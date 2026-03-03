@@ -252,6 +252,39 @@
         display: inline-block; 
         font-size: 18px; 
     }
+
+            /* Mobiltilpasning */
+    @media (max-width: 768px) {
+        body {
+            padding: 8px;
+            font-size: 14px;
+        }
+        #game {
+            border-width: 2px;
+            padding: 10px;
+        }
+        h1 { font-size: 26px; }
+        h2 { font-size: 20px; }
+        h3 { font-size: 16px; }
+
+        .btn {
+            font-size: 14px;
+            padding: 8px 14px;
+        }
+        .btn-big {
+            font-size: 16px;
+            padding: 10px 20px;
+        }
+
+        canvas {
+            height: 180px;  /* mindre højde på mobilen */
+        }
+
+        .jerseys {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
 </style>
 
 </head>
