@@ -254,74 +254,26 @@
     }
 
             /* Mobiltilpasning */
-@media (max-width: 768px) {
-    body {
-        padding: 8px;
-        font-size: 14px;
-    }
-    #game {
-        border-width: 2px;
-        padding: 10px;
-    }
-    h1 { font-size: 26px; }
-    h2 { font-size: 20px; }
-    h3 { font-size: 16px; }
-
-    .btn {
-        font-size: 14px;
-        padding: 8px 14px;
-    }
-    .btn-big {
-        font-size: 16px;
-        padding: 10px 20px;
-    }
-
-    canvas {
-        height: 180px;  /* mindre højde på mobilen */
-    }
-
-    .jerseys {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    /* Topbaren (den med Etape / type / km / tid) må gerne bryde linje */
-    /* Matcher din inline-style med background:#020... */
-    div[style*="background:#020;border:1px solid #0a0;border-radius:4px;margin-bottom:8px"] {
-        flex-wrap: wrap;
-        row-gap: 4px;
-    }
-
-    /* Midter-blokken (type/km/stigning) må også wrappe på mobil */
-    div[style*="display:flex;align-items:center;justify-content:center;gap:15px"] {
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-
-    /* Gør stignings-indikatoren lidt smallere på mobil */
-    span[style*="text-align:center"][style*="border:1px solid"][style*="font-size:11px"] {
-        max-width: 80px;
-        display: inline-block;
-    }    
-}
-    /* -- STYR VISNING AF TOP-BAR -- */
+     /* -- STYR VISNING AF TOP-BAR -- */
     .top-bar-mobile {
         display: none; /* Skjul mobil-versionen som standard */
     }
 
-     @media (max-width: 768px) {
+    @media (max-width: 768px) {
+        /* Regler til at skifte top-bar */
         .top-bar-desktop {
-            display: none !important; /* tving skjuling */
+            display: none;
         }
         .top-bar-mobile {
-            display: block !important;
+            display: block;
         }
         
+        /* Skjul trøjer */
         .jerseys {
-            display: none; /* Skjul trøjerne helt på mobil */
+            display: none;
         }
 
-        /* Resten af dine mobil-regler (body, h1, canvas osv.) */
+        /* Generelle mobil-styles */
         body {
             padding: 8px;
             font-size: 14px;
@@ -347,7 +299,6 @@
             height: 180px;
         }
     }
-
 
 </style>
 
