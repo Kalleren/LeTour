@@ -3091,18 +3091,16 @@ if (G.lastMpResult) {
         '<button class="btn btn-big btn-y" onclick="accel()" style="min-width:140px"' + aDis + '>[A] ACCELERER</button>' +
         '<button class="btn btn-big" onclick="pause()" style="min-width:140px"' + pDis + '>[P] ' + pBtn + '</button>' +
     '</div>' +
-    // ETAPE INFO
+ // ETAPE INFO
 // -- Desktop Version --
 '<div class="top-bar-desktop" style="display:flex;align-items:center;padding:8px;background:#020;border:1px solid #0a0;border-radius:4px;margin-bottom:8px">' +
-    '<div style="flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Etape ' + e.nr + ':</strong> ' + e.start + ' → ' + e.slut + '</div>' +
+    '<div style="flex:1;text-align:left"><strong>Etape ' + e.nr + ':</strong> ' + e.start + ' → ' + e.slut + '</div>' +
     '<div style="display:flex;align-items:center;justify-content:center;gap:15px">' +
         '<span style="padding:4px 10px;border:2px solid ' + typeClr + ';color:' + typeClr + ';border-radius:10px;font-size:12px;width:70px;text-align:center">' + info.n.toUpperCase() + '</span>' +
         '<span class="cyan" style="font-size:20px;font-weight:bold;width:145px;text-align:center">Km ' + G.km + '/' + e.dist + '</span>' +
-    '</div>' +
-    '<div style="flex:1;text-align:right;display:flex;justify-content:flex-end;align-items:center;gap:15px">' +
         '<span style="width:100px;text-align:center">' + getStigningVis() + '</span>' +
-        '<div class="time-display" style="display:inline-block">⏱️ ' + ft(visningsTid) + '</div>' +
     '</div>' +
+    '<div style="flex:1;text-align:right"><div class="time-display" style="display:inline-block">⏱️ ' + ft(visningsTid) + '</div></div>' +
 '</div>' +
 
 // -- Mobil Version --
