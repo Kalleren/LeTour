@@ -304,7 +304,7 @@
         display: inline-block;
     }    
 }
-            /* -- STYR VISNING AF TOP-BAR -- */
+    /* -- STYR VISNING AF TOP-BAR -- */
     .top-bar-mobile {
         display: none; /* Skjul mobil-versionen som standard */
     }
@@ -317,6 +317,11 @@
             display: block; /* Vis mobil-versionen på mobil */
         }
         
+        .jerseys {
+            display: none; /* Skjul trøjerne helt på mobil */
+        }
+
+        /* Resten af dine mobil-regler (body, h1, canvas osv.) */
         body {
             padding: 8px;
             font-size: 14px;
@@ -341,11 +346,8 @@
         canvas {
             height: 180px;
         }
-
-        .jerseys {
-    display: none; /* Skjul trøjerne helt på mobil */
-}
     }
+
 
 </style>
 
@@ -3097,7 +3099,7 @@ if (G.lastMpResult) {
     '<div style="display:flex;align-items:center;justify-content:center;gap:15px">' +
         '<span style="padding:4px 10px;border:2px solid ' + typeClr + ';color:' + typeClr + ';border-radius:10px;font-size:12px;width:70px;text-align:center">' + info.n.toUpperCase() + '</span>' +
         '<span class="cyan" style="font-size:20px;font-weight:bold;width:145px;text-align:center">Km ' + G.km + '/' + e.dist + '</span>' +
-        '<span style="width:100px;text-align:center">' + getStigningVis() + '</span>' + // <-- FLYTTET TILBAGE TIL MIDTEN
+        '<span style="width:100px;text-align:center">' + getStigningVis() + '</span>' +
     '</div>' +
     '<div style="flex:1;text-align:right;">' +
         '<div class="time-display" style="display:inline-block">⏱️ ' + ft(visningsTid) + '</div>' +
