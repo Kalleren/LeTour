@@ -269,9 +269,11 @@
         }
         
         /* Skjul trøjer */
-        .jerseys {
-            display: none;
+        .jerseys,
+        .jerseys-title {
+            display: none; /* Skjul trøjerne OG titlen helt på mobil */
         }
+
 
         /* Generelle mobil-styles */
         body {
@@ -297,10 +299,6 @@
 
         canvas {
             height: 180px;
-        }
-        /* Juster den store tid på enkeltstarter */
-        .time-display[style*="font-size:36px"] {
-            font-size: 24px !important;
         }
     }
 
@@ -910,7 +908,7 @@ function intro() {
     '<p style="color:#666;font-size:11px;margin-top:15px">Du tildeles et tilfældigt hold og overtager en rytters plads</p>' +
 '</div>' +
     '<div class="box" style="background:linear-gradient(180deg,#111 0%,#000 100%)">' +
-        '<h3 style="text-align:center;margin-bottom:12px">🏆 Trøjer at kæmpe om:</h3>' +
+        '<h3 class="jerseys-title" style="text-align:center;margin-bottom:12px">🏆 Trøjer at kæmpe om:</h3>' +
         '<div class="jerseys" style="gap:12px">' +
             '<div class="jersey jy" style="padding:10px 15px;font-size:13px">' +
                 '<div style="font-size:24px">🟡</div>' +
@@ -1241,43 +1239,73 @@ for (var gi = 0; gi < G.grp.length; gi++) {
         } else {
             spd *= (2 - info.felt);
         }
-        // Feltet kører mere stabilt
-        spd += (grpStyrke - 70) * 0.0008;
-    } else if (g.type === "udbrud") {
-        // Udbrud får også gruppefordel, men mindre end felt
-        spd += grpSizeBonus * 0.7;
-        
-        var udbBonus = 0.02;
-        if (e.type === "bjerg") {
-            // I bjerge afhænger hastighed MEGET af klatrestyrke
-            udbBonus = 0.03 + (grpStyrke - 70) * 0.002;
-            if (stig > 10) udbBonus += (grpStyrke - 75) * 0.0015;
-            if (grpSize <= 2) udbBonus += (grpStyrke - 80) * 0.001;
-        } else if (e.type === "kuperet") {
-            // Kuperet: Nemmere at holde hjem, men check om der er favoritter
-            var harFavorit = false;
-            for (var fi = 0; fi < g.ryt.length; fi++) {
-                if (g.ryt[fi].gc > 82) {
-                    harFavorit = true;
-                    break;
-                }
-            }
-            if (harFavorit) {
-                udbBonus = 0.02 + (grpStyrke - 70) * 0.001;
-            } else {
-                udbBonus = 0.04 + (grpStyrke - 70) * 0.0015;
-                if (grpSize >= 2) udbBonus += 0.02;
-            }
-        } else { // flad
-            udbBonus = 0.025;
-            if (grpSize >= 4) udbBonus += 0.015;
+if (g.type === "felt") {
+    spd += grpSizeBonus;
+    // Reducer feltets hastighedsbonus - nemmere at holde hjem på kuperet end flad
+    if (e.type === "kuperet") {
+        spd *= (2 - info.felt) * 0.80; // Feltet kører langsommere på kuperet
+    } else if (e.type === "flad") {
+        spd *= (2 - info.felt) * 0.95; // Feltet kører næsten normalt på flad
+    } else {
+        spd *= (2 - info.felt);
+    }
+    // Feltet kører mere stabilt
+    spd += (grpStyrke - 70) * 0.0008;
+} else if (g.type === "udbrud") {
+    // Udbrud får også gruppefordel, men mindre end felt
+    spd += grpSizeBonus * 0.7;
+    
+    var udbBonus = 0.02;
+    if (e.type === "bjerg") {
+        // I bjerge afhænger hastighed MEGET af klatrestyrke
+        udbBonus = 0.03 + (grpStyrke - 70) * 0.002;
+        // Stærke klatrere i udbrud kører hurtigere op ad
+        if (stig > 10) {
+            udbBonus += (grpStyrke - 75) * 0.0015;
         }
-        spd += udbBonus;
-        spd += (Math.random() - 0.5) * 0.012;
-        
-    } else if (g.type === "gruppetto") {
+        // Solo eller lille gruppe i bjerge: Kun styrke tæller
+        if (grpSize <= 2) {
+            udbBonus += (grpStyrke - 80) * 0.001;
+        }
+} else if (e.type === "kuperet") {
+    // Kuperet: Nemmere at holde hjem, men check om der er favoritter
+    var harFavorit = false;
+    for (var fi = 0; fi < g.ryt.length; fi++) {
+        if (g.ryt[fi].gc > 82) {
+            harFavorit = true;
+            break;
+        }
+    }
+    
+    if (harFavorit) {
+        // Favoritter i udbrud: Feltet jagter hårdere, mindre bonus
+        udbBonus = 0.02 + (grpStyrke - 70) * 0.001;
+    } else {
+        // Uden favoritter: Nemmere at holde hjem
+        udbBonus = 0.04 + (grpStyrke - 70) * 0.0015;
+        if (grpSize >= 2) {
+            udbBonus += 0.02;
+        }
+    }
+}
+ else {
+        // Flad etape: Sværere at holde hjem - mindre bonus
+        udbBonus = 0.025;
+        if (grpSize >= 4) {
+            udbBonus += 0.015; // Kun bonus for store udbrud
+        }
+    }
+    spd += udbBonus;
+    
+    // Tilfældig variation - udbrud er dynamiske
+    spd += (Math.random() - 0.5) * 0.012;
+    
+}
+ else if (g.type === "gruppetto") {
+        // Gruppetto får også lidt gruppefordel
         spd += grpSizeBonus * 0.5;
         spd *= 0.82;
+        // Gruppetto kan også variere lidt
         spd += (Math.random() - 0.5) * 0.006;
     }
     
@@ -1299,7 +1327,6 @@ for (var gi = 0; gi < G.grp.length; gi++) {
     
     g.pos += spd;
 }
-
     
     var sg = findInArr(G.grp, function(g) { return g.ryt.indexOf(G.spiller) >= 0; });
     if (sg) G.km = Math.floor(sg.pos);
