@@ -3106,22 +3106,20 @@ function tegnP() {
     ctx.fillRect(0, 0, c.width, c.height);
     
     var maxH = Math.max.apply(null, p), minH = Math.min.apply(null, p);
-    var rng = maxH - minH;
+
+// Y-aksen starter altid ved 0m
+minH = 0;
+
+// Max er højeste punkt + 100m luft
+maxH = maxH + 100;
+
+// Minimum 1000m spænd for flade/kuperede etaper
+var rng = maxH - minH;
 if (rng < 1000) {
-    // Udvid range til minimum 1000m
-    var midt = (maxH + minH) / 2;
-    minH = midt - 500;
-    maxH = midt + 500;
-    
-    // Sørg for at minH ikke går under 0
-    if (minH < 0) {
-        minH = 0;
-        maxH = 1000;
-    }
+    maxH = 1000;
     rng = 1000;
 }
 
-    rng = rng || 1;
 
     var l = 45, b = 28, w = c.width - l - 12, h = c.height - b - 15;
     
@@ -3389,21 +3387,20 @@ function tegnTTP() {
     ctx.fillRect(0, 0, c.width, c.height);
     
     var maxH = Math.max.apply(null, p), minH = Math.min.apply(null, p);
-    var rng = maxH - minH;
+
+// Y-aksen starter altid ved 0m
+minH = 0;
+
+// Max er højeste punkt + 50m luft
+maxH = maxH + 50;
+
+// Minimum 500m spænd for enkeltstart
+var rng = maxH - minH;
 if (rng < 500) {
-    // Udvid range til minimum 500m for enkeltstart
-    var midt = (maxH + minH) / 2;
-    minH = midt - 250;
-    maxH = midt + 250;
-    
-    // Sørg for at minH ikke går under 0
-    if (minH < 0) {
-        minH = 0;
-        maxH = 500;
-    }
+    maxH = 500;
     rng = 500;
 }
-    rng = rng || 1;
+
     var l = 35, bm = 18, w = c.width - l - 8, h = c.height - bm - 8;
     
     ctx.beginPath();
