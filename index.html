@@ -277,7 +277,7 @@
     }
 
     canvas {
-        height: 180px;
+        height: 180px;  /* mindre højde på mobilen */
     }
 
     .jerseys {
@@ -285,17 +285,23 @@
         align-items: stretch;
     }
 
-    /* Topbar skal kunne bryde rækker på mobil */
-    /* Matcher inline-stylen display:flex;align-items:center;... */
+    /* Topbaren (den med Etape / type / km / tid) må gerne bryde linje */
+    /* Matcher din inline-style med background:#020... */
     div[style*="background:#020;border:1px solid #0a0;border-radius:4px;margin-bottom:8px"] {
         flex-wrap: wrap;
-        row-gap: 6px;
+        row-gap: 4px;
     }
 
-    /* Midter-blokken med etapetype / km / stigning */
+    /* Midter-blokken (type/km/stigning) må også wrappe på mobil */
     div[style*="display:flex;align-items:center;justify-content:center;gap:15px"] {
         flex-wrap: wrap;
         gap: 6px;
+    }
+
+    /* Gør stignings-indikatoren lidt smallere på mobil */
+    span[style*="text-align:center"][style*="border:1px solid"][style*="font-size:11px"] {
+        max-width: 80px;
+        display: inline-block;
     }
 }
 </style>
