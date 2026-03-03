@@ -1229,16 +1229,6 @@ for (var gi = 0; gi < G.grp.length; gi++) {
         grpSizeBonus = maxBonus * Math.min(Math.log(grpSize) / Math.log(30), 1);
     }
     
-    if (g.type === "felt") {
-        spd += grpSizeBonus;
-        // Reducer feltets hastighedsbonus - nemmere at holde hjem på kuperet end flad
-        if (e.type === "kuperet") {
-            spd *= (2 - info.felt) * 0.80; // Feltet kører langsommere på kuperet
-        } else if (e.type === "flad") {
-            spd *= (2 - info.felt) * 0.95; // Feltet kører næsten normalt på flad
-        } else {
-            spd *= (2 - info.felt);
-        }
 if (g.type === "felt") {
     spd += grpSizeBonus;
     // Reducer feltets hastighedsbonus - nemmere at holde hjem på kuperet end flad
