@@ -252,6 +252,55 @@
         display: inline-block; 
         font-size: 18px; 
     }
+    /* -- NYE REGLER TIL TOP-BAR -- */
+    .top-bar {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        background: #020;
+        border: 1px solid #0a0;
+        border-radius: 4px;
+        margin-bottom: 8px;
+        gap: 15px;
+    }
+    .top-bar-info {
+        flex: 1;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .top-bar-stats {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+    }
+    .top-bar-type {
+        padding: 4px 10px;
+        border: 2px solid; /* Farve sættes inline */
+        border-radius: 10px;
+        font-size: 12px;
+        width: 70px;
+        text-align: center;
+    }
+    .top-bar-km {
+        font-size: 20px;
+        font-weight: bold;
+        width: 145px;
+        text-align: center;
+    }
+    .top-bar-status {
+        flex: 1;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 15px;
+    }
+    .top-bar-gradient {
+        width: 100px;
+        text-align: center;
+    }
 
             /* Mobiltilpasning */
 @media (max-width: 768px) {
@@ -302,6 +351,31 @@
     span[style*="text-align:center"][style*="border:1px solid"][style*="font-size:11px"] {
         max-width: 80px;
         display: inline-block;
+    }
+        /* -- NY MOBIL-LAYOUT FOR TOP-BAR -- */
+    .top-bar {
+        flex-direction: column; /* Stak elementerne lodret */
+        gap: 8px;
+    }
+    .top-bar-info {
+        width: 100%;
+        text-align: center; /* Centrer etape-teksten på mobil */
+    }
+    .top-bar-stats {
+        order: 2; /* Sæt km og type nederst */
+        width: 100%;
+        justify-content: space-around;
+    }
+    .top-bar-status {
+        order: 1; /* Sæt stigning og tid øverst */
+        width: 100%;
+        justify-content: space-around;
+    }
+    .top-bar-km {
+        width: auto; /* Lad bredden være auto på mobil */
+    }
+    .top-bar-gradient {
+        width: auto;
     }
 }
 </style>
@@ -3048,14 +3122,16 @@ if (G.lastMpResult) {
         '<button class="btn btn-big" onclick="pause()" style="min-width:140px"' + pDis + '>[P] ' + pBtn + '</button>' +
     '</div>' +
     // ETAPE INFO
-    '<div style="display:flex;align-items:center;padding:8px;background:#020;border:1px solid #0a0;border-radius:4px;margin-bottom:8px">' +
-    '<div style="flex:1;text-align:left"><strong>Etape ' + e.nr + ':</strong> ' + e.start + ' → ' + e.slut + '</div>' +
-    '<div style="display:flex;align-items:center;justify-content:center;gap:15px">' +
-        '<span style="padding:4px 10px;border:2px solid ' + typeClr + ';color:' + typeClr + ';border-radius:10px;font-size:12px;width:70px;text-align:center">' + info.n.toUpperCase() + '</span>' +
-        '<span class="cyan" style="font-size:20px;font-weight:bold;width:145px;text-align:center">Km ' + G.km + '/' + e.dist + '</span>' +
-        '<span style="width:100px;text-align:center">' + getStigningVis() + '</span>' +
+'<div class="top-bar">' +
+    '<div class="top-bar-info"><strong>Etape ' + e.nr + ':</strong> ' + e.start + ' → ' + e.slut + '</div>' +
+    '<div class="top-bar-stats">' +
+        '<span class="top-bar-type" style="border-color:' + typeClr + ';color:' + typeClr + ';">' + info.n.toUpperCase() + '</span>' +
+        '<span class="top-bar-km cyan">' + 'Km ' + G.km + '/' + e.dist + '</span>' +
     '</div>' +
-    '<div style="flex:1;text-align:right"><div class="time-display" style="display:inline-block">⏱️ ' + ft(visningsTid) + '</div></div>' +
+    '<div class="top-bar-status">' +
+        '<span class="top-bar-gradient">' + getStigningVis() + '</span>' +
+        '<div class="time-display">⏱️ ' + ft(visningsTid) + '</div>' +
+    '</div>' +
 '</div>' +
     '<canvas id="cv"></canvas>' + jer +
     '<div class="box" style="padding:10px;display:flex;flex-wrap:wrap;gap:15px;align-items:center">' +
