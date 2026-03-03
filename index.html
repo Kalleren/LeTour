@@ -3107,13 +3107,20 @@ function tegnP() {
     
     var maxH = Math.max.apply(null, p), minH = Math.min.apply(null, p);
     var rng = maxH - minH;
-    if (rng < 1000) {
-        // Udvid range til minimum 1000m, centreret omkring profildata
-        var midt = (maxH + minH) / 2;
-        minH = midt - 500;
-        maxH = midt + 500;
-        rng = 1000;
+if (rng < 1000) {
+    // Udvid range til minimum 1000m
+    var midt = (maxH + minH) / 2;
+    minH = midt - 500;
+    maxH = midt + 500;
+    
+    // Sørg for at minH ikke går under 0
+    if (minH < 0) {
+        minH = 0;
+        maxH = 1000;
     }
+    rng = 1000;
+}
+
     rng = rng || 1;
 
     var l = 45, b = 28, w = c.width - l - 12, h = c.height - b - 15;
@@ -3383,13 +3390,19 @@ function tegnTTP() {
     
     var maxH = Math.max.apply(null, p), minH = Math.min.apply(null, p);
     var rng = maxH - minH;
-    if (rng < 500) {
-        // Udvid range til minimum 500m for enkeltstart (kortere etaper)
-        var midt = (maxH + minH) / 2;
-        minH = midt - 250;
-        maxH = midt + 250;
-        rng = 500;
+if (rng < 500) {
+    // Udvid range til minimum 500m for enkeltstart
+    var midt = (maxH + minH) / 2;
+    minH = midt - 250;
+    maxH = midt + 250;
+    
+    // Sørg for at minH ikke går under 0
+    if (minH < 0) {
+        minH = 0;
+        maxH = 500;
     }
+    rng = 500;
+}
     rng = rng || 1;
     var l = 35, bm = 18, w = c.width - l - 8, h = c.height - bm - 8;
     
