@@ -273,6 +273,8 @@
             display: none; /* Skjul trøjerne OG titlen helt på mobil */
         }
 
+        .jerseys-box {
+        display: none !important;
 
         /* Generelle mobil-styles */
         body {
@@ -905,9 +907,9 @@ function intro() {
     '<button class="btn btn-big btn-y" onclick="startGame()" style="font-size:18px;padding:14px 32px">🏁 START TOUREN 🏁</button>' +
     '<p style="color:#666;font-size:11px;margin-top:15px">Du tildeles et tilfældigt hold og overtager en rytters plads</p>' +
 '</div>' +
-    '<div class="box" style="background:linear-gradient(180deg,#111 0%,#000 100%)">' +
-        '<h3 style="text-align:center;margin-bottom:12px">🏆 Trøjer at kæmpe om:</h3>' +
-        '<div class="jerseys" style="gap:12px">' +
+    '<div class="box jerseys-box" style="background:linear-gradient(180deg,#111 0%,#000 100%)">' +
+    '<h3 style="text-align:center;margin-bottom:12px">🏆 Trøjer at kæmpe om:</h3>' +
+    '<div class="jerseys" style="gap:12px">' +
             '<div class="jersey jy" style="padding:10px 15px;font-size:13px">' +
                 '<div style="font-size:24px">🟡</div>' +
                 '<div style="font-weight:bold">GUL TRØJE</div>' +
