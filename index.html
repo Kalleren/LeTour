@@ -1190,19 +1190,40 @@ function startNorm() {
     // Kun aktive ryttere (ikke ude af touren)
     var aktiveRyttere = G.ryttere.filter(function(r) { return !r.ude; });
     G.grp = [{ type: "felt", navn: "Feltet", ryt: aktiveRyttere, pos: 0, tf: 0 }];
+    G.finaleMode = false;
+    G.finaleTick = 0;
     if (G.iv) clearInterval(G.iv);
-    G.iv = setInterval(loop, 500);
+    G.iv = setInterval(loop, 340);
     rend();
 }
 
 function loop() {
     if (G.vent) return;
+    
+    var e = G.etaper[G.enr];
+    var kmTilMaal = e.dist - G.km;
+    
+    // Skift til hurtigere visuel opdatering i finale (sidste 15 km)
+    if (kmTilMaal <= 15 && !G.finaleMode) {
+        G.finaleMode = true;
+        clearInterval(G.iv);
+        G.iv = setInterval(loop, 170);
+    }
+    
+    // I finale-mode: Kør kun halv simulation hver anden gang
+    if (G.finaleMode) {
+        G.finaleTick = (G.finaleTick || 0) + 1;
+        if (G.finaleTick % 2 === 1) {
+            // Ulige tick: Kun opdater visning, ikke simulation
+            rend();
+            return;
+        }
+    }
 
     // Rens grupper for udgåede ryttere
     rensGrupper();   
 
-    var e = G.etaper[G.enr];
-    var info = ETYPER[e.type];   
+    var info = ETYPER[e.type];
 
     var ki = Math.min(Math.floor(G.km), G.profil.length - 1);
     var stig = (G.profil[Math.min(ki+1, G.profil.length-1)] || 0) - (G.profil[ki] || 0);
