@@ -1,5 +1,13 @@
 import { TEAMS, ETYPER, BYER, BONUS, SPR_PTS_FINISH, BJG_PTS_FINISH, INT_PTS, G } from "./data.js";
-import { ri, rf, sh, ft, $, R } from "./utils.js";
+import { ri, rf, sh, ft, $, R, findInArr, ec} from "./utils.js";
+import { saveGame } from "./storage.js";
+
+
+export function resetGrupperTilFelt() {
+  var aktiveRyttere = G.ryttere.filter(function(r) { return !r.ude; });
+  G.grp = [{ type: "felt", navn: "Feltet", ryt: aktiveRyttere, pos: 0, tf: 0 }];
+  alert(G.grp[0]);
+}
 
 export function startGame() {
     var inp = $("pn");
@@ -53,7 +61,7 @@ export function startGame() {
     rytterInfo(holdNavn, rd);
 }
 
-function genE() {
+export function genE() {
     var t = ["flad","kuperet","flad","bjerg","flad","kuperet","bjerg","kuperet","bjerg","tt","bjerg","kuperet","bjerg","flad","bjerg","kuperet","bjerg","kuperet","bjerg","tt","flad"];
     var result = [];
     for (var i = 0; i < t.length; i++) {
@@ -69,7 +77,7 @@ function genE() {
     return result;
 }
 
-function genENyt() {
+export function genENyt() {
     // Forskellige etapetyper - varieret hver gang
     var typer = ["flad","kuperet","flad","bjerg","flad","kuperet","bjerg","kuperet","bjerg","tt","bjerg","kuperet","bjerg","flad","kuperet","bjerg","bjerg","kuperet","bjerg","tt","flad"];
     
@@ -128,7 +136,7 @@ for (var i = 1; i < typer.length - 1; i++) {
     return result;
 }
 
-function genP(e) {
+export function genP(e) {
     var info = ETYPER[e.type]; 
     var p = [];
     var h = ri(150, 300); // Starthøjde
@@ -253,7 +261,7 @@ function genP(e) {
     return p;
 }
 
-function getStigningVis() {
+export function getStigningVis() {
     if (!G.profil || G.profil.length < 2) return '<span style="display:inline-block;width:100%;padding:3px 8px;border:1px solid #666;color:#666;border-radius:8px;font-size:11px;text-align:center">—</span>';
     
     var ki = Math.min(Math.floor(G.km), G.profil.length - 2);
@@ -281,7 +289,7 @@ function getStigningVis() {
     return '<span style="display:inline-block;width:100%;padding:3px 8px;border:1px solid ' + farve + ';color:' + farve + ';border-radius:8px;font-size:11px;text-align:center">' + ikon + ' ' + tekst + '</span>';
 }
 
-function genMP(e) {
+export function genMP(e) {
     if (e.type === "tt") return [];
     
     var mps = [];
@@ -575,10 +583,15 @@ export function rerollRytter() {
 }
 
 export function startEtape() {
+	
+	//Gemmer Spillet
+	if (G.enr === 0) {
+		saveGame(G); // snapshot lige før første løb
+	}
     var e = G.etaper[G.enr];
     G.km = 0; G.tid = 0; G.msg = ""; G.vent = false; G.udata = null; G.lastMpResult = null;
     G.profil = genP(e);
-G.mps = genMP(e);
+	G.mps = genMP(e);
 
 // For kuperede etaper, find det højeste punkt til bjergspurt
 if (e.type === "kuperet" && G.mps.length > 0) {
@@ -615,7 +628,7 @@ export function startNorm() {
     rend();
 }
 
-function loop() {
+export function loop() {
     if (G.vent) return;
 
     // Rens grupper for udgåede ryttere
@@ -938,7 +951,7 @@ if (Math.random() < udbChance && udbCount < 5) aiUdb();
     rend();
 }
 
-function aiAngrebKuperet() {
+export function aiAngrebKuperet() {
     var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
     if (!felt || felt.ryt.length < 10) return;
     
@@ -1000,7 +1013,7 @@ function aiAngrebKuperet() {
     G.msg = "💨 " + angribere[0].navn.split(" ").pop() + " angriber!";
 }
 
-function aiAngrebBjerg() {
+export function aiAngrebBjerg() {
     var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
     if (!felt || felt.ryt.length < 8) return;
     
@@ -1059,7 +1072,7 @@ function aiAngrebBjerg() {
     G.msg = "⚡ " + angribere[0].navn.split(" ").pop() + " angriber!";
 }
 
-function aiAngrebEnergi() {
+export function aiAngrebEnergi() {
     var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
     if (!felt || felt.ryt.length < 12) return;
     
@@ -1130,7 +1143,7 @@ function aiAngrebEnergi() {
     G.msg = "🎯 " + angribere.length + " lykkeriddere stikker af!";
 }
 
-function favoritAngrebSlut() {
+export function favoritAngrebSlut() {
     var e = G.etaper[G.enr];
     
     // Check om vi er på en stigning
@@ -1320,7 +1333,7 @@ return;
     }
 }
 
-function favoritAngrebKuperet() {
+export function favoritAngrebKuperet() {
     var e = G.etaper[G.enr];
     
     // Favoritter angriber kun i sidste tredjedel på kuperet
@@ -1413,7 +1426,7 @@ if (reagerende.length > 0) {
 }
 }
 
-function fusionGrupper() {
+export function fusionGrupper() {
     // Sortér efter position
     G.grp.sort(function(a, b) { return b.pos - a.pos; });
     
@@ -1460,7 +1473,7 @@ function fusionGrupper() {
     G.grp = G.grp.filter(function(g) { return g.ryt.length > 0; });
 }
 
-function chkMP() {
+export function chkMP() {
     var e = G.etaper[G.enr];
     
     // Check alle mellempunkter der ikke er done
@@ -1540,7 +1553,7 @@ function chkMP() {
     }
 }
 
-function aiUdb() {
+export function aiUdb() {
     var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
     if (!felt || felt.ryt.length < 15) return;
     
@@ -1638,7 +1651,7 @@ G.grp.push({ type: "udbrud", navn: udbNavn, ryt: udb, pos: felt.pos + 0.3, tf: 0
     G.msg = "🚴💨 " + udb.length + " ryttere angriber!";
 }
 
-function tilbyd() {
+export function tilbyd() {
     var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
     if (!felt) return;
     
@@ -1666,7 +1679,7 @@ function tilbyd() {
     rend();
 }
 
-function accUdb() {
+export function accUdb() {
     if (!G.udata) return;
     
     // Stop timeout
@@ -1735,7 +1748,7 @@ function accUdb() {
     G.vent = false; G.udata = null;
 }
 
-function rejUdb() {
+export function rejUdb() {
     // Stop timeout
     if (G.udbrudTimeout) {
         clearTimeout(G.udbrudTimeout);
@@ -1760,7 +1773,7 @@ function rejUdb() {
     rend();
 }
 
-function chkIndhent() {
+export function chkIndhent() {
     var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
     if (!felt) return;
     
@@ -1899,7 +1912,7 @@ if (tidsForskel > 300) {
     }
 }
 
-function flytTilGruppetto(r) {
+export function flytTilGruppetto(r) {
     for (var i = 0; i < G.grp.length; i++) {
         G.grp[i].ryt = G.grp[i].ryt.filter(function(x) { return x !== r; });
     }
@@ -1914,7 +1927,7 @@ function flytTilGruppetto(r) {
     r.gi = G.grp.indexOf(grp);
 }
 
-function rensGrupper() {
+export function rensGrupper() {
     // Fjern udgåede ryttere fra alle grupper
     for (var i = 0; i < G.grp.length; i++) {
         G.grp[i].ryt = G.grp[i].ryt.filter(function(r) { return !r.ude; });
@@ -1923,7 +1936,7 @@ function rensGrupper() {
     G.grp = G.grp.filter(function(g) { return g.ryt.length > 0; });
 }
 
-function accel() {
+export function accel() {
     if (G.vent) return;
     
     var e = G.etaper[G.enr];
@@ -2213,14 +2226,14 @@ if (Math.random() < ch) {
     rend();
 }
 
-function pause() {
+export function pause() {
     if (G.vent) return;
     if (G.iv) { clearInterval(G.iv); G.iv = null; G.msg = "⏸️ PAUSE"; }
     else { G.iv = setInterval(loop, 500); G.msg = ""; }
     rend();
 }
 
-function getGruppeFarve(g, spiller, gcLeder, spLeder, bjLeder) {
+export function getGruppeFarve(g, spiller, gcLeder, spLeder, bjLeder) {
     // Check om spilleren er i gruppen - altid hvid (højeste prioritet)
     if (g.ryt.indexOf(spiller) >= 0) {
         return { border: "#fff", bg: "#222", text: "#fff" };
@@ -2263,12 +2276,13 @@ function getGruppeFarve(g, spiller, gcLeder, spLeder, bjLeder) {
     return { border: "#888", bg: "#111", text: "#888" };
 }
 
-function rend() {
+export function rend() {
     var e = G.etaper[G.enr];
     var info = ETYPER[e.type];
     var r = G.spiller;
     var sg = findInArr(G.grp, function(g) { return g.ryt.indexOf(r) >= 0; });
-    
+	
+
     // Beregn korrekt tid baseret på position og gennemsnitshastighed
     var førsteGrp = G.grp[0];
     var kørtKm = førsteGrp ? førsteGrp.pos : 0;
@@ -2513,7 +2527,7 @@ if (G.lastMpResult) {
     tegnP();
 }
 
-function tegnP() {
+export function tegnP() {
     var c = $("cv");
     if (!c) return;
     c.width = c.parentElement.clientWidth - 4;
@@ -2682,7 +2696,7 @@ if (her) {
 }
 
 // === ENKELTSTART ===
-function startTT() {
+export function startTT() {
     var e = G.etaper[G.enr];
     G.enkRes = [];
     for (var i = 0; i < G.ryttere.length; i++) {
@@ -2715,7 +2729,7 @@ function startTT() {
     rendTT();
 }
 
-function loopTT() {
+export function loopTT() {
     var e = G.etaper[G.enr];
     var info = ETYPER[e.type];
     G.tid += info.sek;
@@ -2734,7 +2748,7 @@ function loopTT() {
     rendTT();
 }
 
-function accTT() {
+export function accTT() {
     if (G.spiller.energi < 3) { G.msg = "❌ Ingen energi!"; rendTT(); return; }
     G.spiller.energi -= 3;
     G.sTid -= 8;
@@ -2754,7 +2768,7 @@ if (btn) {
     rendTT();
 }
 
-function rendTT() {
+export function rendTT() {
     var e = G.etaper[G.enr];
     var r = G.spiller;
     
@@ -2794,7 +2808,7 @@ function rendTT() {
     tegnTTP();
 }
 
-function tegnTTP() {
+export function tegnTTP() {
     var c = $("cv");
     if (!c) return;
     c.width = c.parentElement.clientWidth - 4;
@@ -2860,7 +2874,7 @@ if (rng < 750) {
     ctx.fillText("🏁", l + w, 18);
 }
 
-function afslutTT() {
+export function afslutTT() {
     clearInterval(G.iv);
     G.iv = null;
     G.enkRes.push({ r: G.spiller, tid: G.sTid });
@@ -2875,7 +2889,7 @@ function afslutTT() {
     visRes(G.enkRes, true);
 }
 
-function afslut() {
+export function afslut() {
     clearInterval(G.iv);
     G.iv = null;
     
@@ -2974,11 +2988,11 @@ function afslut() {
         var rest = G.ryttere[i].re / 100 * 28 + 12;
         G.ryttere[i].energi = Math.min(100, G.ryttere[i].energi + rest);
     }
-    
-    visRes(res, false, udeRyttere, vinderTid, tidsGrænse);
+       
+	visRes(res, false, udeRyttere, vinderTid, tidsGrænse);
 }
 
-function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
+export function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
     var e = G.etaper[G.enr];
     var vTid = res[0] ? res[0].tid : 0;
     var spi = -1;
@@ -3042,7 +3056,7 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
 }
 
 
-function samlet() {
+export function samlet() {
     var aktive = G.ryttere.filter(function(r) { return !r.ude; });
     var gcS = aktive.slice().sort(function(a,b) { return a.stid - b.stid; });
     var spS = aktive.slice().sort(function(a,b) { return (G.sprPts[b.navn]||0) - (G.sprPts[a.navn]||0); });
@@ -3132,13 +3146,41 @@ if (G.enr < 20) {
     R(html);
 }
 
-function naeste() {
+export function naeste() {
     G.enr++;
     G.stilTab = "gc";
     startEtape();
 }
 
-function slut() {
+export function resumeFromSave() {
+  // hvis spillet ikke er sat ordentligt op
+  if (!G.etaper || !G.etaper.length || !G.navn) {
+    intro();
+    return;
+  }
+
+  // hvis spillet er færdigt
+  if (G.enr >= G.etaper.length) {
+    // kald din slutskærm hvis du har en
+    // visSlut();
+    intro(); // fallback
+    return;
+  }
+
+  // hop direkte til den etape som save peger på
+	alert(
+	  "Gemt spil indlæst\n\n" +
+	  "Rytter: " + G.navn + "\n" +
+	  "Starter på etape: " + (G.enr + 1)
+	);
+
+//TODO: find ud af hvordan G.grp bliver nulstillet for lige nu er det den gamle data som ligger
+	resetGrupperTilFelt();
+
+  naeste();
+}
+
+export function slut() {
     var aktive = G.ryttere.filter(function(r) { return !r.ude; });
     var gcS = aktive.slice().sort(function(a,b) { return a.stid - b.stid; });
     var spS = aktive.slice().sort(function(a,b) { return (G.sprPts[b.navn]||0) - (G.sprPts[a.navn]||0); });
@@ -3290,7 +3332,7 @@ G.slutPlacering = spiGC + 1;
     R(html);
 }
 
-function fordelPoint() {
+export function fordelPoint() {
     var r = G.spiller;
     var pt = G.bonusPoint;
     
@@ -3321,7 +3363,7 @@ function fordelPoint() {
     R(html);
 }
 
-function addStat(stat) {
+export function addStat(stat) {
     if (G.bonusPoint <= 0) return;
     var r = G.spiller;
     
@@ -3335,7 +3377,7 @@ function addStat(stat) {
     fordelPoint();
 }
 
-function nytTour() {
+export function nytTour() {
     G.tourNr++;
     G.origStats = null;
     

@@ -1,12 +1,10 @@
-import {
-  intro,
-  visInstruktioner,
-  rytterInfo,
-  rerollRytter,
-  startEtape,
-  startNorm,
-  startGame 
-} from "./game.js";
+import * as game from "./game.js";
+
+import { loadGame, hasSave, enableStoragePopup  } from "./storage.js";
+
+enableStoragePopup(true);
+
+Object.assign(window, game);
 
 import { G, TEAMS, ETYPER, BYER, BONUS, SPR_PTS_FINISH, BJG_PTS_FINISH, INT_PTS } from "./data.js";
 
@@ -32,5 +30,11 @@ document.addEventListener("keydown", function(e) {
     else if (k === "n" && G.vent && G.udata) rejUdb();
 });
 
-// START
-intro();	
+//Indlæser gemt spil hvis det findes
+const saved = hasSave() ? loadGame() : null;
+if (saved) {
+  Object.assign(G, saved);
+  resumeFromSave();
+} else {
+  intro();
+}
