@@ -222,7 +222,7 @@ export const  ETYPER = {
 export const  BYER = ["Lille","Bruxelles","Dunkerque","Calais","Rouen","Chartres","Orléans","Limoges","Clermont-Ferrand","Saint-Étienne","Gap","Briançon","Barcelonnette","Nice","Monaco","Menton","Digne","Valence","Villard-de-Lans","Grenoble","Paris"];
 export const  BONUS = [10, 6, 4];
 export const  SPR_PTS_FINISH = [50, 30, 20, 18, 16, 14, 12, 10, 8, 7, 6, 5, 4, 3, 2];
-export const  BJG_PTS_FINISH = [40, 34, 30, 26, 22, 18, 14, 12, 10, 8, 6, 4, 2];
+export const  BJG_PTS_FINISH = [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1];
 export const  INT_PTS = [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1];
 
 export const  G = { 
