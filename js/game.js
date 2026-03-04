@@ -287,50 +287,18 @@ function genMP(e) {
     var mps = [];
     
     if (e.type === "bjerg") {
-        // Bjergetaper: To bjergspurter på toppen af hvert sit bjerg
-        if (e.bjergToppe && e.bjergToppe.length >= 2) {
+    // Bjergspurt på ALLE bjergtoppe (finish er allerede ekskluderet i genP)
+    if (e.bjergToppe && e.bjergToppe.length > 0) {
+        for (var i = 0; i < e.bjergToppe.length; i++) {
             mps.push({
-                km: e.bjergToppe[0],
-                type: "bjerg",
-                done: false,
-                pts: [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1]
-            });
-            mps.push({
-                km: e.bjergToppe[1],
-                type: "bjerg",
-                done: false,
-                pts: [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1]
-            });
-        } else if (e.bjergToppe && e.bjergToppe.length === 1) {
-            mps.push({
-                km: e.bjergToppe[0],
-                type: "bjerg",
-                done: false,
-                pts: [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1]
-            });
-            // Tilføj en ekstra bjergspurt halvvejs
-            mps.push({
-                km: Math.floor(e.dist * 0.5),
-                type: "bjerg",
-                done: false,
-                pts: [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1]
-            });
-        } else {
-            // Fallback
-            mps.push({
-                km: Math.floor(e.dist * 0.4),
-                type: "bjerg",
-                done: false,
-                pts: [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1]
-            });
-            mps.push({
-                km: Math.floor(e.dist * 0.7),
+                km: e.bjergToppe[i],
                 type: "bjerg",
                 done: false,
                 pts: [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1]
             });
         }
-    } else if (e.type === "kuperet") {
+    }
+} else if (e.type === "kuperet") {
         // Kuperede etaper: En pointspurt og en bjergspurt (højeste punkt)
         mps.push({
             km: Math.floor(e.dist * 0.4),
@@ -430,7 +398,6 @@ export function intro() {
     '<div style="text-align:center;margin-top:15px">' +
     '<button class="btn" style="border-color:#3399ff;color:#3399ff" onclick="visInstruktioner()">Instruktioner</button>' +
     '<br><br>' +
-    '<div style="color:#666;font-size:10px;margin-bottom:3px">Af Kalleren</div>' +
     '<div style="color:#333;font-size:10px">🇫🇷 Inspireret af det klassiske DOS-spil fra 90\'erne 🇫🇷</div>' +
     '</div>');
     setTimeout(function() {
@@ -481,12 +448,20 @@ export function visInstruktioner() {
     '</div>' +
 
     '<div class="box">' +
-        '<h3>Trøjer og bonuspoint</h3>' +
+        '<h3>Trøjer</h3>' +
         '<ul style="margin-left:18px;list-style:disc;font-size:14px;line-height:1.4">' +
             '<li><strong>Gul</strong> – samlet tid (GC).</li>' +
             '<li><strong>Grøn</strong> – sprintpoint fra indlagte spurter og mål på flade/kuperede etaper.</li>' +
             '<li><strong>Prikket</strong> – bjergpoint fra bjergspurter og bjergafslutninger.</li>' +
-            '<li>Efter hver Tour får du bonuspoint efter placering og trøjer, som du kan fordele på dine stats til næste sæson.</li>' +
+        '</ul>' +
+    '</div>' +
+
+    '<div class="box">' +
+        '<h3>Karriere og bonuspoint</h3>' +
+        '<p>Du kan køre <strong>op til 12 Tours</strong> i din karriere. Efter hver Tour får du bonuspoint, som du kan fordele på dine evner:</p>' +
+        '<ul style="margin-left:18px;list-style:disc;font-size:13px;line-height:1.4;margin-top:8px">' +
+            '<li><strong>GC top 10:</strong> 12, 10, 9, 7, 6, 5, 4, 3, 2, 1 point</li>' +
+            '<li><strong>Grøn/prikket top 5:</strong> 5, 4, 3, 2, 1 point</li>' +
         '</ul>' +
     '</div>' +
 
@@ -494,6 +469,7 @@ export function visInstruktioner() {
         '<button class="btn btn-big btn-y" onclick="intro()">Tilbage</button>' +
     '</div>');
 }
+
 
 export function rytterInfo(hold, orig) {
     var r = G.spiller;
@@ -3171,9 +3147,13 @@ function slut() {
 var bonusGC = Math.max(0, 11 - Math.min(spiGC + 1, 11));
 if (spiGC >= 10) bonusGC = 0;
 
-// (valgfrit) Ekstra 2 point for at vinde gul trøje
+// Ekstra podium-bonus
 if (spiGC === 0) {
-    bonusGC += 2;
+    bonusGC += 2;  // 1. plads: +1 podium + 1 gul trøje
+} else if (spiGC === 1) {
+    bonusGC += 1;  // 2. plads: +1 podium
+} else if (spiGC === 2) {
+    bonusGC += 1;  // 3. plads: +1 podium
 }
 
 // Ekstra bonuspoint for trøjer (grøn og prikket), 5..1 for top 5
@@ -3197,26 +3177,6 @@ var bonusTroeer = bonusSp + bonusBj;
 
 // Samlet bonus
 var bonusPoint = bonusGC + bonusTroeer;
-
-// Ekstra bonuspoint for trøjer (5,4,3,2,1 ned til 5. plads)
-function trøjeBonus(liste, maxPlads) {
-    var total = 0;
-    var max = Math.min(maxPlads, liste.length);
-    for (var i = 0; i < max; i++) {
-        var plac = i + 1;
-        var pts = Math.max(0, 6 - plac); // 1 ->5, 2->4, 3->3, 4->2, 5->1
-        if (liste[i].sp) {
-            total += pts;
-        }
-    }
-    return total;
-}
-
-var trøjeBonusSp = trøjeBonus(spS, 5); // grøn trøje top 5
-var trøjeBonusBj = trøjeBonus(bjS, 5); // prikket trøje top 5
-
-bonusPoint += trøjeBonusSp + trøjeBonusBj;
-
     
     var html = '<div style="text-align:center"><div style="font-size:50px">🏆</div><h1>TOUR DE FRANCE SLUT!</h1></div>' +
     '<div class="box" style="text-align:center;border-color:#ff0"><h2>' + msg + '</h2>' + (troeje ? '<p class="hl">' + troeje + '</p>' : '') + '</div>' +
