@@ -1191,7 +1191,7 @@ function startNorm() {
     var aktiveRyttere = G.ryttere.filter(function(r) { return !r.ude; });
     G.grp = [{ type: "felt", navn: "Feltet", ryt: aktiveRyttere, pos: 0, tf: 0 }];
     if (G.iv) clearInterval(G.iv);
-    G.iv = setInterval(loop, 340);
+    G.iv = setInterval(loop, 400);
     rend();
 }
 
