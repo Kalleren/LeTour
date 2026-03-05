@@ -591,12 +591,13 @@ document.addEventListener('visibilitychange', async function() {
 
 
 // Gem spiltilstand til localStorage
-function gemSpil() {
+function gemSpil(etapeFærdig) {
     var saveData = {
         version: 1,
         navn: G.navn,
         tourNr: G.tourNr,
         enr: G.enr,
+        etapeFærdig: etapeFærdig || false,
         stilTab: G.stilTab,
         sprPts: G.sprPts,
         bjgPts: G.bjgPts,
@@ -685,7 +686,16 @@ function indlaesGemtSpil() {
         G.ryttere.push(r);
         if (r.sp) G.spiller = G.ryttere[G.ryttere.length - 1];
     }
-    
+    // Hvis etapen var færdig, gå til næste
+    if (saveData.etapeFærdig) {
+        if (G.enr >= 20) {
+            // Sidste etape var færdig - vis slutresultat i stedet
+            G.enr = 20;  // Behold på 20
+            return 'slut';  // Returnér special værdi
+        } else {
+            G.enr++;
+        }
+    }
     return true;
 }
 
@@ -1086,8 +1096,11 @@ function intro() {
 }
 
 function fortsaetSpil() {
-    if (indlaesGemtSpil()) {
-        startEtape();
+    var result = indlaesGemtSpil();
+    if (result === 'slut') {
+        slut();  // Vis slutresultat
+    } else if (result) {
+        startEtape();  // Start næste etape
     } else {
         alert('Kunne ikke indlæse gemt spil');
         intro();
@@ -3693,7 +3706,7 @@ function afslut() {
 }
 
 function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
-    gemSpil();
+    gemSpil(true);
     var e = G.etaper[G.enr];
     var vTid = res[0] ? res[0].tid : 0;
     var spi = -1;
@@ -3758,9 +3771,7 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
 
 
 function samlet() {
-    gemSpil();
-    var inp = $("pn");
-    var n = inp ? inp.value.trim() : "";
+    gemSpil(true);
     var aktive = G.ryttere.filter(function(r) { return !r.ude; });
     var gcS = aktive.slice().sort(function(a,b) { return a.stid - b.stid; });
     var spS = aktive.slice().sort(function(a,b) { return (G.sprPts[b.navn]||0) - (G.sprPts[a.navn]||0); });
