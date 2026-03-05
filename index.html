@@ -2,7 +2,7 @@
 <html lang="da">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LeTour - Tour de France 2025</title>
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -309,6 +309,16 @@
             height: 180px;
         }
     }
+
+    /* Forhindre zoom ved dobbeltklik/hurtige tryk */
+    button, .btn {
+        touch-action: manipulation;
+    }
+
+    html, body {
+        touch-action: pan-y;
+    }
+
 </style>
 
 </head>
@@ -3742,13 +3752,13 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
         var bn = pos <= 3 && !erTT ? ' <span class="ok">(-' + BONUS[pos-1] + 's)</span>' : "";
         var tidTxt = pos === 1 ? ft(x.tid) : (diff === 0 ? "s.t." : '+' + ft(diff));
         html += '<div class="' + cls + '"><span>' + med + ' ' + pos + '. ' + x.r.navn.substring(0,32) + ' <span style="color:#666">' + x.r.holdAbbr + '</span></span>' +
-            '<span>' + tidTxt + bn + (x.r.sp ? ' ◄' : '') + '</span></div>';
+            '<span>' + tidTxt + bn + '</span></div>';
     }
     if (spi >= 12 && !res[spi].r.ude) {
         var x = res[spi];
         var diff = x.tid - vTid;
         var tidTxt = diff === 0 ? "s.t." : '+' + ft(diff);
-        html += '<br><div class="row pl"><span>' + (spi+1) + '. ' + x.r.navn + '</span><span>' + tidTxt + ' ◄</span></div>';
+        html += '<br><div class="row pl"><span>' + (spi+1) + '. ' + x.r.navn + '</span><span>' + tidTxt + ' </span></div>';
     }
     html += '</div>';
     
@@ -3844,8 +3854,14 @@ var html = '<h2>STILLING - Etape ' + (G.enr + 1) + '</h2>' +
         if (G.stilTab === "gc") val = pos === 1 ? ft(r.stid) : '+' + ft(r.stid - fTid);
         else if (G.stilTab === "sp") val = (G.sprPts[r.navn] || 0) + ' pts';
         else val = (G.bjgPts[r.navn] || 0) + ' pts';
-        var j = G.stilTab === "gc" && pos === 1 ? "🟡 " : "";
-        html += '<div class="' + cls + '"><span>' + j + pos + '. ' + r.navn.substring(0,32) + ' <span style="color:#666">' + r.holdAbbr + '</span></span><span>' + val + (r.sp ? ' ◄' : '') + '</span></div>';
+        var j = "";
+        if (pos === 1) {
+            if (G.stilTab === "gc") j = "🟡 ";
+            else if (G.stilTab === "sp") j = "🟢 ";
+            else if (G.stilTab === "bj") j = "🔴 ";
+        }
+        html += '<div class="' + cls + '"><span>' + j + pos + '. ' + r.navn.substring(0,32) + ' <span style="color:#666">' + r.holdAbbr + '</span></span><span>' + val + '</span></div>';
+
     }
     
     if (spi >= 15) {
@@ -3854,7 +3870,7 @@ var html = '<h2>STILLING - Etape ' + (G.enr + 1) + '</h2>' +
         if (G.stilTab === "gc") val = '+' + ft(r.stid - fTid);
         else if (G.stilTab === "sp") val = (G.sprPts[r.navn] || 0) + ' pts';
         else val = (G.bjgPts[r.navn] || 0) + ' pts';
-        html += '<br><div class="row pl"><span>' + (spi+1) + '. ' + r.navn + '</span><span>' + val + ' ◄</span></div>';
+        html += '<br><div class="row pl"><span>' + (spi+1) + '. ' + r.navn + '</span><span>' + val + ' </span></div>';
     }
     html += '</div>';
     
@@ -3917,20 +3933,6 @@ if (spiGC === 0) {
     bonusGC += 1;  // 3. plads: +1 ekstra (podium)
 }
 
-// Ekstra bonuspoint for trøjer (grøn og prikket), 5..1 for top 5
-function troejeBonus(liste, maxPlads) {
-    var total = 0;
-    var max = Math.min(maxPlads, liste.length);
-    for (var i = 0; i < max; i++) {
-        var plac = i + 1;
-        var pts = Math.max(0, 6 - plac); // 1->5, 2->4, 3->3, 4->2, 5->1
-        if (liste[i].sp) {
-            total += pts;
-        }
-    }
-    return total;
-}
-
 var bonusSp = troejeBonus(spS, 5); // grøn trøje top 5
 var bonusBj = troejeBonus(bjS, 5); // prikket trøje top 5
 
@@ -3958,13 +3960,21 @@ var bonusPoint = bonusGC + bonusTroeer;
         var r = data[i];
         var pos = i + 1;
         var cls = r.sp ? "row pl" : "row";
-        var med = pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : "";
+        var prefix = "";
+        if (G.stilTab === "gc") {
+            prefix = pos === 1 ? "🥇 " : pos === 2 ? "🥈 " : pos === 3 ? "🥉 " : "";
+        } else if (G.stilTab === "sp") {
+            prefix = pos === 1 ? "🟢 " : "";
+        } else if (G.stilTab === "bj") {
+            prefix = pos === 1 ? "🔴 " : "";
+        }
         var val;
         if (G.stilTab === "gc") val = pos === 1 ? ft(r.stid) : '+' + ft(r.stid - fTid);
         else if (G.stilTab === "sp") val = (G.sprPts[r.navn] || 0) + ' pts';
         else val = (G.bjgPts[r.navn] || 0) + ' pts';
-        html += '<div class="' + cls + '"><span>' + med + ' ' + pos + '. ' + r.navn + ' <span style="color:#666">' + r.holdAbbr + '</span></span><span>' + val + (r.sp ? ' ◄' : '') + '</span></div>';
+        html += '<div class="' + cls + '"><span>' + prefix + pos + '. ' + r.navn + ' <span style="color:#666">' + r.holdAbbr + '</span></span><span>' + val + '</span></div>';
     }
+
     
     if (spi >= 15) {
         var r = data[spi];
@@ -3972,7 +3982,7 @@ var bonusPoint = bonusGC + bonusTroeer;
         if (G.stilTab === "gc") val = '+' + ft(r.stid - fTid);
         else if (G.stilTab === "sp") val = (G.sprPts[r.navn] || 0) + ' pts';
         else val = (G.bjgPts[r.navn] || 0) + ' pts';
-        html += '<br><div class="row pl"><span>' + (spi+1) + '. ' + r.navn + '</span><span>' + val + ' ◄</span></div>';
+        html += '<br><div class="row pl"><span>' + (spi+1) + '. ' + r.navn + '</span><span>' + val + ' </span></div>';
     }
     html += '</div>';
     
@@ -4012,6 +4022,20 @@ G.slutPlacering = spiGC + 1;
     R(html);
 }
 
+// Ekstra bonuspoint for trøjer (grøn og prikket), 5..1 for top 5
+function troejeBonus(liste, maxPlads) {
+    var total = 0;
+    var max = Math.min(maxPlads, liste.length);
+    for (var i = 0; i < max; i++) {
+        var plac = i + 1;
+        var pts = Math.max(0, 6 - plac); // 1->5, 2->4, 3->3, 4->2, 5->1
+        if (liste[i].sp) {
+            total += pts;
+        }
+    }
+    return total;
+}
+    
 function fordelPoint() {
     var r = G.spiller;
     var pt = G.bonusPoint;
@@ -4101,13 +4125,24 @@ function nytTour() {
     R(html);
 }
 
-
 // Keyboard
+var lastKeyTime = 0;
 document.addEventListener("keydown", function(e) {
     // Ignorer tastetryk hvis man skriver i et input-felt
     if (e.target.tagName === "INPUT") return;
     
     var k = e.key.toLowerCase();
+    
+    // Forhindre gentagne tastetryk for hurtigt (50ms debounce)
+    var now = Date.now();
+    if (now - lastKeyTime < 50) return;
+    lastKeyTime = now;
+    
+    // Forhindre browser-standardadfærd for spiltaster
+    if (k === "a" || k === "p" || k === "u" || k === "n") {
+        e.preventDefault();
+    }
+    
     if (k === "a") accel();
     else if (k === "p") pause();
     else if (k === "u" && G.vent && G.udata) accUdb();
