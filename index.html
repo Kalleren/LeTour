@@ -552,6 +552,97 @@ var G = {
     bonusTroeer: 0
 };
 
+// Gem spiltilstand til localStorage
+function gemSpil() {
+    var saveData = {
+        navn: G.navn,
+        tourNr: G.tourNr,
+        enr: G.enr,
+        stilTab: G.stilTab,
+        sprPts: G.sprPts,
+        bjgPts: G.bjgPts,
+        ryttere: [],
+        bonusPoint: G.bonusPoint || 0
+    };
+    
+    // Gem rytterdata
+    for (var i = 0; i < G.ryttere.length; i++) {
+        var r = G.ryttere[i];
+        saveData.ryttere.push({
+            navn: r.navn,
+            orig: r.orig,
+            hold: r.hold,
+            holdAbbr: r.holdAbbr,
+            holdClr: r.holdClr,
+            sp: r.sp,
+            gc: r.gc,
+            bj: r.bj,
+            spr: r.spr,
+            tt: r.tt,
+            ud: r.ud,
+            re: r.re,
+            fl: r.fl,
+            energi: r.energi,
+            stid: r.stid,
+            ude: r.ude
+        });
+    }
+    
+    // Gem etaper
+    saveData.etaper = G.etaper;
+    
+    localStorage.setItem('tourDeFranceSave', JSON.stringify(saveData));
+    console.log('Spil gemt!');
+}
+
+// Hent spiltilstand fra localStorage
+function hentSpil() {
+    var saved = localStorage.getItem('tourDeFranceSave');
+    if (!saved) return null;
+    
+    try {
+        return JSON.parse(saved);
+    } catch (e) {
+        console.error('Fejl ved indlæsning af gemt spil:', e);
+        return null;
+    }
+}
+
+// Slet gemt spil
+function sletGemtSpil() {
+    localStorage.removeItem('tourDeFranceSave');
+    console.log('Gemt spil slettet!');
+}
+
+// Check om der er et gemt spil
+function harGemtSpil() {
+    return localStorage.getItem('tourDeFranceSave') !== null;
+}
+    
+function indlaesGemtSpil() {
+    var saveData = hentSpil();
+    if (!saveData) return false;
+    
+    G.navn = saveData.navn;
+    G.tourNr = saveData.tourNr;
+    G.enr = saveData.enr;
+    G.stilTab = saveData.stilTab || "gc";
+    G.sprPts = saveData.sprPts;
+    G.bjgPts = saveData.bjgPts;
+    G.etaper = saveData.etaper;
+    G.bonusPoint = saveData.bonusPoint || 0;
+    
+    G.ryttere = [];
+    for (var i = 0; i < saveData.ryttere.length; i++) {
+        var r = saveData.ryttere[i];
+        G.ryttere.push(r);
+        if (r.sp) G.spiller = G.ryttere[G.ryttere.length - 1];
+    }
+    
+    return true;
+}
+
+
 function ri(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 function rf(a, b) { return Math.random() * (b - a) + a; }
 function sh(arr) { var a = arr.slice(); for (var i = a.length - 1; i > 0; i--) { var j = ri(0, i); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
@@ -867,6 +958,12 @@ if (e.type === "bjerg") {
 }
 
 function intro() {
+    var fortsaetKnap = '';
+    if (harGemtSpil()) {
+        var saved = hentSpil();
+        fortsaetKnap = '<button class="btn btn-big btn-y" onclick="fortsaetSpil()" style="margin-bottom:10px">▶️ FORTSÆT SPIL (Tour ' + saved.tourNr + ', Etape ' + (saved.enr + 1) + ')</button><br>';
+    }
+    
     R('<div style="text-align:center;padding:20px 0">' +
         '<div style="font-size:60px;margin-bottom:5px">🚴‍♂️🏔️🚴‍♂️</div>' +
         '<h1 style="font-size:42px;margin:0;background:linear-gradient(180deg,#ff0 0%,#fa0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;letter-spacing:3px">LE TOUR</h1>' +
@@ -878,11 +975,12 @@ function intro() {
         '</div>' +
     '</div>' +
     '<div class="box" style="text-align:center;border-color:#ff0;background:linear-gradient(180deg,#020 0%,#010 100%)">' +
+    fortsaetKnap +
     '<h3 style="color:#fff;margin-bottom:12px">Indtast dit rytternavn:</h3>' +
     '<input id="pn" placeholder="Dit navn..." maxlength="18" style="text-align:center;font-size:18px"><br><br>' +
     '<button class="btn btn-big btn-y" onclick="startGame()" style="font-size:18px;padding:14px 32px">🏁 START TOUREN 🏁</button>' +
     '<p style="color:#666;font-size:11px;margin-top:15px">Du tildeles et tilfældigt hold og overtager en rytters plads</p>' +
-'</div>' +
+    '</div>' +
     '<div class="box jerseys-box" style="background:linear-gradient(180deg,#111 0%,#000 100%)">' +
     '<h3 style="text-align:center;margin-bottom:12px">🏆 Trøjer at kæmpe om:</h3>' +
     '<div class="jerseys" style="gap:12px">' +
@@ -938,6 +1036,15 @@ function intro() {
             });
         }
     }, 100);
+}
+
+function fortsaetSpil() {
+    if (indlaesGemtSpil()) {
+        startEtape();
+    } else {
+        alert('Kunne ikke indlæse gemt spil');
+        intro();
+    }
 }
 
 function visInstruktioner() {
@@ -3599,6 +3706,9 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
 
 
 function samlet() {
+    sletGemtSpil();  // <-- Tilføj denne linje for at slette gammelt spil
+    var inp = $("pn");
+    var n = inp ? inp.value.trim() : "";
     var aktive = G.ryttere.filter(function(r) { return !r.ude; });
     var gcS = aktive.slice().sort(function(a,b) { return a.stid - b.stid; });
     var spS = aktive.slice().sort(function(a,b) { return (G.sprPts[b.navn]||0) - (G.sprPts[a.navn]||0); });
