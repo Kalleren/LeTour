@@ -552,9 +552,48 @@ var G = {
     bonusTroeer: 0
 };
 
+// ========== WAKE LOCK (hold skærm tændt) ==========
+
+var wakeLock = null;
+
+// Anmod om wake lock
+async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Wake Lock aktiv - skærmen slukker ikke');
+            
+            // Lyt efter release (fx hvis bruger skifter tab)
+            wakeLock.addEventListener('release', function() {
+                console.log('Wake Lock frigivet');
+            });
+        } catch (err) {
+            console.log('Wake Lock fejl:', err.message);
+        }
+    }
+}
+
+// Frigiv wake lock
+function releaseWakeLock() {
+    if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+        console.log('Wake Lock frigivet manuelt');
+    }
+}
+
+// Genaktiver wake lock når brugeren kommer tilbage til siden
+document.addEventListener('visibilitychange', async function() {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+        await requestWakeLock();
+    }
+});
+
+
 // Gem spiltilstand til localStorage
 function gemSpil() {
     var saveData = {
+        version: 1,
         navn: G.navn,
         tourNr: G.tourNr,
         enr: G.enr,
@@ -622,6 +661,14 @@ function harGemtSpil() {
 function indlaesGemtSpil() {
     var saveData = hentSpil();
     if (!saveData) return false;
+
+    // Check version - slet gammelt save hvis ukompatibelt
+    var CURRENT_VERSION = 1;
+    if (!saveData.version || saveData.version < CURRENT_VERSION) {
+        console.log('Gammelt save format - sletter og starter forfra');
+        sletGemtSpil();
+        return false;
+    }
     
     G.navn = saveData.navn;
     G.tourNr = saveData.tourNr;
@@ -1238,6 +1285,7 @@ function rerollRytter() {
 }
 
 function startEtape() {
+    requestWakeLock();  // <-- Tilføj denne linje
     var e = G.etaper[G.enr];
     G.km = 0; G.tid = 0; G.msg = ""; G.vent = false; G.udata = null; G.lastMpResult = null;
     G.profil = genP(e);
@@ -3524,6 +3572,7 @@ if (rng < 750) {
 }
 
 function afslutTT() {
+    releaseWakeLock();  // <-- Tilføj denne linje
     clearInterval(G.iv);
     G.iv = null;
     G.enkRes.push({ r: G.spiller, tid: G.sTid });
@@ -3539,6 +3588,7 @@ function afslutTT() {
 }
 
 function afslut() {
+    releaseWakeLock();  // <-- Tilføj denne linje
     clearInterval(G.iv);
     G.iv = null;
     
