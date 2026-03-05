@@ -687,18 +687,19 @@ function indlaesGemtSpil() {
         if (r.sp) G.spiller = G.ryttere[G.ryttere.length - 1];
     }
     
-// Hvis etapen var færdig, gå til næste
-if (saveData.etapeFærdig) {
-    if (G.enr >= 20) {
-        // Sidste etape var færdig - vis slutresultat i stedet
-        G.enr = 20;  // Behold på 20
-        return 'slut';  // Returnér special værdi
-    } else {
-        G.enr++;
+    // Hvis etapen var færdig, gå til næste
+    if (saveData.etapeFærdig) {
+        if (G.enr >= 20) {
+            // Sidste etape var færdig - vis slutresultat i stedet
+            G.enr = 20;  // Behold på 20
+            return 'slut';  // Returnér special værdi
+        } else {
+            G.enr++;
+        }
     }
-}
 
-return true;
+    return true;
+}
 
 function ri(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 function rf(a, b) { return Math.random() * (b - a) + a; }
