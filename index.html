@@ -1154,6 +1154,7 @@ function visInstruktioner() {
 }
 
 function startGame() {
+    sletGemtSpil();
     var inp = $("pn");
     var n = inp ? inp.value.trim() : "";
     if (!n) { alert("Indtast dit navn!"); return; }
@@ -3757,7 +3758,7 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
 
 
 function samlet() {
-    sletGemtSpil();  // <-- Tilføj denne linje for at slette gammelt spil
+    gemSpil();
     var inp = $("pn");
     var n = inp ? inp.value.trim() : "";
     var aktive = G.ryttere.filter(function(r) { return !r.ude; });
