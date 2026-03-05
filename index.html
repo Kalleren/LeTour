@@ -4038,7 +4038,7 @@ function fordelPoint() {
         '<div class="sbar"><span class="lbl">Udholdenhed:</span><div class="bg"><div class="fill" style="width:'+Math.min(99,r.ud)+'%;background:#f80"></div></div><span id="statUd">'+r.ud+'</span> <button class="btn" onclick="addStat(\'ud\')" ' + (pt <= 0 || r.ud >= 99 ? 'disabled' : '') + '>+</button></div>' +
         '<div class="sbar"><span class="lbl">Restitution:</span><div class="bg"><div class="fill" style="width:'+Math.min(99,r.re)+'%;background:#a4f"></div></div><span id="statRe">'+r.re+'</span> <button class="btn" onclick="addStat(\'re\')" ' + (pt <= 0 || r.re >= 99 ? 'disabled' : '') + '>+</button></div>' +
     '</div>' +
-    '<div class="ctrls">'<button class="btn btn-big btn-y" onclick="nytTour()">START NÆSTE TOUR →</button>';
+    '<div class="ctrls"><button class="btn btn-big btn-y" onclick="nytTour()">START NÆSTE TOUR →</button></div>';
     
     R(html);
 }
