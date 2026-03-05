@@ -1019,7 +1019,14 @@ function intro() {
     var fortsaetKnap = '';
     if (harGemtSpil()) {
         var saved = hentSpil();
-        fortsaetKnap = '<button class="btn btn-big btn-y" onclick="fortsaetSpil()" style="margin-bottom:10px">▶️ FORTSÆT SPIL (Tour ' + saved.tourNr + ', Etape ' + (saved.enr + 1) + ')</button><br>';
+        fortsaetKnap =
+            '<button class="btn btn-big btn-y" onclick="fortsaetSpil()" ' +
+                'style="font-size:18px;padding:14px 32px;margin-bottom:6px">' +
+                '▶️ FORTSÆT SPIL' +
+            '</button>' +
+            '<div style="color:#888;font-size:11px;margin-bottom:10px">' +
+                'Sidst gemt: Tour ' + saved.tourNr + ', etape ' + (saved.enr + 1) +
+            '</div>';
     }
     
     R('<div style="text-align:center;padding:20px 0">' +
