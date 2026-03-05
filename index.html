@@ -758,7 +758,7 @@ for (var i = 1; i < typer.length - 1; i++) {
     // Spring TT-positioner over
     if (i === ttPos1 || i === ttPos2) continue;
     
-    if (Math.random() < 0.3) {
+    if (Math.random() < 0.5) {
         // Vælg kun en position der ikke er TT
         var j;
         do {
@@ -1162,7 +1162,7 @@ function visInstruktioner() {
 
     '<div class="box">' +
         '<h3>Karriere og bonuspoint</h3>' +
-        '<p>Du kan køre <strong>op til 12 Tours</strong> i din karriere. Efter hver Tour får du bonuspoint, som du kan fordele på dine evner:</p>' +
+        '<p>Du kan køre <strong>op til 15 Tours</strong> i din karriere. Efter hver Tour får du bonuspoint, som du kan fordele på dine evner:</p>' +
         '<ul style="margin-left:18px;list-style:disc;font-size:13px;line-height:1.4;margin-top:8px">' +
             '<li><strong>GC top 10:</strong> 12, 10, 9, 7, 6, 5, 4, 3, 2, 1 point</li>' +
             '<li><strong>Grøn/prikket top 5:</strong> 5, 4, 3, 2, 1 point</li>' +
@@ -3987,7 +3987,7 @@ G.bonusGC = bonusGC;
 G.bonusTroeer = bonusTroeer;
 G.slutPlacering = spiGC + 1;
     
-    if (G.tourNr >= 12) {
+    if (G.tourNr >= 15) {
         html += '<div class="box" style="text-align:center;border-color:#f80">' +
             '<h3 style="color:#f80">🎖️ Karrieren er slut!</h3>' +
             '<p>Du har kørt dit sidste Tour de France og trækker dig tilbage som professionel.</p>' +
@@ -4038,7 +4038,7 @@ function fordelPoint() {
         '<div class="sbar"><span class="lbl">Udholdenhed:</span><div class="bg"><div class="fill" style="width:'+Math.min(99,r.ud)+'%;background:#f80"></div></div><span id="statUd">'+r.ud+'</span> <button class="btn" onclick="addStat(\'ud\')" ' + (pt <= 0 || r.ud >= 99 ? 'disabled' : '') + '>+</button></div>' +
         '<div class="sbar"><span class="lbl">Restitution:</span><div class="bg"><div class="fill" style="width:'+Math.min(99,r.re)+'%;background:#a4f"></div></div><span id="statRe">'+r.re+'</span> <button class="btn" onclick="addStat(\'re\')" ' + (pt <= 0 || r.re >= 99 ? 'disabled' : '') + '>+</button></div>' +
     '</div>' +
-    '<div class="ctrls"><button class="btn btn-big btn-y" onclick="nytTour()" ' + (pt > 0 ? 'disabled title="Fordel alle point først"' : '') + '>START NÆSTE TOUR →</button></div>';
+    '<div class="ctrls">'<button class="btn btn-big btn-y" onclick="nytTour()">START NÆSTE TOUR →</button>';
     
     R(html);
 }
