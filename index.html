@@ -4150,14 +4150,15 @@ function slut() {
     } else if (bonusPoint > 0) {
     html += '<div class="box" style="border-color:#0f0;text-align:center">' +
         '<h3 style="color:#0f0">🎁 Du har ' + bonusPoint + ' point at fordele!</h3>' +
-        '<p style="margin-top:6px;font-size:13px;color:#ccc">' +
-        (bonusGC > 0 || bonusTroeer > 0 ? 
+    '<p style="margin-top:6px;font-size:13px;color:#ccc">' +
+    (bonusGC > 0 || bonusTroeer > 0 ? 
         (bonusGC > 0 ? '<span class="hl">' + bonusGC + '</span> fra GC placering' : '') +
         (bonusGC > 0 && bonusTroeer > 0 ? ', ' : '') +
-        (bonusTroeer > 0 ? '<span class="hl">' + bonusTroeer + '</span> fra trøjer, ' : '') +
-        '<span class="hl">' + bonusGennemfoer + '</span> for at gennemføre'
+        (bonusTroeer > 0 ? '<span class="hl">' + bonusTroeer + '</span> fra trøjer' : '') +
+        ', <span class="hl">' + bonusGennemfoer + '</span> for at gennemføre'
     : '<span class="hl">' + bonusGennemfoer + '</span> for at gennemføre') +
-'</p>' +
+    '</p>' +
+
 
         '<p style="color:#888;font-size:11px">Fordel dem på dine evner før næste Tour.</p>' +
     '</div>' +
