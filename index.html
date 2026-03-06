@@ -3407,20 +3407,19 @@ function tegnP() {
     ctx.fillRect(0, 0, c.width, c.height);
     
     var maxH = Math.max.apply(null, p), minH = Math.min.apply(null, p);
-
-// Y-aksen starter altid ved 0m
-minH = 0;
-
-// Max er højeste punkt + 200m luft
-maxH = maxH + 200;
-
-// Minimum 1000m spænd for flade/kuperede etaper
-var rng = maxH - minH;
-if (rng < 1000) {
-    maxH = 1000;
-    rng = 1000;
-}
-
+    
+    // Y-aksen starter altid ved 0m
+    minH = 0;
+    
+    // Max er højeste punkt + 200m luft
+    maxH = maxH + 200;
+    
+    // Minimum 1000m spænd for flade/kuperede etaper
+    var rng = maxH - minH;
+    if (rng < 1000) {
+        maxH = 1000;
+        rng = 1000;
+    }
 
     var l = 45, b = 28, w = c.width - l - 12, h = c.height - b - 15;
     
@@ -3440,24 +3439,24 @@ if (rng < 1000) {
     ctx.fill();
     
     // Mellempunkter
-if (G.mps) {
-    for (var mi = 0; mi < G.mps.length; mi++) {
-        var mp = G.mps[mi];
-        var mx = l + (mp.km / e.dist) * w;
-        ctx.strokeStyle = mp.type === "sprint" ? "#0f0" : "#f44";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([6, 4]);
-        ctx.beginPath();
-        ctx.moveTo(mx, 12);
-        ctx.lineTo(mx, 12 + h);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = mp.done ? "#666" : (mp.type === "sprint" ? "#0f0" : "#f44");
-        ctx.font = "16px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(mp.type === "sprint" ? "🟢" : "🔴", mx, 26);
+    if (G.mps) {
+        for (var mi = 0; mi < G.mps.length; mi++) {
+            var mp = G.mps[mi];
+            var mx = l + (mp.km / e.dist) * w;
+            ctx.strokeStyle = mp.type === "sprint" ? "#0f0" : "#f44";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(mx, 12);
+            ctx.lineTo(mx, 12 + h);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = mp.done ? "#666" : (mp.type === "sprint" ? "#0f0" : "#f44");
+            ctx.font = "16px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(mp.type === "sprint" ? "🟢" : "🔴", mx, 26);
+        }
     }
-}
     
     // Find trøjebærere
     var aktiveRyttere = G.ryttere.filter(function(r) { return !r.ude; });
@@ -3466,39 +3465,16 @@ if (G.mps) {
     var bjLeder = aktiveRyttere.slice().sort(function(a,b) { return (G.bjgPts[b.navn]||0) - (G.bjgPts[a.navn]||0); })[0];
     
     for (var i = 0; i < G.grp.length; i++) {
-    var g = G.grp[i];
-    var km = Math.min(g.pos, e.dist);
-    var gx = l + (km / e.dist) * w;
-    var idx = Math.min(Math.floor(km), p.length - 1);
-    var gy = 12 + h - ((p[idx] - minH) / rng) * h;
-    var her = false;
-    for (var ri = 0; ri < g.ryt.length; ri++) {
-        if (g.ryt[ri].sp === true) {
-            her = true;
-            break;
-        }
-    }
-
+        var g = G.grp[i];
+        var km = Math.min(g.pos, e.dist);
+        var gx = l + (km / e.dist) * w;
+        var idx = Math.min(Math.floor(km), p.length - 1);
+        var gy = 12 + h - ((p[idx] - minH) / rng) * h;
         
-// Bestem farve baseret på trøjer
-var col;
-if (her) {
-    col = "#fff";
-} else {
-    var harGul = false, harGroen = false, harRoed = false;
-    for (var j = 0; j < g.ryt.length; j++) {
-        if (g.ryt[j] === gcLeder) harGul = true;
-        if (g.ryt[j] === spLeder) harGroen = true;
-        if (g.ryt[j] === bjLeder) harRoed = true;
-    }
-    if (harGul) col = "#ff0";
-    else if (harGroen) col = "#0f0";
-    else if (harRoed) col = "#f44";
-    else if (g.type === "gruppetto") col = "#888";
-    else if (g.type === "felt") col = "#6af";
-    else if (g.type === "udbrud") col = "#f80";
-    else col = "#888";
-}
+        // Brug getGruppeFarve()
+        var farve = getGruppeFarve(g, G.spiller, gcLeder, spLeder, bjLeder);
+        var col = farve.border;
+        var her = g.ryt.indexOf(G.spiller) >= 0;
         
         var rad = her ? 16 : (g.type === "felt" ? 12 : 10);
         
@@ -3513,8 +3489,10 @@ if (her) {
         // Cirkel
         ctx.beginPath();
         ctx.arc(gx, gy - 16, rad, 0, Math.PI * 2);
-        ctx.fillStyle = col + (her ? "80" : "50");
+        ctx.fillStyle = col;
+        ctx.globalAlpha = her ? 0.5 : 0.3;
         ctx.fill();
+        ctx.globalAlpha = 1.0;
         ctx.strokeStyle = col;
         ctx.lineWidth = her ? 4 : 2;
         ctx.stroke();
@@ -3554,6 +3532,7 @@ if (her) {
     ctx.fillText("0", l, 12 + h + 18);
     ctx.fillText(e.dist + " km", l + w, 12 + h + 18);
 }
+
 
 // === ENKELTSTART ===
 function startTT() {
