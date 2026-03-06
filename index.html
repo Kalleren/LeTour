@@ -3710,17 +3710,25 @@ if (rng < 750) {
     var px = l + (km / e.dist) * w;
     var idx = Math.min(Math.floor(km), p.length - 1);
     var py = 8 + h - ((p[idx] - minH) / rng) * h;
+    
+    // Pænere rytter-markør
     ctx.beginPath();
-    ctx.arc(px, py - 10, 10, 0, Math.PI * 2);
-    ctx.fillStyle = "#0ff40";
+    ctx.arc(px, py - 12, 10, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0, 255, 255, 0.3)";
     ctx.fill();
     ctx.strokeStyle = "#0ff";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.fillStyle = "#0ff";
+    
+    // Cyklist vendt mod højre (målet)
+    ctx.save();
+    ctx.translate(px, py - 12);
+    ctx.scale(-1, 1);
     ctx.font = "12px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("🚴", px, py - 6);
+    ctx.fillText("🚴", 0, 5);
+    ctx.restore();
+    ;
     
     ctx.strokeStyle = "#fff";
     ctx.setLineDash([4, 4]);
