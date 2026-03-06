@@ -2636,7 +2636,7 @@ function accUdb() {
     for (var i = 0; i < reagerende.length; i++) ryt.push(reagerende[i]);
     
     var navn = ryt.length > 1 ? "Udbrud" : "Solo";
-    G.grp.push({ type: "udbrud", navn: navn, ryt: ryt, pos: felt.pos + 0.6, tf: 0 });
+    G.grp.push({ type: "udbrud", navn: navn, ryt: ryt, pos: felt.pos + 0.5, tf: 0 });
     
     if (reagerende.length > 0) {
         G.msg = "🚀 Du angriber! " + reagerende.length + " GC-ryttere reagerer!";
@@ -2979,7 +2979,7 @@ for (var i = 0; i < reagerende.length; i++) {
 var ryt = [G.spiller];
 for (var i = 0; i < fø.length; i++) ryt.push(fø[i]);
 var navn = fø.length > 0 ? "Udbrud" : "Solo";
-G.grp.push({ type: "udbrud", navn: navn, ryt: ryt, pos: sg.pos + 0.5, tf: 0 });
+G.grp.push({ type: "udbrud", navn: navn, ryt: ryt, pos: sg.pos + 0.4, tf: 0 });
 
 if (reagerende.length > 0) {
     G.msg = "🚀 Angreb! " + reagerende.length + " GC-ryttere reagerer!";
@@ -3080,7 +3080,7 @@ if (Math.random() < ch) {
         type: "udbrud", 
         navn: nyNavn, 
         ryt: nyRyt, 
-        pos: sg.pos + 0.4, 
+        pos: sg.pos + 0.3, 
         tf: 0 
     });
     
