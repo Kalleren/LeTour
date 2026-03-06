@@ -3448,14 +3448,12 @@ function startTT() {
         var tid = base * (1 + ttf * 0.28 + ef * 0.06) * rf(0.985, 1.02);
         
         // AI kan accelerere så længe de har energi
-        while (r.energi > 20) {
+        while (r.energi > 30) {
             // Sandsynlighed for at accelerere baseret på TT-evne og energi
-            var accChance = (r.tt / 100) * (r.energi / 100) * 0.5;
+            var accChance = (r.tt / 100) * (r.energi / 100) * 0.7; 
             if (Math.random() < accChance) {
                 r.energi -= 3;
                 tid -= 8;
-            } else {
-                break;
             }
         }
         
@@ -3468,6 +3466,7 @@ function startTT() {
     G.iv = setInterval(loopTT, 500);
     rendTT();
 }
+
 
 function loopTT() {
     var e = G.etaper[G.enr];
