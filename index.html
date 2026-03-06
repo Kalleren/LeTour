@@ -3587,7 +3587,7 @@ function startTT() {
         // AI kan accelerere så længe de har energi
         while (r.energi > 30) {
             // Sandsynlighed for at accelerere baseret på TT-evne og energi
-            var accChance = (r.tt / 100) * (r.energi / 100) * 0.55; 
+            var accChance = (r.tt / 100) * (r.energi / 100) * 0.5; 
             if (Math.random() < accChance) {
                 r.energi -= 3;
                 tid -= 8;
