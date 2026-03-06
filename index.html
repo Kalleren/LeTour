@@ -1493,7 +1493,6 @@ for (var gi = 0; gi < G.grp.length; gi++) {
                 udbBonus += 0.02;
             }
         }
-    }
     } else {
         // Flad etape: Udbrud får bonus tidligt, feltet henter ind gradvist
         if (G.km < e.dist * 0.35) {
@@ -2342,7 +2341,7 @@ function fusionGrupper() {
             
             // Hvis to grupper er tæt nok på hinanden (< 0.15 km)
             var afstand = g1.pos - g2.pos;
-            if (afstand >= 0 && afstand < 0.07) {
+            if (afstand >= 0 && afstand < 0.8) {
                 // Slå sammen - behold den forreste gruppes position
                 for (var j = 0; j < g2.ryt.length; j++) {
                     if (g1.ryt.indexOf(g2.ryt[j]) < 0) {
