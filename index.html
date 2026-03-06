@@ -1356,8 +1356,8 @@ function startEtape() {
     for (var i = 0; i < G.ryttere.length; i++) { G.ryttere[i].gi = 0; }
     
     // === DÅRLIGE DAGE ===
-    // 8% chance for dårlig dag (kun spilleren)
-    if (Math.random() < 0.08) {
+    // 12% chance for dårlig dag (kun spilleren)
+    if (Math.random() < 0.12) {
         var tab = ri(10, 15);
         G.spiller.energi = Math.max(50, G.spiller.energi - tab);
         G.msg = "😓 Du føler dig ikke helt frisk i dag... (-" + tab + "% energi)";
