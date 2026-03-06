@@ -1185,8 +1185,9 @@ function visInstruktioner() {
         '<h3>Karriere og bonuspoint</h3>' +
         '<p>Du kan køre <strong>op til 15 Tours</strong> i din karriere. Efter hver Tour får du bonuspoint, som du kan fordele på dine evner:</p>' +
         '<ul style="margin-left:18px;list-style:disc;font-size:13px;line-height:1.4;margin-top:8px">' +
-            '<li><strong>GC top 10:</strong> 12, 10, 9, 7, 6, 5, 4, 3, 2, 1 point</li>' +
-            '<li><strong>Grøn/prikket top 5:</strong> 5, 4, 3, 2, 1 point</li>' +
+            '<li><strong>GC top 10:</strong> 10, 8, 6, 4, 3, 2, 1, 1, 1, 1 point</li>' +
+            '<li><strong>Grøn/prikket trøje:</strong> 3 point</li>' +
+            '<li><strong>Gennemføre:</strong> 1 point</li>' +
         '</ul>' +
     '</div>' +
 
@@ -4036,28 +4037,24 @@ function slut() {
     if (bjS[0] && bjS[0].sp) troeje += " 🔴 PRIKKET TRØJE!";
     if (gcS[0] && gcS[0].sp) troeje += " 🟡 GUL TRØJE!";
     
-    // GC-bonus (1-10 baseret på placering i GC)
-var bonusGC = Math.max(0, 11 - Math.min(spiGC + 1, 11));
-if (spiGC >= 10) bonusGC = 0;
+    // Bonus for at gennemføre
+    var bonusGennemfoer = 2;
+    
+    // GC-bonus baseret på placering
+    var gcPointTabel = [10, 8, 6, 4, 3, 2, 1, 1, 1, 1];
+    var bonusGC = 0;
+    if (spiGC < 10) {
+        bonusGC = gcPointTabel[spiGC];
+    }
+    
+    var bonusSp = troejeBonus(spS); // grøn trøje 
+    var bonusBj = troejeBonus(bjS); // prikket trøje 
+    
+    var bonusTroeer = bonusSp + bonusBj;
+    
+    // Samlet bonus
+    var bonusPoint = bonusGennemfoer + bonusGC + bonusTroeer;
 
-// Ekstra podium-bonus
-if (spiGC === 0) {
-    bonusGC += 2;  // 1. plads: +2 ekstra (podium + gul trøje)
-} else if (spiGC === 1) {
-    bonusGC += 1;  // 2. plads: +1 ekstra (podium)
-} else if (spiGC === 2) {
-    bonusGC += 1;  // 3. plads: +1 ekstra (podium)
-}
-
-var bonusSp = troejeBonus(spS, 5); // grøn trøje top 5
-var bonusBj = troejeBonus(bjS, 5); // prikket trøje top 5
-
-var bonusTroeer = bonusSp + bonusBj;
-
-// Samlet bonus
-var bonusPoint = bonusGC + bonusTroeer;
-
-   
     var html = '<div style="text-align:center"><div style="font-size:50px">🏆</div><h1>TOUR DE FRANCE SLUT!</h1></div>' +
     '<div class="box" style="text-align:center;border-color:#ff0"><h2>' + msg + '</h2>' + (troeje ? '<p class="hl">' + troeje + '</p>' : '') + '</div>' +
     '<div class="jerseys">' +
@@ -4094,7 +4091,6 @@ var bonusPoint = bonusGC + bonusTroeer;
         var numTxt = visTal ? pos + '. ' : '';
         html += '<div class="' + cls + '"><span>' + prefix + numTxt + r.navn + ' <span style="color:#666">' + r.holdAbbr + '</span></span><span>' + val + '</span></div>';
     }
-
     
     if (spi >= 15) {
         var r = data[spi];
@@ -4111,11 +4107,11 @@ var bonusPoint = bonusGC + bonusTroeer;
     G.lastSpVinder = spS[0] ? spS[0].navn : null;
     G.lastBjVinder = bjS[0] ? bjS[0].navn : null;
 
-// Gem bonus point til senere
-G.bonusPoint = bonusPoint;
-G.bonusGC = bonusGC;
-G.bonusTroeer = bonusTroeer;
-G.slutPlacering = spiGC + 1;
+    // Gem bonus point til senere
+    G.bonusPoint = bonusPoint;
+    G.bonusGC = bonusGC;
+    G.bonusTroeer = bonusTroeer;
+    G.slutPlacering = spiGC + 1;
     
     if (G.tourNr >= 15) {
         html += '<div class="box" style="text-align:center;border-color:#f80">' +
@@ -4128,9 +4124,14 @@ G.slutPlacering = spiGC + 1;
     html += '<div class="box" style="border-color:#0f0;text-align:center">' +
         '<h3 style="color:#0f0">🎁 Du har ' + bonusPoint + ' point at fordele!</h3>' +
         '<p style="margin-top:6px;font-size:13px;color:#ccc">' +
-            'Af dem kommer <span class="hl">' + bonusGC + '</span> fra din samlede placering ' +
-            'og <span class="hl">' + bonusTroeer + '</span> fra trøjerne.' +
-        '</p>' +
+        (bonusGC > 0 || bonusTroeer > 0 ? 
+        (bonusGC > 0 ? '<span class="hl">' + bonusGC + '</span> fra GC placering' : '') +
+        (bonusGC > 0 && bonusTroeer > 0 ? ', ' : '') +
+        (bonusTroeer > 0 ? '<span class="hl">' + bonusTroeer + '</span> fra trøjer, ' : '') +
+        '<span class="hl">' + bonusGennemfoer + '</span> for at gennemføre'
+    : '<span class="hl">' + bonusGennemfoer + '</span> for at gennemføre') +
+'</p>' +
+
         '<p style="color:#888;font-size:11px">Fordel dem på dine evner før næste Tour.</p>' +
     '</div>' +
     '<div class="ctrls"><button class="btn btn-big btn-y" onclick="fordelPoint()">FORDEL POINT →</button></div>';
@@ -4142,18 +4143,12 @@ G.slutPlacering = spiGC + 1;
     R(html);
 }
 
-// Ekstra bonuspoint for trøjer (grøn og prikket), 5..1 for top 5
 function troejeBonus(liste, maxPlads) {
-    var total = 0;
-    var max = Math.min(maxPlads, liste.length);
-    for (var i = 0; i < max; i++) {
-        var plac = i + 1;
-        var pts = Math.max(0, 6 - plac); // 1->5, 2->4, 3->3, 4->2, 5->1
-        if (liste[i].sp) {
-            total += pts;
-        }
+    // Kun nr. 1 får point
+    if (liste.length > 0 && liste[0].sp) {
+        return 3;
     }
-    return total;
+    return 0;
 }
     
 function fordelPoint() {
