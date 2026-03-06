@@ -3478,19 +3478,11 @@ function tegnP() {
         
         var rad = her ? 16 : (g.type === "felt" ? 12 : 10);
         
-        // Glow for spillerens gruppe
-        if (her) {
-            ctx.beginPath();
-            ctx.arc(gx, gy - 16, rad + 8, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(255,255,255,0.25)";
-            ctx.fill();
-        }
-        
         // Cirkel
         ctx.beginPath();
         ctx.arc(gx, gy - 16, rad, 0, Math.PI * 2);
         ctx.fillStyle = col;
-        ctx.globalAlpha = her ? 0.3 : 0.6;
+        ctx.globalAlpha = her ? 0.3 : 0.5;
         ctx.fill();
         ctx.globalAlpha = 1.0;
         ctx.strokeStyle = col;
