@@ -793,23 +793,50 @@ for (var i = 1; i < typer.length - 1; i++) {
 }
 
     
-    // Udvid bylisten med flere franske byer
-    var alleByer = [
+    // Normale byer (kan bruges til alle etapetyper)
+    var normaleByer = [
         "Lille", "Bruxelles", "Dunkerque", "Calais", "Rouen", "Chartres", "Orléans", 
         "Limoges", "Clermont-Ferrand", "Saint-Étienne", "Gap", "Briançon", 
         "Barcelonnette", "Nice", "Monaco", "Menton", "Digne", "Valence", 
         "Villard-de-Lans", "Grenoble", "Lyon", "Marseille", "Toulouse", 
         "Bordeaux", "Nantes", "Rennes", "Strasbourg", "Dijon", "Montpellier",
         "Perpignan", "Pau", "Biarritz", "La Rochelle", "Angers", "Tours",
-        "Alpe d'Huez", "Col du Tourmalet", "Mont Ventoux", "Col du Galibier",
         "Megève", "Chamonix", "Annecy", "Chambéry", "Albertville", "Bourg-en-Bresse"
     ];
     
-    // Vælg tilfældige byer (undtagen Paris som slutby)
-    var brugteByer = sh(alleByer).slice(0, 21);
+    // Bjergtoppe (kun som slutby på bjergetaper)
+    var bjergToppe = [
+        "Alpe d'Huez", "Col du Tourmalet", "Mont Ventoux", "Col du Galibier",
+        "Pla d'Adet", "Luz Ardiden", "Col du Portet", "Hautacam", "Superbagnères"
+    ];
+    
+    // Bland byerne
+    var blandedeByer = sh(normaleByer);
+    var blandedeBjergToppe = sh(bjergToppe);
+    var bjergTopIdx = 0;
+    
+    // Byg byliste - hver by er slutby for én etape og startby for næste
+    var brugteByer = [blandedeByer.shift()]; // Startby for etape 1
+    
+    for (var i = 0; i < typer.length; i++) {
+        var etapeType = typer[i];
+        var sidsteBrugt = brugteByer[brugteByer.length - 1];
+        var erBjergTop = bjergToppe.indexOf(sidsteBrugt) >= 0;
+        
+        // Vælg slutby for denne etape
+        if (etapeType === "bjerg" && Math.random() < 0.4 && bjergTopIdx < blandedeBjergToppe.length) {
+            // Bjergetape med bjergfinish
+            brugteByer.push(blandedeBjergToppe[bjergTopIdx]);
+            bjergTopIdx++;
+        } else {
+            // Normal by som slutby
+            brugteByer.push(blandedeByer.shift());
+        }
+    }
     
     // Sikr at sidste by er Paris
-    brugteByer[brugteByer.length - 1] = "Paris";
+    brugteByer[21] = "Paris";
+
     
     var result = [];
     for (var i = 0; i < typer.length; i++) {
