@@ -1537,6 +1537,10 @@ for (var i = 0; i < G.ryttere.length; i++) {
             var restitution = 0.03 + klatreEffektivitet * 0.02;
             r.energi = Math.min(100, r.energi + restitution);
             baseTab *= 0.3; // Meget lavt energitab ned ad
+        } else {
+            // Fladt/let terræn på bjergetape: Tempo hjælper lidt
+            var tempoEffektivitet = r.fl / 100;
+            baseTab *= (1.1 - tempoEffektivitet * 0.15);
         }
     } else if (e.type === "kuperet") {
         var klatreEffektivitet = (r.bj * 0.6 + r.fl * 0.4) / 100;
