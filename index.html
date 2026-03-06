@@ -1186,8 +1186,8 @@ function visInstruktioner() {
         '<p>Du kan køre <strong>op til 15 Tours</strong> i din karriere. Efter hver Tour får du bonuspoint, som du kan fordele på dine evner:</p>' +
         '<ul style="margin-left:18px;list-style:disc;font-size:13px;line-height:1.4;margin-top:8px">' +
             '<li><strong>GC top 10:</strong> 10, 8, 6, 4, 3, 2, 1, 1, 1, 1 point</li>' +
-            '<li><strong>Grøn/prikket trøje:</strong> 3 point</li>' +
-            '<li><strong>Gennemføre:</strong> 1 point</li>' +
+            '<li><strong>Grøn/prikket trøje:</strong> 5 point</li>' +
+            '<li><strong>Gennemføre:</strong> 2 point</li>' +
         '</ul>' +
     '</div>' +
 
@@ -4146,7 +4146,7 @@ function slut() {
 function troejeBonus(liste, maxPlads) {
     // Kun nr. 1 får point
     if (liste.length > 0 && liste[0].sp) {
-        return 3;
+        return 5;
     }
     return 0;
 }
