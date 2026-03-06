@@ -1356,26 +1356,16 @@ function startEtape() {
     for (var i = 0; i < G.ryttere.length; i++) { G.ryttere[i].gi = 0; }
     
     // === DÅRLIGE DAGE ===
-    // 15% chance for dårlig dag for hver rytter (inkl. spilleren)
-    for (var i = 0; i < G.ryttere.length; i++) {
-        var r = G.ryttere[i];
-        if (r.ude) continue;
-        
-        if (Math.random() < 0.15) {
-            // Dårlig dag: Mister 5-15% energi fra start
-            var tab = ri(5, 10);
-            r.energi = Math.max(50, r.energi - tab);
-            
-            if (r.sp) {
-                G.msg = "😓 Du føler dig ikke helt frisk i dag... (-" + tab + "% energi)";
-            }
-        }
+    // 5% chance for dårlig dag (kun spilleren)
+    if (Math.random() < 0.05) {
+        var tab = ri(10, 15);
+        G.spiller.energi = Math.max(50, G.spiller.energi - tab);
+        G.msg = "😓 Du føler dig ikke helt frisk i dag... (-" + tab + "% energi)";
     }
-    
-    if (e.type === "tt") startTT();
-    else startNorm();
-}
-
+            
+        if (e.type === "tt") startTT();
+        else startNorm();
+    }
 
 function startNorm() {
     // Kun aktive ryttere (ikke ude af touren)
@@ -2695,7 +2685,7 @@ for (var i = 0; i < G.grp.length; i++) {
     
         // På flade etaper: Feltet venter længere i første halvdel
         if (e.type === "flad" && G.km < e.dist * 0.5) {
-            modJagteRate *= 0.4;
+            modJagteRate *= 0.3;
         }
     } else {
         // MED klassementryttere jagter feltet MEGET hårdere
@@ -3534,14 +3524,7 @@ if (her) {
         ctx.font = her ? "bold 13px monospace" : "11px monospace";
         ctx.textAlign = "center";
         ctx.fillText(g.ryt.length, gx, gy - 12);
-        
-        // Tidsforskel
-        if (g.tf >= 1) {
-            ctx.font = "10px monospace";
-            ctx.fillStyle = col;
-            ctx.fillText("+" + Math.floor(g.tf) + "s", gx, gy + 5);
-        }
-        
+                
         // Gruppenavn for spillerens gruppe
         if (her) {
             ctx.font = "11px monospace";
