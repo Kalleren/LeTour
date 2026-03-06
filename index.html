@@ -2682,68 +2682,73 @@ for (var i = 0; i < G.grp.length; i++) {
         udbrudEnergi = g.ryt.length > 0 ? udbrudEnergi / g.ryt.length : 50;
         
         // Modificer jagterate baseret på klassement og energi
-var modJagteRate = jagteRate;
-if (!harKlassement) {
-    // Uden klassementryttere jagter feltet mindre aggressivt
-    if (e.type === "bjerg") modJagteRate *= 0.5;
-    else if (e.type === "kuperet") modJagteRate *= 0.55;
-    else modJagteRate *= 0.70;
-    
-    // Hvis udbruddet har meget energi, er de endnu sværere at hente
-    if (udbrudEnergi > 70) modJagteRate *= 0.7;
-    else if (udbrudEnergi > 50) modJagteRate *= 0.85;
-} else {
-    // MED klassementryttere jagter feltet MEGET hårdere
-    if (e.type === "kuperet") modJagteRate *= 1.8;
-    else if (e.type === "flad") modJagteRate *= 1.5;
-}
-
-       
-// Felt kører kun op hvis ret tæt på - venter længere på flade/kuperede
-// Udbrud kan få op til 1 min forspring (ca. 0.8-1.2 km ved normal hastighed)
-var jagtAfstand = 5;
-if (e.type === "flad") jagtAfstand = 3;
-else if (e.type === "kuperet") jagtAfstand = 4;
-
-// Beregn tidsforskel i sekunder (afstand * sek per km)
-var tidsForskel = afstand * info.sek;
-
-// Først start jagten når udbruddet har fået nok forspring
-// Nemmere at holde hjem på kuperet end flad
-var minTidsForskel = 0;
-if (e.type === "kuperet") minTidsForskel = 150; // 2.5 minutter - nemmest at holde hjem
-else if (e.type === "flad") minTidsForskel = 120; // 2 minutter
-else if (e.type === "bjerg") minTidsForskel = 30; // 30 sekunder
-
-if (tidsForskel > minTidsForskel && afstand < jagtAfstand) {
-    felt.pos += modJagteRate;
-}
-
-// Feltet sætter farten op hvis de er mere end 5 minutter bagud
-if (tidsForskel > 300) {
-    // Check om der er GC-ryttere i feltet
-    var harGCiFelt = false;
-    for (var fi = 0; fi < felt.ryt.length; fi++) {
-        if (felt.ryt[fi].gc > 78) {
-            harGCiFelt = true;
-            break;
-        }
-    }
-    
-    if (harGCiFelt) {
-        // Feltet jagter MEGET hårdere - ekstra fart
-        var panikRate = 0.08;
-        if (tidsForskel > 400) panikRate = 0.15; // Over 6.5 min
-        if (tidsForskel > 480) panikRate = 0.25; // Over 8 min
-        if (tidsForskel > 600) panikRate = 0.40; // Over 10 min
-        felt.pos += panikRate;
+    var modJagteRate = jagteRate;
+    if (!harKlassement) {
+        // Uden klassementryttere jagter feltet mindre aggressivt
+        if (e.type === "bjerg") modJagteRate *= 0.5;
+        else if (e.type === "kuperet") modJagteRate *= 0.55;
+        else modJagteRate *= 0.70;
         
-        // Sæt besked hvis de virkelig jagter
-        if (tidsForskel > 400 && Math.random() < 0.02) {
-            G.msg = "🔥 Feltet sætter fuld fart på!";
+        // Hvis udbruddet har meget energi, er de endnu sværere at hente
+        if (udbrudEnergi > 70) modJagteRate *= 0.7;
+        else if (udbrudEnergi > 50) modJagteRate *= 0.85;
+    
+        // På flade etaper: Feltet venter længere i første halvdel
+        if (e.type === "flad" && G.km < e.dist * 0.5) {
+            modJagteRate *= 0.4;
+        }
+    } else {
+        // MED klassementryttere jagter feltet MEGET hårdere
+        if (e.type === "kuperet") modJagteRate *= 1.8;
+        else if (e.type === "flad") modJagteRate *= 1.5;
+    }
+    
+           
+    // Felt kører kun op hvis ret tæt på - venter længere på flade/kuperede
+    // Udbrud kan få op til 1 min forspring (ca. 0.8-1.2 km ved normal hastighed)
+    var jagtAfstand = 5;
+    if (e.type === "flad") jagtAfstand = 3;
+    else if (e.type === "kuperet") jagtAfstand = 4;
+    
+    // Beregn tidsforskel i sekunder (afstand * sek per km)
+    var tidsForskel = afstand * info.sek;
+    
+    // Først start jagten når udbruddet har fået nok forspring
+    // Nemmere at holde hjem på kuperet end flad
+    var minTidsForskel = 0;
+    if (e.type === "kuperet") minTidsForskel = 150; // 2.5 minutter - nemmest at holde hjem
+    else if (e.type === "flad") minTidsForskel = 120; // 2 minutter
+    else if (e.type === "bjerg") minTidsForskel = 30; // 30 sekunder
+    
+    if (tidsForskel > minTidsForskel && afstand < jagtAfstand) {
+        felt.pos += modJagteRate;
+    }
+
+    // Feltet sætter farten op hvis de er mere end 5 minutter bagud
+    if (tidsForskel > 300) {
+        // Check om der er GC-ryttere i feltet
+        var harGCiFelt = false;
+        for (var fi = 0; fi < felt.ryt.length; fi++) {
+            if (felt.ryt[fi].gc > 78) {
+                harGCiFelt = true;
+                break;
+            }
+        }
+    
+        if (harGCiFelt) {
+            // Feltet jagter MEGET hårdere - ekstra fart
+            var panikRate = 0.08;
+            if (tidsForskel > 400) panikRate = 0.15; // Over 6.5 min
+            if (tidsForskel > 480) panikRate = 0.25; // Over 8 min
+            if (tidsForskel > 600) panikRate = 0.40; // Over 10 min
+            felt.pos += panikRate;
+            
+            // Sæt besked hvis de virkelig jagter
+            if (tidsForskel > 400 && Math.random() < 0.02) {
+                G.msg = "🔥 Feltet sætter fuld fart på!";
+            }
         }
     }
-}
 
 
 
