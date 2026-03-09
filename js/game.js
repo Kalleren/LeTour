@@ -841,7 +841,7 @@ for (var i = 0; i < G.ryttere.length; i++) {
         
             if (faldne.length > 0) {
                 var bagudGrp = findInArr(G.grp, function(g) { 
-                    return g.type === "gruppetto" && g.pos < felt.pos && felt.pos - g.pos < 3; 
+                    return g.type === "gruppetto" && g.pos < felt.pos && felt.pos - g.pos < 0.5; //Rettet fra 3 km til 0.5 km
                 });
             
                 if (!bagudGrp && faldne.length >= 1) {
