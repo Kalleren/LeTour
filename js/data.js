@@ -234,3 +234,5 @@ export const  G = {
     bonusGC: 0,
     bonusTroeer: 0
 };
+
+/* export const resultatStatus = {}; */

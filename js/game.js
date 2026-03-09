@@ -2992,6 +2992,7 @@ export function afslut() {
 }
 
 export function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
+	 
 	gemSpil(true);
     var e = G.etaper[G.enr];
     var vTid = res[0] ? res[0].tid : 0;
