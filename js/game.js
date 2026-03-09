@@ -1,6 +1,6 @@
 import { TEAMS, ETYPER, BYER, BONUS, SPR_PTS_FINISH, BJG_PTS_FINISH, INT_PTS, G } from "./data.js";
 import { ri, rf, sh, ft, $, R, findInArr, ec} from "./utils.js";
-import { saveGame } from "./storage.js";
+import {gemSpil, hentSpil, harGemtSpil, indlaesGemtSpil, fortsaetSpil} from "./storage.js";
 
 
 export function resetGrupperTilFelt() {
@@ -347,6 +347,22 @@ export function genMP(e) {
 }
 
 export function intro() {
+	
+	
+	var fortsaetKnap = '';
+    if (harGemtSpil()) {
+        var saved = hentSpil();
+        fortsaetKnap =
+            '<button class="btn btn-big btn-y" onclick="fortsaetSpil()" ' +
+                'style="font-size:18px;padding:14px 32px;margin-bottom:6px">' +
+                '▶️ FORTSÆT SPIL' +
+            '</button>' +
+            '<div style="color:#888;font-size:11px;margin-bottom:10px">' +
+                'Sidst gemt: Tour ' + saved.tourNr + ', etape ' + (saved.enr + 1) +
+            '</div>';
+    }
+	
+	
     R('<div style="text-align:center;padding:20px 0">' +
         '<div style="font-size:60px;margin-bottom:5px">🚴‍♂️🏔️🚴‍♂️</div>' +
         '<h1 style="font-size:42px;margin:0;background:linear-gradient(180deg,#ff0 0%,#fa0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;letter-spacing:3px">LE TOUR</h1>' +
@@ -560,10 +576,6 @@ export function rerollRytter() {
 
 export function startEtape() {
 	
-	//Gemmer Spillet
-	if (G.enr === 0) {
-		saveGame(G); // snapshot lige før første løb
-	}
     var e = G.etaper[G.enr];
     G.km = 0; G.tid = 0; G.msg = ""; G.vent = false; G.udata = null; G.lastMpResult = null;
     G.profil = genP(e);
@@ -2969,6 +2981,7 @@ export function afslut() {
 }
 
 export function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
+	gemSpil(true);
     var e = G.etaper[G.enr];
     var vTid = res[0] ? res[0].tid : 0;
     var spi = -1;

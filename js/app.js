@@ -1,8 +1,8 @@
 import * as game from "./game.js";
 
-import { loadGame, hasSave, enableStoragePopup  } from "./storage.js";
+import {enableStoragePopup, gemSpil, hentSpil, harGemtSpil, indlaesGemtSpil, fortsaetSpil} from "./storage.js";
 
-enableStoragePopup(true);
+enableStoragePopup(false);
 
 Object.assign(window, game);
 
@@ -18,6 +18,43 @@ window.startEtape = startEtape;
 window.startNorm = startNorm;
 
 
+// ========== WAKE LOCK (hold skærm tændt) ==========
+
+var wakeLock = null;
+
+// Anmod om wake lock
+async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Wake Lock aktiv - skærmen slukker ikke');
+            
+            // Lyt efter release (fx hvis bruger skifter tab)
+            wakeLock.addEventListener('release', function() {
+                console.log('Wake Lock frigivet');
+            });
+        } catch (err) {
+            console.log('Wake Lock fejl:', err.message);
+        }
+    }
+}
+
+// Frigiv wake lock
+function releaseWakeLock() {
+    if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+        console.log('Wake Lock frigivet manuelt');
+    }
+}
+
+// Genaktiver wake lock når brugeren kommer tilbage til siden
+document.addEventListener('visibilitychange', async function() {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+        await requestWakeLock();
+    }
+});
+
 // Keyboard
 document.addEventListener("keydown", function(e) {
     // Ignorer tastetryk hvis man skriver i et input-felt
@@ -31,10 +68,11 @@ document.addEventListener("keydown", function(e) {
 });
 
 //Indlæser gemt spil hvis det findes
-const saved = hasSave() ? loadGame() : null;
+const saved = harGemtSpil() ? indlaesGemtSpil() : null;
 if (saved) {
-  Object.assign(G, saved);
-  resumeFromSave();
+	fortsaetSpil()
 } else {
   intro();
 }
+
+
