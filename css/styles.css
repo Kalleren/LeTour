@@ -44,7 +44,13 @@
     .warn { color: #f80; }
     .bad { color: #f44; }
     .cyan { color: #0ff; }
-    
+ 
+
+.navne-popup {
+    display: none;
+}
+
+ 
 .btn { 
     background: #111; 
     color: #0f0; 

@@ -1,5 +1,5 @@
 import { TEAMS, ETYPER, BYER, BONUS, SPR_PTS_FINISH, BJG_PTS_FINISH, INT_PTS, G } from "./data.js";
-import { ri, rf, sh, ft, $, R, findInArr, ec} from "./utils.js";
+import { ri, rf, sh, ft, $, R, findInArr, ec, togglePopup} from "./utils.js";
 import {gemSpil, hentSpil, harGemtSpil, indlaesGemtSpil, fortsaetSpil} from "./storage.js";
 
 
@@ -2265,6 +2265,7 @@ export function getGruppeFarve(g, spiller, gcLeder, spLeder, bjLeder) {
 }
 
 export function rend() {
+	var popupId = 0;
     var e = G.etaper[G.enr];
     var info = ETYPER[e.type];
     var r = G.spiller;
@@ -2292,12 +2293,12 @@ export function rend() {
     }
     
     var pmod = "";
-    if (!G.iv && !G.vent) {
+/*     if (!G.iv && !G.vent) {
         pmod = '<div class="modal"><div class="mbox" style="border-color:#3399ff">' +
             '<h2 style="color:#3399ff">⏸️ PAUSE</h2>' +
             '<button class="btn btn-big" style="border-color:#3399ff;color:#fff" onclick="pause()">[P] FORTSÆT</button>' +
             '</div></div>';
-    }
+    } */
     
     // Find trøjebærere til farveberegning
     var aktiveRyttere = G.ryttere.filter(function(r) { return !r.ude; });
@@ -2365,20 +2366,30 @@ if (g.ryt.length === 1) {
 // Sortér gruppens ryttere efter samlet klassement (lavest stid først)
 var sorteretRyt = g.ryt.slice().sort(function(a, b) { return a.stid - b.stid; });
 
+
+//Fem vises, resten er i hover-box
 var navne = "";
+var extraNavne = "";
 var vis = Math.min(sorteretRyt.length, 5);
-for (var j = 0; j < vis; j++) {
+for (var j = 0; j < sorteretRyt.length; j++) {
     var rr = sorteretRyt[j];
     var kort = rr.navn.split(" ").pop();
     var rFarve = rr.sp ? "#fff" : rr.holdClr;
     var rWeight = rr.sp ? ";font-weight:bold" : "";
-    navne += '<span style="color:' + rFarve + rWeight + '">' + kort + '</span>';
-    if (j < vis - 1) navne += ", ";
+    
+	//Viste navne
+	if(j<vis){
+		navne += '<span style="color:' + rFarve + rWeight + '">' + kort + '</span>';
+		if (j < vis - 1) navne += ", ";
+	}
+	else //skjulte navne i popup
+	{	extraNavne += '<span style="color:' + rFarve + rWeight + '">' + kort + '</span>';
+		if (j < sorteretRyt.length - 1) extraNavne += ", ";
+	}
 }
 if (g.ryt.length > 5) {
     navne += ' <span style="color:#666">+' + (g.ryt.length - 5) + '</span>';
 }
-        
         var boxStyle = 'border:' + (her ? '3px' : '2px') + ' solid ' + farve.border + ';' +
             'background:' + farve.bg + ';' +
             (her ? 'box-shadow:0 0 10px ' + farve.border + '4;' : '') +
@@ -2390,7 +2401,7 @@ gh += '<div style="' + boxStyle + '">' +
 '<span>' + emo + ' ' + grpNavn + visAntal + (her ? ' ◄' : '') + '</span>' +
 '<span style="margin-left:10px">Km ' + Math.floor(g.pos) + '</span></div>' +
             '<div>' + tid + '</div>' +
-            '<div style="font-size:10px">' + navne + '</div></div>';
+            '<div id="navn" style="font-size:10px" onclick="togglePopup(\'riderpopup'+ (++popupId) + '\')">' + navne + '</div><div id="riderpopup' + popupId + '" class="navne-popup">' + extraNavne +'</div></div>';
     }
     gh += '</div>';
     
@@ -3141,7 +3152,7 @@ export function naeste() {
     startEtape();
 }
 
-export function resumeFromSave() {
+/* export function resumeFromSave() {
   // hvis spillet ikke er sat ordentligt op
   if (!G.etaper || !G.etaper.length || !G.navn) {
     intro();
@@ -3167,7 +3178,7 @@ export function resumeFromSave() {
 	resetGrupperTilFelt();
 
   naeste();
-}
+} */
 
 export function slut() {
     var aktive = G.ryttere.filter(function(r) { return !r.ude; });

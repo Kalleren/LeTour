@@ -25,3 +25,11 @@ export function findIdx(arr, fn) {
     }
     return -1;
 }
+
+export function togglePopup(id) {
+	const el = document.getElementById(id);
+    el.style.display = (el.style.display === "block") ? "none" : "block";
+}
+
+// GØR FUNKTIONEN GLOBAL
+window.togglePopup = togglePopup;
