@@ -13,14 +13,16 @@
         padding: 16px; 
         font-size: 16px; 
     }
+    
     #game { 
         max-width: 1150px; 
         margin: 0 auto; 
-        border: 3px solid #0f0; 
+        border: 3px solid #ff0; 
         padding: 18px; 
-        background: #010; 
+        background: #110; 
         border-radius: 6px; 
     }
+
     h1 { 
         color: #ff0; 
         text-align: center; 
@@ -29,23 +31,25 @@
     }
     h2 { 
         color: #ff0; 
-        border-bottom: 2px solid #0a0; 
+        border-bottom: 2px solid #aa0; 
         padding-bottom: 6px; 
         margin-bottom: 12px; 
         font-size: 24px; 
     }
+
     h3 { 
         color: #0ff; 
         margin-bottom: 8px; 
         font-size: 18px; 
     }
     .box { 
-        border: 2px solid #0a0; 
+        border: 2px solid #aa0; 
         padding: 14px; 
         margin: 12px 0; 
-        background: #020; 
+        background: #110; 
         border-radius: 5px; 
     }
+        
     .hl { color: #ff0; }
     .ok { color: #0f0; }
     .warn { color: #f80; }
@@ -100,16 +104,17 @@
     canvas { 
         width: 100%; 
         height: 230px; 
-        border: 2px solid #0a0; 
-        background: linear-gradient(180deg, #001 0%, #010 100%); 
+        border: 2px solid #aa0; 
+        background: linear-gradient(180deg, #111 0%, #110 100%); 
         display: block; 
         margin: 10px 0; 
         border-radius: 5px; 
     }
+
     
     .ebar { 
         background: #222; 
-        border: 2px solid #0a0; 
+        border: 2px solid #aa0; 
         border-radius: 10px; 
         width: 190px; 
         height: 18px; 
@@ -117,6 +122,7 @@
         vertical-align: middle; 
         overflow: hidden; 
     }
+
     .efill { 
         height: 100%; 
         background: linear-gradient(90deg, #0f0, #0a0); 
@@ -149,11 +155,12 @@
     .row { 
         padding: 4px 8px; 
         font-size: 14px; 
-        border-bottom: 1px solid #030; 
+        border-bottom: 1px solid #330; 
         display: flex; 
         justify-content: space-between; 
         align-items: center;  
     }
+
     .row.pl { background: #333; color: #fff; }
     
     .ctrls { 
@@ -223,13 +230,14 @@
     }
     .tab { 
         padding: 8px 15px; 
-        border: 2px solid #0a0; 
+        border: 2px solid #aa0; 
         cursor: pointer; 
         border-radius: 4px; 
         font-size: 14px; 
     }
-    .tab.active { background: #0a0; color: #000; }
-    .tab:hover { background: #020; }
+    .tab.active { background: #aa0; color: #000; }
+    .tab:hover { background: #220; }
+
     
     .mp-result { 
         background: linear-gradient(135deg, #220 0%, #110 100%); 
@@ -1616,16 +1624,27 @@ for (var i = 0; i < G.ryttere.length; i++) {
     if ((e.type === "bjerg" || e.type === "kuperet") && stig > 12) {
         var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
         if (felt && felt.ryt.length > 8) {
-            // Jo stejlere, jo flere falder fra
             var basisChance = e.type === "bjerg" ? 0.02 : 0.008;
-            var stejlBonus = Math.min(stig / 30, 1.5); // Op til 1.5x ved stejle stigninger
+            var stejlBonus = Math.min(stig / 30, 1.5);
             var faldChance = basisChance * (1 + stejlBonus);
         
             var faldne = [];
             for (var i = 0; i < felt.ryt.length; i++) {
                 var r = felt.ryt[i];
                 if (r.sp || r.ude) continue;
-            
+                
+                // TOPKLATRERE (bj >= 85) falder ALDRIG fra tidligt på etapen
+                if (r.bj >= 85 && G.km < e.dist * 0.5) continue;
+                
+                // GC-favoritter (gc >= 80) er beskyttede tidligt, MEN kun hvis de også kan klatre
+                if (r.gc >= 80 && r.bj >= 70 && G.km < e.dist * 0.3) continue;
+                
+                // Energitærskel baseret på klatreevne
+                // Gode klatrere kan "holde hjulet" længere
+                // Dårlige klatrere (bj < 60) har lavere tærskel og falder nemmere fra
+                var minEnergiForFald = 40 + (r.bj * 0.3);
+                if (r.energi > minEnergiForFald) continue;
+                
                 // Risiko baseret på klatreevne, energi og stigningens stejlhed
                 var klatreManko = (100 - r.bj) / 100;
                 var energiManko = (100 - r.energi) / 100;
@@ -1635,12 +1654,17 @@ for (var i = 0; i < G.ryttere.length; i++) {
                 if (stig > 20 && r.bj < 70) {
                     riskFaktor *= 1.5;
                 }
+                
+                // Dårlige klatrere (bj < 60) har EKSTRA risiko
+                if (r.bj < 60) {
+                    riskFaktor *= 1.3;
+                }
             
                 if (Math.random() < faldChance * riskFaktor) {
                     faldne.push(r);
                 }
             }
-        
+            
             if (faldne.length > 0) {
                 var bagudGrp = findInArr(G.grp, function(g) { 
                     return g.type === "gruppetto" && g.pos < felt.pos && felt.pos - g.pos < 3; 
@@ -1665,6 +1689,7 @@ for (var i = 0; i < G.ryttere.length; i++) {
             }
         }
     }
+
 
     
 // AI angreb - baseret på etapetype og energi
@@ -3277,7 +3302,7 @@ if (g.ryt.length === 1) {
     }
 }
         var emo = g.type === "udbrud" ? "🚴💨" : g.type === "felt" ? "🚴🚴🚴" : "🚴";
-        var tid = g.tf < 1 ? '<span style="color:#0f0">FORREST</span>' : '<span style="color:' + farve.text + '">+' + ft(g.tf) + '</span>';
+        var tid = g.tf < 1 ? '<span style="color:' + farve.text + '">FORREST</span>' : '<span style="color:' + farve.text + '">+' + ft(g.tf) + '</span>';
         
 // Sortér gruppens ryttere efter samlet klassement (lavest stid først)
 var sorteretRyt = g.ryt.slice().sort(function(a, b) { return a.stid - b.stid; });
@@ -3386,13 +3411,13 @@ if (G.lastMpResult) {
     
     R(mod + pmod +
     // KNAPPER ØVERST
-    '<div style="background:#000;padding:8px;margin-bottom:8px;border:1px solid #0a0;border-radius:4px;text-align:center">' +
+    '<div style="background:#110;padding:8px;margin-bottom:8px;border:1px solid #aa0;border-radius:4px;text-align:center">' +
         '<button class="btn btn-big btn-y" onclick="accel()" style="min-width:140px"' + aDis + '>[A] ACCELERER</button>' +
         '<button class="btn btn-big" onclick="pause()" style="min-width:140px"' + pDis + '>[P] ' + pBtn + '</button>' +
     '</div>' +
  // ETAPE INFO
 // -- Desktop Version --
-'<div class="top-bar-desktop" style="display:flex;align-items:center;padding:8px;background:#020;border:1px solid #0a0;border-radius:4px;margin-bottom:8px">' +
+'<div class="top-bar-desktop" style="display:flex;align-items:center;padding:8px;background:#110;border:1px solid #aa0;border-radius:4px;margin-bottom:8px">' +
     '<div style="flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Etape ' + e.nr + ':</strong> ' + e.start + ' → ' + e.slut + '</div>' +
     '<div style="display:flex;align-items:center;justify-content:center;gap:15px">' +
         '<span style="padding:4px 10px;border:2px solid ' + typeClr + ';color:' + typeClr + ';border-radius:10px;font-size:12px;width:70px;text-align:center">' + info.n.toUpperCase() + '</span>' +
@@ -3405,7 +3430,7 @@ if (G.lastMpResult) {
 '</div>' +
 
 // -- Mobil Version --
-'<div class="top-bar-mobile" style="background:#020;border:1px solid #0a0;border-radius:4px;margin-bottom:8px;padding:8px;text-align:center;">' +
+'<div class="top-bar-mobile" style="background:#110;border:1px solid #aa0;border-radius:4px;margin-bottom:8px;padding:8px;text-align:center;">' +
     // Række 1: Etape Info
     '<div style="font-size:14px;margin-bottom:8px;"><strong>Etape ' + e.nr + ':</strong> ' + e.start + ' → ' + e.slut + '</div>' +
     // Række 2 (NU): Type og KM
@@ -3468,12 +3493,12 @@ function tegnP() {
         var y = 12 + h - ((p[i] - minH) / rng) * h;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
-    ctx.strokeStyle = "#0f0";
+    ctx.strokeStyle = "#ff0";
     ctx.lineWidth = 3;
     ctx.stroke();
     ctx.lineTo(l + w, 12 + h);
     ctx.lineTo(l, 12 + h);
-    ctx.fillStyle = "rgba(0,100,0,0.3)";
+    ctx.fillStyle = "rgba(100,100,0,0.3)";
     ctx.fill();
     
     // Mellempunkter
@@ -4069,10 +4094,10 @@ function slut() {
         : spiGC <= 19 ? "👍 Top 20!"
         : "Du gennemførte!";
     
-    var troeje = "";
-    if (spS[0] && spS[0].sp) troeje += " 🟢 GRØN TRØJE!";
-    if (bjS[0] && bjS[0].sp) troeje += " 🔴 PRIKKET TRØJE!";
-    if (gcS[0] && gcS[0].sp) troeje += " 🟡 GUL TRØJE!";
+    var troeje = [];
+    if (gcS[0] && gcS[0].sp) troeje.push("🟡 GUL TRØJE!");
+    if (spS[0] && spS[0].sp) troeje.push("🟢 GRØN TRØJE!");
+    if (bjS[0] && bjS[0].sp) troeje.push("🔴 PRIKKET TRØJE!");
     
     // Bonus for at gennemføre
     var bonusGennemfoer = 2;
@@ -4093,7 +4118,7 @@ function slut() {
     var bonusPoint = bonusGennemfoer + bonusGC + bonusTroeer;
 
     var html = '<div style="text-align:center"><div style="font-size:50px">🏆</div><h1>TOUR DE FRANCE SLUT!</h1></div>' +
-    '<div class="box" style="text-align:center;border-color:#ff0"><h2>' + msg + '</h2>' + (troeje ? '<p class="hl">' + troeje + '</p>' : '') + '</div>' +
+    '<div class="box" style="text-align:center;border-color:#ff0"><h2>' + msg + '</h2>' + (troeje.length > 0 ? '<div class="hl" style="margin-top:10px">' + troeje.join('<br>') + '</div>' : '') + '</div>' +
     '<div class="jerseys">' +
         '<div class="jersey jy">🟡 ' + (gcS[0] ? gcS[0].navn : "-") + '</div>' +
         '<div class="jersey jg">🟢 ' + (spS[0] ? spS[0].navn : "-") + ' (' + (G.sprPts[spS[0] ? spS[0].navn : ""]||0) + ')</div>' +
