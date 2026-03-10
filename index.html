@@ -3712,8 +3712,12 @@ function rendTT() {
         '<div style="width:' + pct + '%;height:100%;background:linear-gradient(90deg,#0aa,#3399ff);border-radius:10px"></div>' +
     '</div>' +
     '<div class="box" style="display:flex;flex-wrap:wrap;gap:15px;justify-content:center">' +
-        '<div><strong>Energi:</strong> <div class="ebar"><div class="efill ' + ec(r.energi,100) + '" style="width:' + r.energi + '%"></div></div> ' + Math.round(r.energi) + '%</div>' +
+        '<div><strong>Energi:</strong> ' +
+            '<div class="ebar"><div class="efill ' + ec(r.energi,100) + '" style="width:' + r.energi + '%"></div></div> ' +
+            '<span class="' + (r.energi < 25 ? 'bad' : r.energi < 50 ? 'warn' : 'ok') + '">' + Math.round(r.energi) + '%</span>' +
+        '</div>' +
     '</div>' +
+
     (G.msg ? '<div style="padding:8px;border:1px solid #3399ff;background:#012;border-radius:4px;text-align:center;margin:8px 0">' + G.msg + '</div>' : '') +
     '<div class="box"><h3>Top 5:</h3>' + top5 + '</div>');
     
