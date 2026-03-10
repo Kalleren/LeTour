@@ -4362,26 +4362,37 @@ function nytTour() {
 // Keyboard
 var lastKeyTime = 0;
 document.addEventListener("keydown", function(e) {
-    // Ignorer tastetryk hvis man skriver i et input-felt
     if (e.target.tagName === "INPUT") return;
     
     var k = e.key.toLowerCase();
     
-    // Forhindre gentagne tastetryk for hurtigt (50ms debounce)
     var now = Date.now();
     if (now - lastKeyTime < 50) return;
     lastKeyTime = now;
     
-    // Forhindre browser-standardadfærd for spiltaster
     if (k === "a" || k === "p" || k === "u" || k === "n") {
         e.preventDefault();
     }
-    
-    if (k === "a") accel();
-    else if (k === "p") pause();
-    else if (k === "u" && G.vent && G.udata) accUdb();
-    else if (k === "n" && G.vent && G.udata) rejUdb();
+
+    // Hvis vi ikke har nogen etape endnu, gør ingenting
+    if (!G.etaper || !G.etaper.length) return;
+    var eType = G.etaper[G.enr].type;
+
+    if (k === "a") {
+        if (eType === "tt") {
+            accTT();       // enkeltstart
+        } else {
+            accel();       // normal etape
+        }
+    } else if (k === "p") {
+        pause();
+    } else if (k === "u" && G.vent && G.udata) {
+        accUdb();
+    } else if (k === "n" && G.vent && G.udata) {
+        rejUdb();
+    }
 });
+
 
 // START
 intro();
