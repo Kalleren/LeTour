@@ -1652,7 +1652,17 @@ for (var i = 0; i < G.ryttere.length; i++) {
             for (var i = 0; i < felt.ryt.length; i++) {
                 var r = felt.ryt[i];
                 if (r.sp || r.ude) continue;
-            
+    
+                // === GC/BJERG-BESKYTTELSE ===
+                // Stærke GC-klatrere må IKKE falde fra alt for tidligt
+                // Fx gc ≥ 82 og bj ≥ 80
+                if (r.gc >= 82 && r.bj >= 80) {
+                    // På bjergetaper: fuldt beskyttet i første halvdel
+                    if (e.type === "bjerg" && G.km < e.dist * 0.5) continue;
+                    // På kuperede etaper: fuldt beskyttet i første 35%
+                    if (e.type === "kuperet" && G.km < e.dist * 0.35) continue;
+                }
+    
                 // Risiko baseret på klatreevne, energi og stigningens stejlhed
                 var klatreManko = (100 - r.bj) / 100;
                 var energiManko = (100 - r.energi) / 100;
@@ -1667,6 +1677,7 @@ for (var i = 0; i < G.ryttere.length; i++) {
                     faldne.push(r);
                 }
             }
+
         
             if (faldne.length > 0) {
                 var bagudGrp = findInArr(G.grp, function(g) { 
