@@ -1291,7 +1291,8 @@ function startGame() {
                 fl: x.fl + ri(-2,2),
                 energi: 100,
                 stid: 0,
-                gi: 0
+                gi: 0,
+                heltFærdig: false
             };
             G.ryttere.push(r);
             G.sprPts[r.navn] = 0;
@@ -1372,7 +1373,8 @@ function rerollRytter() {
                 fl: x.fl + ri(-2,2),
                 energi: 100,
                 stid: 0,
-                gi: 0
+                gi: 0,
+                heltFærdig: false
             };
             G.ryttere.push(r);
             G.sprPts[r.navn] = 0;
@@ -2383,12 +2385,21 @@ function fusionGrupper() {
             // Hvis to grupper er tæt nok på hinanden (< 0.15 km)
             var afstand = g1.pos - g2.pos;
             if (afstand >= 0 && afstand < 0.08) {
-                // Slå sammen - behold den forreste gruppes position
-                for (var j = 0; j < g2.ryt.length; j++) {
-                    if (g1.ryt.indexOf(g2.ryt[j]) < 0) {
-                        g1.ryt.push(g2.ryt[j]);
-                    }
+
+            // TJEK: hvis g2 kun er én helt færdig rytter, så kør bare forbi
+            if (g2.ryt.length === 1 && g2.ryt[0].heltFærdig) {
+                // Lad den forreste gruppe fortsætte uden at samle ham op
+                // vi kan fx give g1 et lille ekstra skub, hvis du vil:
+                // g1.pos += 0.02;
+                continue;
+            }
+        
+            // Slå sammen - behold den forreste gruppes position
+            for (var j = 0; j < g2.ryt.length; j++) {
+                if (g1.ryt.indexOf(g2.ryt[j]) < 0) {
+                    g1.ryt.push(g2.ryt[j]);
                 }
+            }
                 
                 // Bestem nyt navn og type
                 if (g1.type === "felt" || g2.type === "felt") {
@@ -2867,6 +2878,9 @@ function flytTilGruppetto(r) {
     // Fjern rytteren fra sin nuværende gruppe
     rg.ryt = rg.ryt.filter(function(x) { return x !== r; });
 
+    // Marker rytteren som helt færdig
+    r.heltFærdig = true;
+    
     // Opret en lille bagud-gruppe lige bag den gruppe, han kom fra
     var bagud = {
         type: "gruppetto",
