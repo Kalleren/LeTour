@@ -2860,19 +2860,25 @@ for (var i = 0; i < G.grp.length; i++) {
 }
 
 function flytTilGruppetto(r) {
-    for (var i = 0; i < G.grp.length; i++) {
-        G.grp[i].ryt = G.grp[i].ryt.filter(function(x) { return x !== r; });
-    }
-    
-    var grp = findInArr(G.grp, function(g) { return g.type === "gruppetto"; });
-    if (!grp) {
-        var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
-        grp = { type: "gruppetto", navn: "Gruppetto", ryt: [], pos: (felt ? felt.pos : G.km) - 3, tf: 0 };
-        G.grp.push(grp);
-    }
-    grp.ryt.push(r);
-    r.gi = G.grp.indexOf(grp);
+    // Find nuværende gruppe
+    var rg = findInArr(G.grp, function(g) { return g.ryt.indexOf(r) >= 0; });
+    if (!rg) return;
+
+    // Fjern rytteren fra sin nuværende gruppe
+    rg.ryt = rg.ryt.filter(function(x) { return x !== r; });
+
+    // Opret en lille bagud-gruppe lige bag den gruppe, han kom fra
+    var bagud = {
+        type: "gruppetto",
+        navn: "Ny gruppe",
+        ryt: [r],
+        pos: rg.pos - 0.3,  // kun 0.3 km bagved den gruppe, han sad i
+        tf: 0
+    };
+    G.grp.push(bagud);
+    r.gi = G.grp.length - 1;
 }
+
 
 function rensGrupper() {
     // Fjern udgåede ryttere fra alle grupper
@@ -3302,20 +3308,31 @@ if (g.ryt.length === 1) {
     // Udbrud der ligger MELLEM forreste gruppe og feltet = Forfølgere
     grpNavn = "Forfølgere";
 } else if (g.type === "gruppetto") {
-    // Find om dette er den bagerste gruppe
-    var erBagerst = true;
-    for (var gi2 = 0; gi2 < G.grp.length; gi2++) {
-        if (G.grp[gi2].type === "gruppetto" && G.grp[gi2].pos < g.pos) {
-            erBagerst = false;
-            break;
+    if (feltGrp) {
+        if (g.pos > feltGrp.pos) {
+            // Gruppetto-type foran feltet = forfølgere/bagved en anden frontgruppe
+            grpNavn = "Forfølgere";
+        } else {
+            // Find om dette er den bagerste gruppe
+            var erBagerst = true;
+            for (var gi2 = 0; gi2 < G.grp.length; gi2++) {
+                if (G.grp[gi2].pos < g.pos) {
+                    erBagerst = false;
+                    break;
+                }
+            }
+            if (erBagerst && (et.type === "bjerg" || et.type === "kuperet")) {
+                grpNavn = "Gruppetto";
+            } else {
+                grpNavn = "Bagud";
+            }
         }
-    }
-    if (erBagerst && (et.type === "bjerg" || et.type === "kuperet")) {
-        grpNavn = "Gruppetto";
     } else {
+        // Ingen feltgruppe (fx kaotisk situation) – kald bare "Bagud"
         grpNavn = "Bagud";
     }
 }
+
         var emo = g.type === "udbrud" ? "🚴💨" : g.type === "felt" ? "🚴🚴🚴" : "🚴";
         var tid = g.tf < 1 ? '<span style="color:' + farve.text + '">FORREST</span>' : '<span style="color:' + farve.text + '">+' + ft(g.tf) + '</span>';
         
