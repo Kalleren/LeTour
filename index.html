@@ -1431,7 +1431,6 @@ function startNorm() {
     G.iv = setInterval(loop, 400);
     rend();
 }
-
 function loop() {
     if (G.vent) return;
 
@@ -1486,37 +1485,10 @@ for (var gi = 0; gi < G.grp.length; gi++) {
         // Feltet kører mere stabilt
         spd += (grpStyrke - 70) * 0.0008;
     } else if (g.type === "udbrud") {
-    // Udbrud får også gruppefordel, men mindre end felt
-    spd += grpSizeBonus * 0.7;
-    
-    // Bagud-grupper med lav energi kører langsommere
-    if (g.lavEnergi) {
-        // Find gennemsnitlig energi i gruppen
-        var gnsEnergi = 0;
-        for (var ri = 0; ri < g.ryt.length; ri++) {
-            gnsEnergi += g.ryt[ri].energi;
-        }
-        gnsEnergi = g.ryt.length > 0 ? gnsEnergi / g.ryt.length : 0;
+        // Udbrud får også gruppefordel, men mindre end felt
+        spd += grpSizeBonus * 0.7;
         
-        // Jo lavere energi, jo MEGET langsommere
-        // Under 30% energi: Op til 45% langsommere ved 0%
-        if (gnsEnergi < 30) {
-            var energiStraf = (30 - gnsEnergi) / 30 * 0.45;
-            spd *= (1 - energiStraf);
-        }
-        
-        // Større grupper får bonus (samarbejde reducerer straffen)
-        if (g.ryt.length >= 8) {
-            spd *= 1.08;
-        } else if (g.ryt.length >= 5) {
-            spd *= 1.05;
-        } else if (g.ryt.length >= 3) {
-            spd *= 1.025;
-        }
-    }
-    
-    var udbBonus = 0.02;
-
+        var udbBonus = 0.02;
         if (e.type === "bjerg") {
             // I bjerge afhænger hastighed MEGET af klatrestyrke
             udbBonus = 0.03 + (grpStyrke - 70) * 0.002;
@@ -1667,154 +1639,86 @@ for (var i = 0; i < G.ryttere.length; i++) {
     r.energi = Math.max(0, r.energi - baseTab);
 }
     
-    // Ryttere med lav energi falder fra deres gruppe (felt ELLER udbrud)
-    if ((e.type === "bjerg" || e.type === "kuperet") && stig > 10) {
-        for (var gi = 0; gi < G.grp.length; gi++) {
-            var g = G.grp[gi];
-            if (g.type === "gruppetto") continue;
-            if (g.ryt.length < 2) continue;
-            
+    // Ryttere falder fra i bjerge - især på stejle stigninger
+    if ((e.type === "bjerg" || e.type === "kuperet") && stig > 12) {
+        var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
+        if (felt && felt.ryt.length > 8) {
+            // Jo stejlere, jo flere falder fra
+            var basisChance = e.type === "bjerg" ? 0.02 : 0.008;
+            var stejlBonus = Math.min(stig / 30, 1.5); // Op til 1.5x ved stejle stigninger
+            var faldChance = basisChance * (1 + stejlBonus);
+        
             var faldne = [];
-            for (var i = 0; i < g.ryt.length; i++) {
-                var r = g.ryt[i];
-                if (r.ude) continue;
-                
-                // TOPKLATRERE (bj >= 85) falder ALDRIG fra tidligt
-                if (r.bj >= 85 && G.km < e.dist * 0.5) continue;
-                
-                // GC-favoritter beskyttet tidligt
-                if (r.gc >= 80 && r.bj >= 70 && G.km < e.dist * 0.3) continue;
-                
-                // Energitærskel baseret på klatreevne
-                var minEnergiForFald;
-                if (r.bj < 40) {
-                    minEnergiForFald = 95;
-                } else if (r.bj < 50) {
-                    minEnergiForFald = 90;
-                } else if (r.bj < 60) {
-                    minEnergiForFald = 85;
-                } else if (r.bj < 70) {
-                    minEnergiForFald = 75;
-                } else if (r.bj < 80) {
-                    minEnergiForFald = 65;
-                } else {
-                    minEnergiForFald = 50;
-                }
-
-                if (r.energi > minEnergiForFald) continue;
-                
-                // Risiko beregning
+            for (var i = 0; i < felt.ryt.length; i++) {
+                var r = felt.ryt[i];
+                if (r.sp || r.ude) continue;
+            
+                // Risiko baseret på klatreevne, energi og stigningens stejlhed
                 var klatreManko = (100 - r.bj) / 100;
                 var energiManko = (100 - r.energi) / 100;
-                var riskFaktor = klatreManko * 0.6 + energiManko * 0.4;
-                
-                if (stig > 20 && r.bj < 70) riskFaktor *= 1.8;
-                if (r.bj < 60) riskFaktor *= 1.5;
-                if (r.bj < 40) riskFaktor *= 1.4;
-                
-                var basisChance = e.type === "bjerg" ? 0.025 : 0.012;
-                var stejlBonus = Math.min(stig / 25, 2.0);
-                var faldChance = basisChance * (1 + stejlBonus);
-                
+                var riskFaktor = klatreManko * 0.5 + energiManko * 0.5;
+            
+                // Ekstra risiko ved stejle stigninger for dårlige klatrere
+                if (stig > 20 && r.bj < 70) {
+                    riskFaktor *= 1.5;
+                }
+            
                 if (Math.random() < faldChance * riskFaktor) {
                     faldne.push(r);
                 }
             }
-            
+        
             if (faldne.length > 0) {
-                // Fjern faldne fra deres gruppe
-                for (var i = 0; i < faldne.length; i++) {
-                    g.ryt = g.ryt.filter(function(x) { return x !== faldne[i]; });
-                }
-                
-                // Find eksisterende bagud-gruppe MEGET tæt på (inden for 0.2 km)
-                var eksisterendeBagud = findInArr(G.grp, function(gg) { 
-                    return gg.type === "udbrud" && gg.lavEnergi && 
-                           gg.pos < g.pos && g.pos - gg.pos < 0.2; 
+                var bagudGrp = findInArr(G.grp, function(g) { 
+                    return g.type === "gruppetto" && g.pos < felt.pos && felt.pos - g.pos < 3; 
                 });
-                
-                if (eksisterendeBagud) {
-                    // Tilslut eksisterende bagud-gruppe (de faldt næsten samtidig)
+            
+                if (!bagudGrp && faldne.length >= 1) {
+                    bagudGrp = { type: "gruppetto", navn: "Bagud", ryt: [], pos: felt.pos - 0.2, tf: 0 };
+                    G.grp.push(bagudGrp);
+                }
+            
+                if (bagudGrp) {
                     for (var i = 0; i < faldne.length; i++) {
-                        eksisterendeBagud.ryt.push(faldne[i]);
+                        felt.ryt = felt.ryt.filter(function(x) { return x !== faldne[i]; });
+                        bagudGrp.ryt.push(faldne[i]);
                     }
-                    if (eksisterendeBagud.ryt.length === 1) {
-                        eksisterendeBagud.navn = eksisterendeBagud.ryt[0].navn.split(" ").pop();
+                    if (faldne.length >= 2) {
+                        G.msg = "🏔️ " + faldne.length + " kan ikke følge tempoet!";
                     } else {
-                        eksisterendeBagud.navn = "Bagud (" + eksisterendeBagud.ryt.length + ")";
+                        G.msg = "🏔️ " + faldne[0].navn.split(" ").pop() + " sættes!";
                     }
-                } else {
-                    // Opret ny bagud-gruppe
-                    var nyNavn;
-                    if (faldne.length === 1) {
-                        nyNavn = faldne[0].navn.split(" ").pop();
-                    } else {
-                        nyNavn = "Bagud (" + faldne.length + ")";
-                    }
-                    
-                    var nyGrp = { 
-                        type: "udbrud",
-                        navn: nyNavn, 
-                        ryt: faldne, 
-                        pos: g.pos - 0.15,
-                        tf: 0,
-                        lavEnergi: true
-                    };
-                    G.grp.push(nyGrp);
-                }
-                
-                // Besked
-                var spillerFaldt = false;
-                for (var i = 0; i < faldne.length; i++) {
-                    if (faldne[i].sp) spillerFaldt = true;
-                }
-                
-                if (spillerFaldt) {
-                    G.msg = "💀 Du kan ikke holde hjulet og sakker bagud!";
-                } else if (faldne.length >= 3) {
-                    G.msg = "🏔️ " + faldne.length + " ryttere sakker!";
-                } else if (faldne.length === 2) {
-                    G.msg = "🏔️ " + faldne[0].navn.split(" ").pop() + " og " + faldne[1].navn.split(" ").pop() + " sakker!";
-                } else {
-                    G.msg = "🏔️ " + faldne[0].navn.split(" ").pop() + " sakker!";
-                }
-                
-                // Opdater original gruppes navn
-                if (g.ryt.length === 1 && g.type === "udbrud") {
-                    g.navn = g.ryt[0].navn.split(" ").pop();
                 }
             }
         }
     }
 
+    
+// AI angreb - baseret på etapetype og energi
+if (e.type === "bjerg" && Math.random() < 0.05) {
+    aiAngrebBjerg();
+} else if (e.type === "kuperet" && Math.random() < 0.05) {
+    aiAngrebKuperet();
+} else if (e.type === "flad" && Math.random() < 0.04) {
+    aiAngrebEnergi();
+} else if (e.type === "kuperet" && Math.random() < 0.03) {
+    aiAngrebEnergi();
+}
 
+// Favoritter angriber fra favoritgruppe (fra halvvejs)
+if ((e.type === "bjerg" || e.type === "kuperet") && G.km > e.dist * 0.5) {
+    favoritAngrebMidtvejs();
+}
+    
+// Favoritter angriber hinanden tæt på mål i bjerge
+if (e.type === "bjerg" && G.km > e.dist - 15) {
+    favoritAngrebSlut();
+}
 
-    
-    // AI angreb - baseret på etapetype og energi
-    if (e.type === "bjerg" && Math.random() < 0.05) {
-        aiAngrebBjerg();
-    } else if (e.type === "kuperet" && Math.random() < 0.05) {
-        aiAngrebKuperet();
-    } else if (e.type === "flad" && Math.random() < 0.04) {
-        aiAngrebEnergi();
-    } else if (e.type === "kuperet" && Math.random() < 0.03) {
-        aiAngrebEnergi();
-    }
-    
-    // Favoritter angriber fra favoritgruppe (fra halvvejs)
-    if ((e.type === "bjerg" || e.type === "kuperet") && G.km > e.dist * 0.5) {
-        favoritAngrebMidtvejs();
-    }
-        
-    // Favoritter angriber hinanden tæt på mål i bjerge
-    if (e.type === "bjerg" && G.km > e.dist - 15) {
-        favoritAngrebSlut();
-    }
-    
-    // Favoritter angriber på kuperet i sidste fjerdedel
-    if (e.type === "kuperet" && G.km > e.dist * 0.75) {
-        favoritAngrebKuperet();
-    }
+// Favoritter angriber på kuperet i sidste fjerdedel
+if (e.type === "kuperet" && G.km > e.dist * 0.75) {
+    favoritAngrebKuperet();
+}
 
     
     // Mellempunkter
@@ -1822,12 +1726,12 @@ for (var i = 0; i < G.ryttere.length; i++) {
 
     
     // AI udbrud - oftere på flad og kuperet
-    var udbCount = 0;
-    for (var i = 0; i < G.grp.length; i++) { if (G.grp[i].type === "udbrud") udbCount++; }
-    var udbChance = info.uch * 1.5;
-    if (e.type === "flad") udbChance = info.uch * 3;
-    else if (e.type === "kuperet") udbChance = info.uch * 2.5;
-    if (Math.random() < udbChance && udbCount < 5) aiUdb();
+var udbCount = 0;
+for (var i = 0; i < G.grp.length; i++) { if (G.grp[i].type === "udbrud") udbCount++; }
+var udbChance = info.uch * 1.5;
+if (e.type === "flad") udbChance = info.uch * 3;
+else if (e.type === "kuperet") udbChance = info.uch * 2.5;
+if (Math.random() < udbChance && udbCount < 5) aiUdb();
 
     
     // Tilbyd udbrud - oftere i bjerge
@@ -1850,7 +1754,19 @@ for (var i = 0; i < G.ryttere.length; i++) {
         G.grp[i].tf = (fp - G.grp[i].pos) * info.sek;
     }
     
-  
+    // Udkørte
+    for (var i = 0; i < G.ryttere.length; i++) {
+        var r = G.ryttere[i];
+        if (r.ude) continue;
+        if (r.energi <= 1) {
+            var rg = findInArr(G.grp, function(g) { return g.ryt.indexOf(r) >= 0; });
+            if (rg && rg.type !== "gruppetto") {
+                if (r.sp) G.msg = "💀 Du er udkørt!";
+                flytTilGruppetto(r);
+            }
+        }
+    }
+    
     // Mål?
     if (G.grp[0] && G.grp[0].pos >= e.dist) { afslut(); return; }
     
@@ -2439,6 +2355,7 @@ if (reagerende.length > 0) {
 }
 
 function fusionGrupper() {
+    // Sortér efter position
     G.grp.sort(function(a, b) { return b.pos - a.pos; });
     
     var fusioneret = true;
@@ -2449,58 +2366,30 @@ function fusionGrupper() {
             var g1 = G.grp[i];
             var g2 = G.grp[i + 1];
             
+            // Hvis to grupper er tæt nok på hinanden (< 0.15 km)
             var afstand = g1.pos - g2.pos;
             if (afstand >= 0 && afstand < 0.08) {
-                
-                var g1Energi = getGruppeEnergi(g1);
-                var g2Energi = getGruppeEnergi(g2);
-                
-                // Hvis den hurtigere gruppe har MEGET mere energi, kører de forbi
-                if (g1Energi - g2Energi > 20) {
-                    g1.pos += 0.05;
-                    
-                    var spillerIG2 = false;
-                    for (var j = 0; j < g2.ryt.length; j++) {
-                        if (g2.ryt[j].sp) spillerIG2 = true;
-                    }
-                    if (spillerIG2 && g1.type === "felt") {
-                        G.msg = "💀 Feltet passerer dig - du kan ikke følge med!";
-                    } else if (spillerIG2) {
-                        G.msg = "💀 Du bliver passeret - ingen kræfter til at følge med!";
-                    }
-                    
-                    continue;
-                }
-                
-                // Ellers fusionér normalt
+                // Slå sammen - behold den forreste gruppes position
                 for (var j = 0; j < g2.ryt.length; j++) {
                     if (g1.ryt.indexOf(g2.ryt[j]) < 0) {
                         g1.ryt.push(g2.ryt[j]);
                     }
                 }
                 
-                if (g1.lavEnergi || g2.lavEnergi) {
-                    g1.lavEnergi = true;
-                }
-                
+                // Bestem nyt navn og type
                 if (g1.type === "felt" || g2.type === "felt") {
                     g1.type = "felt";
                     g1.navn = "Feltet";
-                    g1.lavEnergi = false;
                     G.msg = "🔄 Grupper samlet med feltet!";
                 } else if (g1.type === "udbrud" && g2.type === "udbrud") {
-                    if (g1.ryt.length === 1) {
-                        g1.navn = g1.ryt[0].navn.split(" ").pop();
-                    } else {
-                        g1.navn = "Udbrud (" + g1.ryt.length + ")";
-                    }
-                    G.msg = "🔄 Grupper slået sammen!";
+                    g1.navn = "Udbrud (" + g1.ryt.length + ")";
+                    G.msg = "🔄 Udbrud slået sammen!";
                 } else if (g1.type === "gruppetto" || g2.type === "gruppetto") {
                     g1.type = "gruppetto";
                     g1.navn = "Gruppetto";
-                    g1.lavEnergi = true;
                 }
                 
+                // Fjern den tomme gruppe
                 G.grp.splice(i + 1, 1);
                 fusioneret = true;
                 break;
@@ -2508,9 +2397,9 @@ function fusionGrupper() {
         }
     }
     
+    // Fjern tomme grupper
     G.grp = G.grp.filter(function(g) { return g.ryt.length > 0; });
 }
-
 
 function chkMP() {
     var e = G.etaper[G.enr];
@@ -2979,24 +2868,6 @@ function rensGrupper() {
     // Fjern tomme grupper
     G.grp = G.grp.filter(function(g) { return g.ryt.length > 0; });
 }
-
-function getGruppeEnergi(g) {
-    if (g.ryt.length === 0) return 50;
-    
-    var energier = [];
-    for (var j = 0; j < g.ryt.length; j++) {
-        energier.push(g.ryt[j].energi);
-    }
-    energier.sort(function(a, b) { return b - a; });
-    
-    var antalTop = Math.max(1, Math.floor(g.ryt.length * 0.3));
-    var sum = 0;
-    for (var j = 0; j < antalTop; j++) {
-        sum += energier[j];
-    }
-    return sum / antalTop;
-}
-
 
 function accel() {
     if (G.vent) return;
