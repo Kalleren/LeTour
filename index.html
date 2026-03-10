@@ -274,9 +274,8 @@
         border-radius: 5px; 
         display: inline-block; 
         font-size: 18px; 
-        color: #3399ff;
+        color: #ff0;
     }
-
 
             /* Mobiltilpasning */
      /* -- STYR VISNING AF TOP-BAR -- */
@@ -1683,13 +1682,20 @@ for (var i = 0; i < G.ryttere.length; i++) {
                 
                 // Energitærskel baseret på klatreevne
                 var minEnergiForFald;
-                if (r.bj < 50) {
-                    minEnergiForFald = 75 + (r.bj * 0.2);
+                if (r.bj < 40) {
+                    minEnergiForFald = 95;
+                } else if (r.bj < 50) {
+                    minEnergiForFald = 90;
+                } else if (r.bj < 60) {
+                    minEnergiForFald = 85;
                 } else if (r.bj < 70) {
-                    minEnergiForFald = 60 + (r.bj * 0.2);
+                    minEnergiForFald = 75;
+                } else if (r.bj < 80) {
+                    minEnergiForFald = 65;
                 } else {
-                    minEnergiForFald = 40 + (r.bj * 0.3);
+                    minEnergiForFald = 50;
                 }
+
                 if (r.energi > minEnergiForFald) continue;
                 
                 // Risiko beregning
@@ -2428,7 +2434,6 @@ if (reagerende.length > 0) {
 }
 
 function fusionGrupper() {
-    // Sortér efter position
     G.grp.sort(function(a, b) { return b.pos - a.pos; });
     
     var fusioneret = true;
@@ -2439,30 +2444,58 @@ function fusionGrupper() {
             var g1 = G.grp[i];
             var g2 = G.grp[i + 1];
             
-            // Hvis to grupper er tæt nok på hinanden (< 0.15 km)
             var afstand = g1.pos - g2.pos;
             if (afstand >= 0 && afstand < 0.08) {
-                // Slå sammen - behold den forreste gruppes position
+                
+                var g1Energi = getGruppeEnergi(g1);
+                var g2Energi = getGruppeEnergi(g2);
+                
+                // Hvis den hurtigere gruppe har MEGET mere energi, kører de forbi
+                if (g1Energi - g2Energi > 20) {
+                    g1.pos += 0.05;
+                    
+                    var spillerIG2 = false;
+                    for (var j = 0; j < g2.ryt.length; j++) {
+                        if (g2.ryt[j].sp) spillerIG2 = true;
+                    }
+                    if (spillerIG2 && g1.type === "felt") {
+                        G.msg = "💀 Feltet passerer dig - du kan ikke følge med!";
+                    } else if (spillerIG2) {
+                        G.msg = "💀 Du bliver passeret - ingen kræfter til at følge med!";
+                    }
+                    
+                    continue;
+                }
+                
+                // Ellers fusionér normalt
                 for (var j = 0; j < g2.ryt.length; j++) {
                     if (g1.ryt.indexOf(g2.ryt[j]) < 0) {
                         g1.ryt.push(g2.ryt[j]);
                     }
                 }
                 
-                // Bestem nyt navn og type
+                if (g1.lavEnergi || g2.lavEnergi) {
+                    g1.lavEnergi = true;
+                }
+                
                 if (g1.type === "felt" || g2.type === "felt") {
                     g1.type = "felt";
                     g1.navn = "Feltet";
+                    g1.lavEnergi = false;
                     G.msg = "🔄 Grupper samlet med feltet!";
                 } else if (g1.type === "udbrud" && g2.type === "udbrud") {
-                    g1.navn = "Udbrud (" + g1.ryt.length + ")";
-                    G.msg = "🔄 Udbrud slået sammen!";
+                    if (g1.ryt.length === 1) {
+                        g1.navn = g1.ryt[0].navn.split(" ").pop();
+                    } else {
+                        g1.navn = "Udbrud (" + g1.ryt.length + ")";
+                    }
+                    G.msg = "🔄 Grupper slået sammen!";
                 } else if (g1.type === "gruppetto" || g2.type === "gruppetto") {
                     g1.type = "gruppetto";
                     g1.navn = "Gruppetto";
+                    g1.lavEnergi = true;
                 }
                 
-                // Fjern den tomme gruppe
                 G.grp.splice(i + 1, 1);
                 fusioneret = true;
                 break;
@@ -2470,9 +2503,9 @@ function fusionGrupper() {
         }
     }
     
-    // Fjern tomme grupper
     G.grp = G.grp.filter(function(g) { return g.ryt.length > 0; });
 }
+
 
 function chkMP() {
     var e = G.etaper[G.enr];
@@ -2941,6 +2974,24 @@ function rensGrupper() {
     // Fjern tomme grupper
     G.grp = G.grp.filter(function(g) { return g.ryt.length > 0; });
 }
+
+function getGruppeEnergi(g) {
+    if (g.ryt.length === 0) return 50;
+    
+    var energier = [];
+    for (var j = 0; j < g.ryt.length; j++) {
+        energier.push(g.ryt[j].energi);
+    }
+    energier.sort(function(a, b) { return b - a; });
+    
+    var antalTop = Math.max(1, Math.floor(g.ryt.length * 0.3));
+    var sum = 0;
+    for (var j = 0; j < antalTop; j++) {
+        sum += energier[j];
+    }
+    return sum / antalTop;
+}
+
 
 function accel() {
     if (G.vent) return;
