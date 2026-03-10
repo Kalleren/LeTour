@@ -598,7 +598,8 @@ var G = {
     tourNr: 1, bonusPoint: 0, slutPlacering: 0, origStats: null, udbrudTimeout: null,
     rerollsLeft: 5,
     bonusGC: 0,
-    bonusTroeer: 0
+    bonusTroeer: 0,
+    etapeSlut: false
 };
 
 // ========== WAKE LOCK (hold skærm tændt) ==========
@@ -1385,6 +1386,7 @@ function rerollRytter() {
 
 function startEtape() {
     requestWakeLock();
+    G.etapeSlut = false;
     var e = G.etaper[G.enr];
     G.km = 0; G.tid = 0; G.msg = ""; G.vent = false; G.udata = null; G.lastMpResult = null;
     G.profil = genP(e);
@@ -1433,6 +1435,7 @@ function startNorm() {
 }
 function loop() {
     if (G.vent) return;
+    if (G.etapeSlut) return;   // ← kør aldrig videre efter mål
 
     // Rens grupper for udgåede ryttere
     rensGrupper();   
@@ -2881,8 +2884,7 @@ function rensGrupper() {
 }
 
 function accel() {
-    if (G.vent) return;
-    
+    if (G.vent || G.etapeSlut) return;   // ← tilføj G.etapeSlut    
     var e = G.etaper[G.enr];
     var info = ETYPER[e.type];
     var cost = Math.round(2 + info.enrg * 35);
@@ -3171,7 +3173,7 @@ if (Math.random() < ch) {
 }
 
 function pause() {
-    if (G.vent) return;
+    if (G.vent || G.etapeSlut) return;   // ← tilføj G.etapeSlut
     if (G.iv) { clearInterval(G.iv); G.iv = null; G.msg = "⏸️ PAUSE"; }
     else { G.iv = setInterval(loop, 500); G.msg = ""; }
     rend();
@@ -3607,6 +3609,7 @@ function tegnP() {
 // === ENKELTSTART ===
 function startTT() {
     var e = G.etaper[G.enr];
+    G.etapeSlut = false;    // ← nulstil
     G.enkRes = [];
     for (var i = 0; i < G.ryttere.length; i++) {
         var r = G.ryttere[i];
@@ -3638,6 +3641,7 @@ function startTT() {
 
 
 function loopTT() {
+    if (G.etapeSlut) return;   // ← sikkerhed for enkeltstart
     var e = G.etaper[G.enr];
     var info = ETYPER[e.type];
     G.tid += info.sek;
@@ -3794,6 +3798,7 @@ function afslutTT() {
     releaseWakeLock();  // <-- Tilføj denne linje
     clearInterval(G.iv);
     G.iv = null;
+    G.etapeSlut = true;     // ← tilføj
     G.enkRes.push({ r: G.spiller, tid: G.sTid });
     G.enkRes.sort(function(a, b) { return a.tid - b.tid; });
     for (var i = 0; i < G.enkRes.length; i++) {
@@ -3810,7 +3815,8 @@ function afslut() {
     releaseWakeLock();  // <-- Tilføj denne linje
     clearInterval(G.iv);
     G.iv = null;
-    
+    G.etapeSlut = true;     // ← tilføj
+
     var e = G.etaper[G.enr];
     var info = ETYPER[e.type];
     var res = [];
