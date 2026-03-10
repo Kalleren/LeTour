@@ -211,7 +211,6 @@ export const TEAMS = {
     ]}
 };
 
-
 export const  ETYPER = {
     flad: { n: "Flad", enrg: 0.032, uch: 0.008, felt: 0.78, min: 5, mh: 200, sek: 75, grpBonus: 0.95 },
     kuperet: { n: "Kuperet", enrg: 0.048, uch: 0.015, felt: 0.85, min: 3, mh: 700, sek: 85, grpBonus: 0.70 },

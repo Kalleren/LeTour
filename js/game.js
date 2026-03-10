@@ -1,30 +1,41 @@
 import { TEAMS, ETYPER, BYER, BONUS, SPR_PTS_FINISH, BJG_PTS_FINISH, INT_PTS, G } from "./data.js";
-import { ri, rf, sh, ft, $, R, findInArr, ec, togglePopup} from "./utils.js";
-import {gemSpil, hentSpil, harGemtSpil, indlaesGemtSpil, fortsaetSpil} from "./storage.js";
-
+import { ri, rf, sh, ft, $, R, findInArr, ec, togglePopup } from "./utils.js";
+import { gemSpil, hentSpil, harGemtSpil, indlaesGemtSpil, fortsaetSpil } from "./storage.js";
 
 export function resetGrupperTilFelt() {
-  var aktiveRyttere = G.ryttere.filter(function(r) { return !r.ude; });
-  G.grp = [{ type: "felt", navn: "Feltet", ryt: aktiveRyttere, pos: 0, tf: 0 }];
-  alert(G.grp[0]);
+    var aktiveRyttere = G.ryttere.filter(function (r) {
+        return !r.ude;
+    });
+    G.grp = [{
+            type: "felt",
+            navn: "Feltet",
+            ryt: aktiveRyttere,
+            pos: 0,
+            tf: 0
+        }
+    ];
+    alert(G.grp[0]);
 }
 
 export function startGame() {
     var inp = $("pn");
     var n = inp ? inp.value.trim() : "";
-    if (!n) { alert("Indtast dit navn!"); return; }
+    if (!n) {
+        alert("Indtast dit navn!");
+        return;
+    }
     G.navn = n;
-    
+
     var hn = Object.keys(TEAMS);
-    var holdNavn = hn[ri(0, hn.length-1)];
+    var holdNavn = hn[ri(0, hn.length - 1)];
     var hd = TEAMS[holdNavn];
     var ridx = ri(4, 7);
     var rd = hd.r[ridx];
-    
-    G.ryttere = []; 
-    G.sprPts = {}; 
+
+    G.ryttere = [];
+    G.sprPts = {};
     G.bjgPts = {};
-    
+
     for (var hi = 0; hi < hn.length; hi++) {
         var h = hn[hi];
         var team = TEAMS[h];
@@ -38,13 +49,13 @@ export function startGame() {
                 holdAbbr: team.abbr,
                 holdClr: team.clr,
                 sp: erSpiller,
-                gc: x.gc + ri(-2,2),
-                bj: x.bj + ri(-2,2),
-                spr: x.sp + ri(-2,2),
-                tt: x.tt + ri(-2,2),
-                ud: x.ud + ri(-2,2),
-                re: x.re + ri(-2,2),
-                fl: x.fl + ri(-2,2),
+                gc: x.gc + ri(-2, 2),
+                bj: x.bj + ri(-2, 2),
+                spr: x.sp + ri(-2, 2),
+                tt: x.tt + ri(-2, 2),
+                ud: x.ud + ri(-2, 2),
+                re: x.re + ri(-2, 2),
+                fl: x.fl + ri(-2, 2),
                 energi: 100,
                 stid: 0,
                 gi: 0
@@ -52,26 +63,27 @@ export function startGame() {
             G.ryttere.push(r);
             G.sprPts[r.navn] = 0;
             G.bjgPts[r.navn] = 0;
-            if (erSpiller) G.spiller = r;
+            if (erSpiller)
+                G.spiller = r;
         }
     }
-    
+
     G.etaper = genE();
     G.enr = 0;
     rytterInfo(holdNavn, rd);
 }
 
 export function genE() {
-    var t = ["flad","kuperet","flad","bjerg","flad","kuperet","bjerg","kuperet","bjerg","tt","bjerg","kuperet","bjerg","flad","bjerg","kuperet","bjerg","kuperet","bjerg","tt","flad"];
+    var t = ["flad", "kuperet", "flad", "bjerg", "flad", "kuperet", "bjerg", "kuperet", "bjerg", "tt", "bjerg", "kuperet", "bjerg", "flad", "bjerg", "kuperet", "bjerg", "kuperet", "bjerg", "tt", "flad"];
     var result = [];
     for (var i = 0; i < t.length; i++) {
         var x = t[i];
-        result.push({ 
-            nr: i+1, 
-            type: x, 
-            start: i===0 ? "Lille" : BYER[i-1], 
-            slut: BYER[i], 
-            dist: x==="tt" ? ri(28,42) : x==="bjerg" ? ri(155,180) : ri(170,210) 
+        result.push({
+            nr: i + 1,
+            type: x,
+            start: i === 0 ? "Lille" : BYER[i - 1],
+            slut: BYER[i],
+            dist: x === "tt" ? ri(28, 42) : x === "bjerg" ? ri(155, 180) : ri(170, 210)
         });
     }
     return result;
@@ -79,73 +91,74 @@ export function genE() {
 
 export function genENyt() {
     // Forskellige etapetyper - varieret hver gang
-    var typer = ["flad","kuperet","flad","bjerg","flad","kuperet","bjerg","kuperet","bjerg","tt","bjerg","kuperet","bjerg","flad","kuperet","bjerg","bjerg","kuperet","bjerg","tt","flad"];
-    
-// Bland lidt om på rækkefølgen (undtagen første, sidste og enkeltstarter)
-// Find TT positioner og behold dem faste
-var ttPos1 = 3;  // Første TT blandt de første 6 etaper
-var ttPos2 = 18; // Anden TT blandt de sidste 6 etaper
+    var typer = ["flad", "kuperet", "flad", "bjerg", "flad", "kuperet", "bjerg", "kuperet", "bjerg", "tt", "bjerg", "kuperet", "bjerg", "flad", "kuperet", "bjerg", "bjerg", "kuperet", "bjerg", "tt", "flad"];
 
-for (var i = 1; i < typer.length - 1; i++) {
-    // Spring TT-positioner over
-    if (i === ttPos1 || i === ttPos2) continue;
-    
-    if (Math.random() < 0.3) {
-        // Vælg kun en position der ikke er TT
-        var j;
-        do {
-            j = ri(1, typer.length - 2);
-        } while (j === ttPos1 || j === ttPos2);
-        
-        var temp = typer[i];
-        typer[i] = typer[j];
-        typer[j] = temp;
+    // Bland lidt om på rækkefølgen (undtagen første, sidste og enkeltstarter)
+    // Find TT positioner og behold dem faste
+    var ttPos1 = 3; // Første TT blandt de første 6 etaper
+    var ttPos2 = 18; // Anden TT blandt de sidste 6 etaper
+
+    for (var i = 1; i < typer.length - 1; i++) {
+        // Spring TT-positioner over
+        if (i === ttPos1 || i === ttPos2)
+            continue;
+
+        if (Math.random() < 0.3) {
+            // Vælg kun en position der ikke er TT
+            var j;
+            do {
+                j = ri(1, typer.length - 2);
+            } while (j === ttPos1 || j === ttPos2);
+
+            var temp = typer[i];
+            typer[i] = typer[j];
+            typer[j] = temp;
+        }
     }
-}
 
-    
     // Udvid bylisten med flere franske byer
     var alleByer = [
-        "Lille", "Bruxelles", "Dunkerque", "Calais", "Rouen", "Chartres", "Orléans", 
-        "Limoges", "Clermont-Ferrand", "Saint-Étienne", "Gap", "Briançon", 
-        "Barcelonnette", "Nice", "Monaco", "Menton", "Digne", "Valence", 
-        "Villard-de-Lans", "Grenoble", "Lyon", "Marseille", "Toulouse", 
+        "Lille", "Bruxelles", "Dunkerque", "Calais", "Rouen", "Chartres", "Orléans",
+        "Limoges", "Clermont-Ferrand", "Saint-Étienne", "Gap", "Briançon",
+        "Barcelonnette", "Nice", "Monaco", "Menton", "Digne", "Valence",
+        "Villard-de-Lans", "Grenoble", "Lyon", "Marseille", "Toulouse",
         "Bordeaux", "Nantes", "Rennes", "Strasbourg", "Dijon", "Montpellier",
         "Perpignan", "Pau", "Biarritz", "La Rochelle", "Angers", "Tours",
         "Alpe d'Huez", "Col du Tourmalet", "Mont Ventoux", "Col du Galibier",
         "Megève", "Chamonix", "Annecy", "Chambéry", "Albertville", "Bourg-en-Bresse"
     ];
-    
+
     // Vælg tilfældige byer (undtagen Paris som slutby)
     var brugteByer = sh(alleByer).slice(0, 21);
-    
+
     // Sikr at sidste by er Paris
     brugteByer[brugteByer.length - 1] = "Paris";
-    
+
     var result = [];
     for (var i = 0; i < typer.length; i++) {
         var x = typer[i];
-        result.push({ 
-            nr: i+1, 
-            type: x, 
-            start: i === 0 ? brugteByer[0] : brugteByer[i], 
-            slut: brugteByer[i + 1] || "Paris", 
-            dist: x === "tt" ? ri(28,42) : x === "bjerg" ? ri(155,180) : ri(170,210) 
+        result.push({
+            nr: i + 1,
+            type: x,
+            start: i === 0 ? brugteByer[0] : brugteByer[i],
+            slut: brugteByer[i + 1] || "Paris",
+            dist: x === "tt" ? ri(28, 42) : x === "bjerg" ? ri(155, 180) : ri(170, 210)
         });
     }
     return result;
 }
 
 export function genP(e) {
-    var info = ETYPER[e.type]; 
+    var info = ETYPER[e.type];
     var p = [];
     var h = ri(150, 300); // Starthøjde
-    
+
     if (e.type === "flad") {
         // Flade etaper: Små bølger, aldrig helt fladt
         for (var k = 0; k <= e.dist; k++) {
             h += ri(-8, 8);
-            if (k % 20 === 0) h += ri(-15, 15);
+            if (k % 20 === 0)
+                h += ri(-15, 15);
             h = Math.max(20, Math.min(400, h));
             p.push(h);
         }
@@ -156,7 +169,7 @@ export function genP(e) {
         for (var i = 0; i < bakker; i++) {
             bakkePos.push(Math.floor(e.dist * (i + 0.5) / bakker) + ri(-10, 10));
         }
-        
+
         for (var k = 0; k <= e.dist; k++) {
             var bakkeEffect = 0;
             for (var i = 0; i < bakkePos.length; i++) {
@@ -175,7 +188,7 @@ export function genP(e) {
         // Bjergetaper: Store bjerge med kantede profiler
         var bjerge = ri(2, 4);
         var bjergData = [];
-        
+
         for (var i = 0; i < bjerge; i++) {
             var pos = Math.floor(e.dist * (i + 0.5) / bjerge) + ri(-15, 15);
             pos = Math.max(25, Math.min(e.dist - 25, pos));
@@ -191,9 +204,11 @@ export function genP(e) {
                 nedSlut: pos + nedLængde
             });
         }
-        
-        bjergData.sort(function(a, b) { return a.pos - b.pos; });
-        
+
+        bjergData.sort(function (a, b) {
+            return a.pos - b.pos;
+        });
+
         // Evt. bjergfinish
         var bjergFinish = Math.random() < 0.5;
         if (bjergFinish) {
@@ -209,37 +224,39 @@ export function genP(e) {
                 nedSlut: finishPos
             });
         }
-        
+
         var baseHøjde = ri(200, 400);
-        
+
         for (var k = 0; k <= e.dist; k++) {
             var totalHøjde = baseHøjde;
-            
+
             for (var i = 0; i < bjergData.length; i++) {
                 var bjerg = bjergData[i];
-                
+
                 if (k >= bjerg.opStart && k <= bjerg.topPos) {
                     // Op ad bjerget - lineær stigning med lidt variation
                     var progress = (k - bjerg.opStart) / bjerg.opLængde;
                     totalHøjde += bjerg.højde * progress;
                     // Tilføj lidt kantethed
-                    if (ri(0, 3) === 0) totalHøjde += ri(-40, 60);
+                    if (ri(0, 3) === 0)
+                        totalHøjde += ri(-40, 60);
                 } else if (k > bjerg.topPos && k <= bjerg.nedSlut) {
                     // Ned ad bjerget - lineær nedstigning
                     var progress = (k - bjerg.topPos) / bjerg.nedLængde;
                     totalHøjde += bjerg.højde * (1 - progress);
                     // Tilføj lidt kantethed
-                    if (ri(0, 3) === 0) totalHøjde += ri(-30, 40);
+                    if (ri(0, 3) === 0)
+                        totalHøjde += ri(-30, 40);
                 }
             }
-            
+
             // Generel variation mellem bjerge
             totalHøjde += ri(-25, 25);
-            
+
             h = Math.max(100, Math.min(info.mh, totalHøjde));
             p.push(h);
         }
-        
+
         // Gem bjergtoppe til brug for mellempunkter
         e.bjergToppe = [];
         for (var i = 0; i < bjergData.length; i++) {
@@ -247,66 +264,87 @@ export function genP(e) {
                 e.bjergToppe.push(bjergData[i].topPos);
             }
         }
-        
+
     } else if (e.type === "tt") {
         // Enkeltstart: Relativt fladt med små variationer
         for (var k = 0; k <= e.dist; k++) {
             h += ri(-5, 5);
-            if (k % 8 === 0) h += ri(-20, 20);
+            if (k % 8 === 0)
+                h += ri(-20, 20);
             h = Math.max(50, Math.min(350, h));
             p.push(h);
         }
     }
-    
+
     return p;
 }
 
 export function getStigningVis() {
-    if (!G.profil || G.profil.length < 2) return '<span style="display:inline-block;width:100%;padding:3px 8px;border:1px solid #666;color:#666;border-radius:8px;font-size:11px;text-align:center">—</span>';
-    
+    if (!G.profil || G.profil.length < 2)
+        return '<span style="display:inline-block;width:100%;padding:3px 8px;border:1px solid #666;color:#666;border-radius:8px;font-size:11px;text-align:center">—</span>';
+
     var ki = Math.min(Math.floor(G.km), G.profil.length - 2);
     var stig = G.profil[ki + 1] - G.profil[ki];
-    
-    var ikon, farve, tekst;
+
+    var ikon,
+    farve,
+    tekst;
     if (stig > 40) {
-        ikon = "🔥"; farve = "#f00"; tekst = "HC!";
+        ikon = "🔥";
+        farve = "#f00";
+        tekst = "HC!";
     } else if (stig > 25) {
-        ikon = "⛰️"; farve = "#f44"; tekst = "Stejlt!";
+        ikon = "⛰️";
+        farve = "#f44";
+        tekst = "Stejlt!";
     } else if (stig > 12) {
-        ikon = "🔺"; farve = "#f80"; tekst = "Op";
+        ikon = "🔺";
+        farve = "#f80";
+        tekst = "Op";
     } else if (stig > 3) {
-        ikon = "↗️"; farve = "#fa0"; tekst = "Let stig.";
+        ikon = "↗️";
+        farve = "#fa0";
+        tekst = "Let stig.";
     } else if (stig < -20) {
-        ikon = "💨"; farve = "#4f4"; tekst = "Hvil!";
+        ikon = "💨";
+        farve = "#4f4";
+        tekst = "Hvil!";
     } else if (stig < -10) {
-        ikon = "⬇️"; farve = "#4f4"; tekst = "Udfor";
+        ikon = "⬇️";
+        farve = "#4f4";
+        tekst = "Udfor";
     } else if (stig < -3) {
-        ikon = "↘️"; farve = "#8f8"; tekst = "Ned";
+        ikon = "↘️";
+        farve = "#8f8";
+        tekst = "Ned";
     } else {
-        ikon = "➡️"; farve = "#aaa"; tekst = "Fladt";
+        ikon = "➡️";
+        farve = "#aaa";
+        tekst = "Fladt";
     }
-    
+
     return '<span style="display:inline-block;width:100%;padding:3px 8px;border:1px solid ' + farve + ';color:' + farve + ';border-radius:8px;font-size:11px;text-align:center">' + ikon + ' ' + tekst + '</span>';
 }
 
 export function genMP(e) {
-    if (e.type === "tt") return [];
-    
+    if (e.type === "tt")
+        return [];
+
     var mps = [];
-    
+
     if (e.type === "bjerg") {
-    // Bjergspurt på ALLE bjergtoppe (finish er allerede ekskluderet i genP)
-    if (e.bjergToppe && e.bjergToppe.length > 0) {
-        for (var i = 0; i < e.bjergToppe.length; i++) {
-            mps.push({
-                km: e.bjergToppe[i],
-                type: "bjerg",
-                done: false,
-                pts: [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1]
-            });
+        // Bjergspurt på ALLE bjergtoppe (finish er allerede ekskluderet i genP)
+        if (e.bjergToppe && e.bjergToppe.length > 0) {
+            for (var i = 0; i < e.bjergToppe.length; i++) {
+                mps.push({
+                    km: e.bjergToppe[i],
+                    type: "bjerg",
+                    done: false,
+                    pts: [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1]
+                });
+            }
         }
-    }
-} else if (e.type === "kuperet") {
+    } else if (e.type === "kuperet") {
         // Kuperede etaper: En pointspurt og en bjergspurt (højeste punkt)
         mps.push({
             km: Math.floor(e.dist * 0.4),
@@ -322,7 +360,7 @@ export function genMP(e) {
             km: højesteKm,
             type: "bjerg",
             done: false,
-            pts: [10, 8, 6, 4, 2, 1] // Maks 10 point
+            pts: [10, 8, 6, 4, 2, 1]// Maks 10 point
         });
     } else if (e.type === "flad") {
         // Flade etaper: To pointspurter
@@ -339,97 +377,98 @@ export function genMP(e) {
             pts: [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1]
         });
     }
-    
+
     // Sortér efter km
-    mps.sort(function(a, b) { return a.km - b.km; });
-    
+    mps.sort(function (a, b) {
+        return a.km - b.km;
+    });
+
     return mps;
 }
 
 export function intro() {
-	
-	
-	var fortsaetKnap = '';
+
+    var fortsaetKnap = '';
     if (harGemtSpil()) {
         var saved = hentSpil();
         fortsaetKnap =
             '<button class="btn btn-big btn-y" onclick="fortsaetSpil()" ' +
-                'style="font-size:18px;padding:14px 32px;margin-bottom:6px">' +
-                '▶️ FORTSÆT SPIL' +
+            'style="font-size:18px;padding:14px 32px;margin-bottom:6px">' +
+            '▶️ FORTSÆT SPIL' +
             '</button>' +
             '<div style="color:#888;font-size:11px;margin-bottom:10px">' +
-                'Sidst gemt: Tour ' + saved.tourNr + ', etape ' + (saved.enr + 1) +
+            'Sidst gemt: Tour ' + saved.tourNr + ', etape ' + (saved.enr + 1) +
             '</div>';
     }
-	
-	
+
     R('<div style="text-align:center;padding:20px 0">' +
         '<div style="font-size:60px;margin-bottom:5px">🚴‍♂️🏔️🚴‍♂️</div>' +
         '<h1 style="font-size:42px;margin:0;background:linear-gradient(180deg,#ff0 0%,#fa0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;letter-spacing:3px">LE TOUR</h1>' +
         '<div style="font-size:28px;color:#0ff;font-weight:bold;margin-top:5px">2025</div>' +
         '<div style="margin-top:10px">' +
-            '<span style="display:inline-block;width:12px;height:12px;background:#ff0;border-radius:50%;margin:0 4px"></span>' +
-            '<span style="display:inline-block;width:12px;height:12px;background:#0f0;border-radius:50%;margin:0 4px"></span>' +
-            '<span style="display:inline-block;width:12px;height:12px;background:#fff;border-radius:50%;margin:0 4px"></span>' +
+        '<span style="display:inline-block;width:12px;height:12px;background:#ff0;border-radius:50%;margin:0 4px"></span>' +
+        '<span style="display:inline-block;width:12px;height:12px;background:#0f0;border-radius:50%;margin:0 4px"></span>' +
+        '<span style="display:inline-block;width:12px;height:12px;background:#fff;border-radius:50%;margin:0 4px"></span>' +
         '</div>' +
-    '</div>' +
-    '<div class="box" style="text-align:center;border-color:#ff0;background:linear-gradient(180deg,#020 0%,#010 100%)">' +
-    '<h3 style="color:#fff;margin-bottom:12px">Indtast dit rytternavn:</h3>' +
-    '<input id="pn" placeholder="Dit navn..." maxlength="18" style="text-align:center;font-size:18px"><br><br>' +
-    '<button class="btn btn-big btn-y" onclick="startGame()" style="font-size:18px;padding:14px 32px">🏁 START TOUREN 🏁</button>' +
-    '<p style="color:#666;font-size:11px;margin-top:15px">Du tildeles et tilfældigt hold og overtager en rytters plads</p>' +
-'</div>' +
-    '<div class="box jerseys-box" style="background:linear-gradient(180deg,#111 0%,#000 100%)">' +
-    '<h3 style="text-align:center;margin-bottom:12px">🏆 Trøjer at kæmpe om:</h3>' +
-    '<div class="jerseys" style="gap:12px">' +
-            '<div class="jersey jy" style="padding:10px 15px;font-size:13px">' +
-                '<div style="font-size:24px">🟡</div>' +
-                '<div style="font-weight:bold">GUL TRØJE</div>' +
-                '<div style="font-size:10px;opacity:0.8">Samlet klassement</div>' +
-            '</div>' +
-            '<div class="jersey jg" style="padding:10px 15px;font-size:13px">' +
-                '<div style="font-size:24px">🟢</div>' +
-                '<div style="font-weight:bold">GRØN TRØJE</div>' +
-                '<div style="font-size:10px;opacity:0.8">Pointkonkurrencen</div>' +
-            '</div>' +
-            '<div class="jersey jp" style="padding:10px 15px;font-size:13px">' +
-                '<div style="font-size:24px">🔴</div>' +
-                '<div style="font-weight:bold">PRIKKET TRØJE</div>' +
-                '<div style="font-size:10px;opacity:0.8">Bjergkonkurrencen</div>' +
-            '</div>' +
         '</div>' +
-    '</div>' +
-    '<div class="box" style="background:#000;border-color:#333">' +
+        '<div class="box" style="text-align:center;border-color:#ff0;background:linear-gradient(180deg,#020 0%,#010 100%)">' +
+        '<h3 style="color:#fff;margin-bottom:12px">Indtast dit rytternavn:</h3>' +
+        '<input id="pn" placeholder="Dit navn..." maxlength="18" style="text-align:center;font-size:18px"><br><br>' +
+        '<button class="btn btn-big btn-y" onclick="startGame()" style="font-size:18px;padding:14px 32px">🏁 START TOUREN 🏁</button>' +
+        '<p style="color:#666;font-size:11px;margin-top:15px">Du tildeles et tilfældigt hold og overtager en rytters plads</p>' +
+        '</div>' +
+        '<div class="box jerseys-box" style="background:linear-gradient(180deg,#111 0%,#000 100%)">' +
+        '<h3 style="text-align:center;margin-bottom:12px">🏆 Trøjer at kæmpe om:</h3>' +
+        '<div class="jerseys" style="gap:12px">' +
+        '<div class="jersey jy" style="padding:10px 15px;font-size:13px">' +
+        '<div style="font-size:24px">🟡</div>' +
+        '<div style="font-weight:bold">GUL TRØJE</div>' +
+        '<div style="font-size:10px;opacity:0.8">Samlet klassement</div>' +
+        '</div>' +
+        '<div class="jersey jg" style="padding:10px 15px;font-size:13px">' +
+        '<div style="font-size:24px">🟢</div>' +
+        '<div style="font-weight:bold">GRØN TRØJE</div>' +
+        '<div style="font-size:10px;opacity:0.8">Pointkonkurrencen</div>' +
+        '</div>' +
+        '<div class="jersey jp" style="padding:10px 15px;font-size:13px">' +
+        '<div style="font-size:24px">🔴</div>' +
+        '<div style="font-weight:bold">PRIKKET TRØJE</div>' +
+        '<div style="font-size:10px;opacity:0.8">Bjergkonkurrencen</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="box" style="background:#000;border-color:#333">' +
         '<h3 style="text-align:center;margin-bottom:10px">⌨️ Kontroltaster:</h3>' +
         '<div style="display:flex;justify-content:center;gap:15px;flex-wrap:wrap;font-size:12px">' +
-            '<div style="text-align:center;padding:8px 12px;border:1px solid #ff0;border-radius:5px">' +
-                '<div style="font-size:18px;color:#ff0;font-weight:bold">A</div>' +
-                '<div style="color:#888">Accelerer</div>' +
-            '</div>' +
-            '<div style="text-align:center;padding:8px 12px;border:1px solid #0f0;border-radius:5px">' +
-                '<div style="font-size:18px;color:#0f0;font-weight:bold">U</div>' +
-                '<div style="color:#888">Udbrud JA</div>' +
-            '</div>' +
-            '<div style="text-align:center;padding:8px 12px;border:1px solid #f44;border-radius:5px">' +
-                '<div style="font-size:18px;color:#f44;font-weight:bold">N</div>' +
-                '<div style="color:#888">Udbrud NEJ</div>' +
-            '</div>' +
-            '<div style="text-align:center;padding:8px 12px;border:1px solid #0ff;border-radius:5px">' +
-                '<div style="font-size:18px;color:#0ff;font-weight:bold">P</div>' +
-                '<div style="color:#888">Pause</div>' +
-            '</div>' +
+        '<div style="text-align:center;padding:8px 12px;border:1px solid #ff0;border-radius:5px">' +
+        '<div style="font-size:18px;color:#ff0;font-weight:bold">A</div>' +
+        '<div style="color:#888">Accelerer</div>' +
         '</div>' +
-    '<div style="text-align:center;margin-top:15px">' +
-    '<button class="btn" style="border-color:#3399ff;color:#3399ff" onclick="visInstruktioner()">Instruktioner</button>' +
-    '<br><br>' +
-    '<div style="color:#333;font-size:10px">🇫🇷 Inspireret af det klassiske DOS-spil fra 90\'erne 🇫🇷</div>' +
-    '</div>');
-    setTimeout(function() {
+        '<div style="text-align:center;padding:8px 12px;border:1px solid #0f0;border-radius:5px">' +
+        '<div style="font-size:18px;color:#0f0;font-weight:bold">U</div>' +
+        '<div style="color:#888">Udbrud JA</div>' +
+        '</div>' +
+        '<div style="text-align:center;padding:8px 12px;border:1px solid #f44;border-radius:5px">' +
+        '<div style="font-size:18px;color:#f44;font-weight:bold">N</div>' +
+        '<div style="color:#888">Udbrud NEJ</div>' +
+        '</div>' +
+        '<div style="text-align:center;padding:8px 12px;border:1px solid #0ff;border-radius:5px">' +
+        '<div style="font-size:18px;color:#0ff;font-weight:bold">P</div>' +
+        '<div style="color:#888">Pause</div>' +
+        '</div>' +
+        '</div>' +
+        '<div style="text-align:center;margin-top:15px">' +
+        '<button class="btn" style="border-color:#3399ff;color:#3399ff" onclick="visInstruktioner()">Instruktioner</button>' +
+        '<br><br>' +
+        '<div style="color:#333;font-size:10px">🇫🇷 Inspireret af det klassiske DOS-spil fra 90\'erne 🇫🇷</div>' +
+        '</div>');
+    setTimeout(function () {
         var inp = $("pn");
         if (inp) {
             inp.focus();
-            inp.addEventListener("keydown", function(ev) {
-                if (ev.key === "Enter") startGame();
+            inp.addEventListener("keydown", function (ev) {
+                if (ev.key === "Enter")
+                    startGame();
             });
         }
     }, 100);
@@ -437,109 +476,109 @@ export function intro() {
 
 export function visInstruktioner() {
     R(
-    '<h2>Instruktioner</h2>' +
-    '<div class="box">' +
+        '<h2>Instruktioner</h2>' +
+        '<div class="box">' +
         '<h3>Grundidé</h3>' +
         '<p>Du kører en hel Tour de France som én rytter. Spillet simulerer etaperne automatisk; du styrer kun angreb og valg om at gå med i udbrud.</p>' +
-    '</div>' +
+        '</div>' +
 
-    '<div class="box">' +
+        '<div class="box">' +
         '<h3>Styring under etaper</h3>' +
         '<ul style="margin-left:18px;list-style:disc;font-size:14px;line-height:1.4">' +
-            '<li><strong>A</strong> – Accelerer / angrib. Bruges til at forsøge at køre væk eller køre op til en gruppe foran.</li>' +
-            '<li><strong>U</strong> – Sig JA til at gå med i et tilbudt udbrud (popup).</li>' +
-            '<li><strong>N</strong> – Sig NEJ til udbruddet og bliv i feltet.</li>' +
-            '<li><strong>P</strong> – Pause / fortsæt simulationen.</li>' +
+        '<li><strong>A</strong> – Accelerer / angrib. Bruges til at forsøge at køre væk eller køre op til en gruppe foran.</li>' +
+        '<li><strong>U</strong> – Sig JA til at gå med i et tilbudt udbrud (popup).</li>' +
+        '<li><strong>N</strong> – Sig NEJ til udbruddet og bliv i feltet.</li>' +
+        '<li><strong>P</strong> – Pause / fortsæt simulationen.</li>' +
         '</ul>' +
-    '</div>' +
+        '</div>' +
 
-    '<div class="box">' +
+        '<div class="box">' +
         '<h3>Grupper på etapen</h3>' +
         '<ul style="margin-left:18px;list-style:disc;font-size:14px;line-height:1.4">' +
-            '<li><strong>Feltet</strong> – Hovedgruppen med de fleste ryttere.</li>' +
-            '<li><strong>Udbrud / Forfølgere</strong> – Grupper foran feltet.</li>' +
-            '<li><strong>Bagud / Gruppetto</strong> – Grupper der er sat af bagved.</li>' +
+        '<li><strong>Feltet</strong> – Hovedgruppen med de fleste ryttere.</li>' +
+        '<li><strong>Udbrud / Forfølgere</strong> – Grupper foran feltet.</li>' +
+        '<li><strong>Bagud / Gruppetto</strong> – Grupper der er sat af bagved.</li>' +
         '</ul>' +
-    '</div>' +
+        '</div>' +
 
-    '<div class="box">' +
+        '<div class="box">' +
         '<h3>Energi og udskilning</h3>' +
         '<ul style="margin-left:18px;list-style:disc;font-size:14px;line-height:1.4">' +
-            '<li>Alle starter hver etape med en vis mængde energi.</li>' +
-            '<li>Angreb og hårde stigninger koster energi – brug A og U med omtanke.</li>' +
-            '<li>Har du næsten ingen energi, kan du ryge i bagud-gruppe/gruppetto og risikere tidsgrænsen.</li>' +
+        '<li>Alle starter hver etape med en vis mængde energi.</li>' +
+        '<li>Angreb og hårde stigninger koster energi – brug A og U med omtanke.</li>' +
+        '<li>Har du næsten ingen energi, kan du ryge i bagud-gruppe/gruppetto og risikere tidsgrænsen.</li>' +
         '</ul>' +
-    '</div>' +
+        '</div>' +
 
-    '<div class="box">' +
+        '<div class="box">' +
         '<h3>Trøjer</h3>' +
         '<ul style="margin-left:18px;list-style:disc;font-size:14px;line-height:1.4">' +
-            '<li><strong>Gul</strong> – samlet tid (GC).</li>' +
-            '<li><strong>Grøn</strong> – sprintpoint fra indlagte spurter og mål på flade/kuperede etaper.</li>' +
-            '<li><strong>Prikket</strong> – bjergpoint fra bjergspurter og bjergafslutninger.</li>' +
+        '<li><strong>Gul</strong> – samlet tid (GC).</li>' +
+        '<li><strong>Grøn</strong> – sprintpoint fra indlagte spurter og mål på flade/kuperede etaper.</li>' +
+        '<li><strong>Prikket</strong> – bjergpoint fra bjergspurter og bjergafslutninger.</li>' +
         '</ul>' +
-    '</div>' +
+        '</div>' +
 
-    '<div class="box">' +
+        '<div class="box">' +
         '<h3>Karriere og bonuspoint</h3>' +
         '<p>Du kan køre <strong>op til 12 Tours</strong> i din karriere. Efter hver Tour får du bonuspoint, som du kan fordele på dine evner:</p>' +
         '<ul style="margin-left:18px;list-style:disc;font-size:13px;line-height:1.4;margin-top:8px">' +
-            '<li><strong>GC top 10:</strong> 12, 10, 9, 7, 6, 5, 4, 3, 2, 1 point</li>' +
-            '<li><strong>Grøn/prikket top 5:</strong> 5, 4, 3, 2, 1 point</li>' +
+        '<li><strong>GC top 10:</strong> 12, 10, 9, 7, 6, 5, 4, 3, 2, 1 point</li>' +
+        '<li><strong>Grøn/prikket top 5:</strong> 5, 4, 3, 2, 1 point</li>' +
         '</ul>' +
-    '</div>' +
+        '</div>' +
 
-    '<div class="ctrls">' +
+        '<div class="ctrls">' +
         '<button class="btn btn-big btn-y" onclick="intro()">Tilbage</button>' +
-    '</div>');
+        '</div>');
 }
-
 
 export function rytterInfo(hold, orig) {
     var r = G.spiller;
     var pot = Math.round((r.gc + r.bj + r.spr + r.tt + r.ud) / 5);
     var msg = pot >= 85 ? '<div class="box" style="border-color:#ff0"><span class="hl">⭐ STJERNE!</span> Du kan vinde!</div>'
-        : pot >= 72 ? '<div class="box" style="border-color:#0f0"><span class="ok">👍 Solid rytter!</span></div>'
-        : '<div class="box" style="border-color:#f80"><span class="warn">😓 Hjælperytter</span></div>';
-    
-var rerollBtn = '';
-if (G.rerollsLeft > 0) {
-    rerollBtn = '<button class="btn btn-big" onclick="rerollRytter()">Prøv igen (' + G.rerollsLeft + ' tilbage)</button> ';
-} else {
-    rerollBtn = '<button class="btn btn-big" disabled>Ingen forsøg tilbage</button> ';
-}
-    
+         : pot >= 72 ? '<div class="box" style="border-color:#0f0"><span class="ok">👍 Solid rytter!</span></div>'
+         : '<div class="box" style="border-color:#f80"><span class="warn">😓 Hjælperytter</span></div>';
+
+    var rerollBtn = '';
+    if (G.rerollsLeft > 0) {
+        rerollBtn = '<button class="btn btn-big" onclick="rerollRytter()">Prøv igen (' + G.rerollsLeft + ' tilbage)</button> ';
+    } else {
+        rerollBtn = '<button class="btn btn-big" disabled>Ingen forsøg tilbage</button> ';
+    }
+
     R('<h2>🚴 Velkommen ' + G.navn + '!</h2>' +
-    '<div class="box">' +
+        '<div class="box">' +
         '<p><strong>Hold: ' + hold + '</strong> (' + TEAMS[hold].abbr + ')</p>' +
         '<p style="color:#666;font-size:11px">Erstatter: ' + orig.n + '</p>' +
-    '</div>' +
-    '<div class="box">' +
+        '</div>' +
+        '<div class="box">' +
         '<h3>Dine evner:</h3>' +
-        '<div class="sbar"><span class="lbl">Klatring:</span><div class="bg"><div class="fill" style="width:'+r.bj+'%;background:#f44"></div></div><span>'+r.bj+'</span></div>' +
-        '<div class="sbar"><span class="lbl">Sprint:</span><div class="bg"><div class="fill" style="width:'+r.spr+'%;background:#4f4"></div></div><span>'+r.spr+'</span></div>' +
-        '<div class="sbar"><span class="lbl">Tidskørsel:</span><div class="bg"><div class="fill" style="width:'+r.tt+'%;background:#44f"></div></div><span>'+r.tt+'</span></div>' +
-        '<div class="sbar"><span class="lbl">Tempo:</span><div class="bg"><div class="fill" style="width:'+r.fl+'%;background:#0aa"></div></div><span>'+r.fl+'</span></div>' +
-        '<div class="sbar"><span class="lbl">Udholdenhed:</span><div class="bg"><div class="fill" style="width:'+r.ud+'%;background:#f80"></div></div><span>'+r.ud+'</span></div>' +
-        '<div class="sbar"><span class="lbl">Restitution:</span><div class="bg"><div class="fill" style="width:'+r.re+'%;background:#a4f"></div></div><span>'+r.re+'</span></div>' +
-    '</div>' + msg +
-    '<div class="ctrls">' + rerollBtn + '<button class="btn btn-big btn-y" onclick="startEtape()">START TOUREN →</button></div>');
+        '<div class="sbar"><span class="lbl">Klatring:</span><div class="bg"><div class="fill" style="width:' + r.bj + '%;background:#f44"></div></div><span>' + r.bj + '</span></div>' +
+        '<div class="sbar"><span class="lbl">Sprint:</span><div class="bg"><div class="fill" style="width:' + r.spr + '%;background:#4f4"></div></div><span>' + r.spr + '</span></div>' +
+        '<div class="sbar"><span class="lbl">Tidskørsel:</span><div class="bg"><div class="fill" style="width:' + r.tt + '%;background:#44f"></div></div><span>' + r.tt + '</span></div>' +
+        '<div class="sbar"><span class="lbl">Tempo:</span><div class="bg"><div class="fill" style="width:' + r.fl + '%;background:#0aa"></div></div><span>' + r.fl + '</span></div>' +
+        '<div class="sbar"><span class="lbl">Udholdenhed:</span><div class="bg"><div class="fill" style="width:' + r.ud + '%;background:#f80"></div></div><span>' + r.ud + '</span></div>' +
+        '<div class="sbar"><span class="lbl">Restitution:</span><div class="bg"><div class="fill" style="width:' + r.re + '%;background:#a4f"></div></div><span>' + r.re + '</span></div>' +
+        '</div>' + msg +
+        '<div class="ctrls">' + rerollBtn + '<button class="btn btn-big btn-y" onclick="startEtape()">START TOUREN →</button></div>');
 }
 
 export function rerollRytter() {
-    if (G.rerollsLeft <= 0) return;
+    if (G.rerollsLeft <= 0)
+        return;
     G.rerollsLeft--;
-    
+
     var hn = Object.keys(TEAMS);
-    var holdNavn = hn[ri(0, hn.length-1)];
+    var holdNavn = hn[ri(0, hn.length - 1)];
     var hd = TEAMS[holdNavn];
     var ridx = ri(4, 7);
     var rd = hd.r[ridx];
-    
-    G.ryttere = []; 
-    G.sprPts = {}; 
+
+    G.ryttere = [];
+    G.sprPts = {};
     G.bjgPts = {};
-    
+
     for (var hi = 0; hi < hn.length; hi++) {
         var h = hn[hi];
         var team = TEAMS[h];
@@ -553,13 +592,13 @@ export function rerollRytter() {
                 holdAbbr: team.abbr,
                 holdClr: team.clr,
                 sp: erSpiller,
-                gc: x.gc + ri(-2,2),
-                bj: x.bj + ri(-2,2),
-                spr: x.sp + ri(-2,2),
-                tt: x.tt + ri(-2,2),
-                ud: x.ud + ri(-2,2),
-                re: x.re + ri(-2,2),
-                fl: x.fl + ri(-2,2),
+                gc: x.gc + ri(-2, 2),
+                bj: x.bj + ri(-2, 2),
+                spr: x.sp + ri(-2, 2),
+                tt: x.tt + ri(-2, 2),
+                ud: x.ud + ri(-2, 2),
+                re: x.re + ri(-2, 2),
+                fl: x.fl + ri(-2, 2),
                 energi: 100,
                 stid: 0,
                 gi: 0
@@ -567,291 +606,327 @@ export function rerollRytter() {
             G.ryttere.push(r);
             G.sprPts[r.navn] = 0;
             G.bjgPts[r.navn] = 0;
-            if (erSpiller) G.spiller = r;
+            if (erSpiller)
+                G.spiller = r;
         }
     }
-    
+
     rytterInfo(holdNavn, rd);
 }
 
 export function startEtape() {
-	
-    var e = G.etaper[G.enr];
-    G.km = 0; G.tid = 0; G.msg = ""; G.vent = false; G.udata = null; G.lastMpResult = null;
-    G.profil = genP(e);
-	G.mps = genMP(e);
 
-// For kuperede etaper, find det højeste punkt til bjergspurt
-if (e.type === "kuperet" && G.mps.length > 0) {
-    var højestePunkt = 0;
-    var højesteKm = 0;
-    for (var ki = 0; ki < G.profil.length; ki++) {
-        if (G.profil[ki] > højestePunkt) {
-            højestePunkt = G.profil[ki];
-            højesteKm = ki;
+    var e = G.etaper[G.enr];
+    G.km = 0;
+    G.tid = 0;
+    G.msg = "";
+    G.vent = false;
+    G.udata = null;
+    G.lastMpResult = null;
+    G.profil = genP(e);
+    G.mps = genMP(e);
+
+    // For kuperede etaper, find det højeste punkt til bjergspurt
+    if (e.type === "kuperet" && G.mps.length > 0) {
+        var højestePunkt = 0;
+        var højesteKm = 0;
+        for (var ki = 0; ki < G.profil.length; ki++) {
+            if (G.profil[ki] > højestePunkt) {
+                højestePunkt = G.profil[ki];
+                højesteKm = ki;
+            }
         }
-    }
-    // Find bjergspurten og opdater dens km
-    for (var mi = 0; mi < G.mps.length; mi++) {
-        if (G.mps[mi].type === "bjerg") {
-            G.mps[mi].km = højesteKm;
-            break;
+        // Find bjergspurten og opdater dens km
+        for (var mi = 0; mi < G.mps.length; mi++) {
+            if (G.mps[mi].type === "bjerg") {
+                G.mps[mi].km = højesteKm;
+                break;
+            }
         }
+        // Sortér igen
+        G.mps.sort(function (a, b) {
+            return a.km - b.km;
+        });
     }
-    // Sortér igen
-    G.mps.sort(function(a, b) { return a.km - b.km; });
-}
-    for (var i = 0; i < G.ryttere.length; i++) { G.ryttere[i].gi = 0; }
-    
-    if (e.type === "tt") startTT();
-    else startNorm();
+    for (var i = 0; i < G.ryttere.length; i++) {
+        G.ryttere[i].gi = 0;
+    }
+
+    if (e.type === "tt")
+        startTT();
+    else
+        startNorm();
 }
 
 export function startNorm() {
     // Kun aktive ryttere (ikke ude af touren)
-    var aktiveRyttere = G.ryttere.filter(function(r) { return !r.ude; });
-    G.grp = [{ type: "felt", navn: "Feltet", ryt: aktiveRyttere, pos: 0, tf: 0 }];
-    if (G.iv) clearInterval(G.iv);
+    var aktiveRyttere = G.ryttere.filter(function (r) {
+        return !r.ude;
+    });
+    G.grp = [{
+            type: "felt",
+            navn: "Feltet",
+            ryt: aktiveRyttere,
+            pos: 0,
+            tf: 0
+        }
+    ];
+    if (G.iv)
+        clearInterval(G.iv);
     G.iv = setInterval(loop, 400);
     rend();
 }
 
 export function loop() {
-    if (G.vent) return;
+    if (G.vent)
+        return;
 
     // Rens grupper for udgåede ryttere
-    rensGrupper();   
+    rensGrupper();
 
     var e = G.etaper[G.enr];
-    var info = ETYPER[e.type];   
+    var info = ETYPER[e.type];
 
     var ki = Math.min(Math.floor(G.km), G.profil.length - 1);
-    var stig = (G.profil[Math.min(ki+1, G.profil.length-1)] || 0) - (G.profil[ki] || 0);
-    
-// Opdater grupper
-for (var gi = 0; gi < G.grp.length; gi++) {
-    var g = G.grp[gi];
-    var spd = 1.0;
-    var grpSize = g.ryt.length;
-    
-    // Beregn gennemsnitlig styrke i gruppen
-    var grpStyrke = 0;
-    for (var ri = 0; ri < g.ryt.length; ri++) {
-        var rr = g.ryt[ri];
-        if (e.type === "bjerg") {
-            grpStyrke += rr.bj * 0.7 + rr.energi * 0.3;
-        } else if (e.type === "kuperet") {
-            grpStyrke += rr.bj * 0.4 + rr.fl * 0.3 + rr.energi * 0.3;
-        } else {
-            grpStyrke += rr.fl * 0.5 + rr.energi * 0.3 + rr.ud * 0.2;
-        }
-    }
-    grpStyrke = grpSize > 0 ? grpStyrke / grpSize : 50;
-    
-    // Gruppefordel - afhænger af etapetype og gruppestørrelse
-    // Stor fordel på flade etaper, lille fordel i bjerge
-    var grpSizeBonus = 0;
-    if (grpSize >= 2) {
-        var maxBonus = e.type === "flad" ? 0.08 : e.type === "kuperet" ? 0.05 : 0.02;
-        // Logaritmisk kurve: Stor gevinst ved første ryttere, aftager derefter
-        grpSizeBonus = maxBonus * Math.min(Math.log(grpSize) / Math.log(30), 1);
-    }
-    
-if (g.type === "felt") {
-    spd += grpSizeBonus;
-    // Reducer feltets hastighedsbonus - nemmere at holde hjem på kuperet end flad
-    if (e.type === "kuperet") {
-        spd *= (2 - info.felt) * 0.80; // Feltet kører langsommere på kuperet
-    } else if (e.type === "flad") {
-        spd *= (2 - info.felt) * 0.95; // Feltet kører næsten normalt på flad
-    } else {
-        spd *= (2 - info.felt);
-    }
-    // Feltet kører mere stabilt
-    spd += (grpStyrke - 70) * 0.0008;
-} else if (g.type === "udbrud") {
-    // Udbrud får også gruppefordel, men mindre end felt
-    spd += grpSizeBonus * 0.7;
-    
-    var udbBonus = 0.02;
-    if (e.type === "bjerg") {
-        // I bjerge afhænger hastighed MEGET af klatrestyrke
-        udbBonus = 0.03 + (grpStyrke - 70) * 0.002;
-        // Stærke klatrere i udbrud kører hurtigere op ad
-        if (stig > 10) {
-            udbBonus += (grpStyrke - 75) * 0.0015;
-        }
-        // Solo eller lille gruppe i bjerge: Kun styrke tæller
-        if (grpSize <= 2) {
-            udbBonus += (grpStyrke - 80) * 0.001;
-        }
-} else if (e.type === "kuperet") {
-    // Kuperet: Nemmere at holde hjem, men check om der er favoritter
-    var harFavorit = false;
-    for (var fi = 0; fi < g.ryt.length; fi++) {
-        if (g.ryt[fi].gc > 82) {
-            harFavorit = true;
-            break;
-        }
-    }
-    
-    if (harFavorit) {
-        // Favoritter i udbrud: Feltet jagter hårdere, mindre bonus
-        udbBonus = 0.02 + (grpStyrke - 70) * 0.001;
-    } else {
-        // Uden favoritter: Nemmere at holde hjem
-        udbBonus = 0.04 + (grpStyrke - 70) * 0.0015;
-        if (grpSize >= 2) {
-            udbBonus += 0.02;
-        }
-    }
-}
- else {
-        // Flad etape: Sværere at holde hjem - mindre bonus
-        udbBonus = 0.025;
-        if (grpSize >= 4) {
-            udbBonus += 0.015; // Kun bonus for store udbrud
-        }
-    }
-    spd += udbBonus;
-    
-    // Tilfældig variation - udbrud er dynamiske
-    spd += (Math.random() - 0.5) * 0.012;
-    
-}
- else if (g.type === "gruppetto") {
-        // Gruppetto får også lidt gruppefordel
-        spd += grpSizeBonus * 0.5;
-        spd *= 0.82;
-        // Gruppetto kan også variere lidt
-        spd += (Math.random() - 0.5) * 0.006;
-    }
-    
-    // Stejle stigninger påvirker alle grupper forskelligt
-    if (stig > 15) {
-        // På stejle stigninger: Styrke vigtigere, gruppestørrelse mindre vigtig
-        var stejlFaktor = (grpStyrke - 60) * 0.001;
-        spd += stejlFaktor;
-        // Reducer gruppefordel på stejle stigninger
-        spd -= grpSizeBonus * 0.3;
-    }
-    
-    // Nedkørsler - gruppefordel stadig vigtig (læ, hastighed)
-    if (stig < -10) {
-        spd *= 1.04;
-        // Store grupper kører hurtigere ned ad også
-        spd += grpSizeBonus * 0.5;
-    }
-    
-    g.pos += spd;
-}
-    
-    var sg = findInArr(G.grp, function(g) { return g.ryt.indexOf(G.spiller) >= 0; });
-    if (sg) G.km = Math.floor(sg.pos);
-    
-// Energitab - meget mere på stigninger, lidt mindre på fald
-var hf = 1.0;
-if (stig > 0) {
-    // Op ad bakke - eksponentielt hårdere jo stejlere
-    hf = 1.2 + stig * 0.015 + (stig * stig) * 0.0002;
-} else if (stig < 0) {
-    // Ned ad bakke - man restituerer lidt
-    hf = 0.4 + (stig * 0.01); // stig er negativ, så dette reducerer hf
-    hf = Math.max(0.1, hf); // Kan komme ned til 10% energitab (næsten hvile)
-}
+    var stig = (G.profil[Math.min(ki + 1, G.profil.length - 1)] || 0) - (G.profil[ki] || 0);
 
-for (var i = 0; i < G.ryttere.length; i++) {
-    var r = G.ryttere[i];
-    if (r.ude) continue;
-    
-    var uf = (100 - r.ud) / 100;
-    var baseTab = info.enrg * hf * (1.4 + uf * 0.6); // Øget base fra 1.2 til 1.4
-    
-    if (e.type === "bjerg") {
-        // I bjerge er klatreevne MEGET vigtig
-        var klatreEffektivitet = r.bj / 100;
-        if (stig > 0) {
-            // Op ad: Dårlige klatrere lider MEGET mere
-            baseTab *= (1.8 - klatreEffektivitet * 0.9) * 0.8;
-            // Ekstra hårdt på stejle stigninger
-            if (stig > 25) {
-                baseTab *= 1.4 * 0.8;
-            } else if (stig > 15) {
-                baseTab *= 1.2 * 0.8;
+    // Opdater grupper
+    for (var gi = 0; gi < G.grp.length; gi++) {
+        var g = G.grp[gi];
+        var spd = 1.0;
+        var grpSize = g.ryt.length;
+
+        // Beregn gennemsnitlig styrke i gruppen
+        var grpStyrke = 0;
+        for (var ri = 0; ri < g.ryt.length; ri++) {
+            var rr = g.ryt[ri];
+            if (e.type === "bjerg") {
+                grpStyrke += rr.bj * 0.7 + rr.energi * 0.3;
+            } else if (e.type === "kuperet") {
+                grpStyrke += rr.bj * 0.4 + rr.fl * 0.3 + rr.energi * 0.3;
+            } else {
+                grpStyrke += rr.fl * 0.5 + rr.energi * 0.3 + rr.ud * 0.2;
             }
-        } else if (stig < -5) {
-            // Ned ad: Alle restituerer - gode klatrere lidt mere
-            var restitution = 0.03 + klatreEffektivitet * 0.02;
-            r.energi = Math.min(100, r.energi + restitution);
-            baseTab *= 0.3; // Meget lavt energitab ned ad
         }
-    } else if (e.type === "kuperet") {
-        var klatreEffektivitet = (r.bj * 0.6 + r.fl * 0.4) / 100;
-        if (stig > 0) {
-            baseTab *= (1.5 - klatreEffektivitet * 0.6);
-        } else if (stig < -5) {
-            // Lidt restitution ned ad bakke
-            var restitution = 0.02 + klatreEffektivitet * 0.01;
-            r.energi = Math.min(100, r.energi + restitution);
-            baseTab *= 0.5;
+        grpStyrke = grpSize > 0 ? grpStyrke / grpSize : 50;
+
+        // Gruppefordel - afhænger af etapetype og gruppestørrelse
+        // Stor fordel på flade etaper, lille fordel i bjerge
+        var grpSizeBonus = 0;
+        if (grpSize >= 2) {
+            var maxBonus = e.type === "flad" ? 0.08 : e.type === "kuperet" ? 0.05 : 0.02;
+            // Logaritmisk kurve: Stor gevinst ved første ryttere, aftager derefter
+            grpSizeBonus = maxBonus * Math.min(Math.log(grpSize) / Math.log(30), 1);
         }
-    } else if (e.type === "flad") {
-        // Flad: Tempo-evne er vigtigst
-        baseTab *= (1.2 - r.fl * 0.005);
+
+        if (g.type === "felt") {
+            spd += grpSizeBonus;
+            // Reducer feltets hastighedsbonus - nemmere at holde hjem på kuperet end flad
+            if (e.type === "kuperet") {
+                spd *= (2 - info.felt) * 0.80; // Feltet kører langsommere på kuperet
+            } else if (e.type === "flad") {
+                spd *= (2 - info.felt) * 0.95; // Feltet kører næsten normalt på flad
+            } else {
+                spd *= (2 - info.felt);
+            }
+            // Feltet kører mere stabilt
+            spd += (grpStyrke - 70) * 0.0008;
+        } else if (g.type === "udbrud") {
+            // Udbrud får også gruppefordel, men mindre end felt
+            spd += grpSizeBonus * 0.7;
+
+            var udbBonus = 0.02;
+            if (e.type === "bjerg") {
+                // I bjerge afhænger hastighed MEGET af klatrestyrke
+                udbBonus = 0.03 + (grpStyrke - 70) * 0.002;
+                // Stærke klatrere i udbrud kører hurtigere op ad
+                if (stig > 10) {
+                    udbBonus += (grpStyrke - 75) * 0.0015;
+                }
+                // Solo eller lille gruppe i bjerge: Kun styrke tæller
+                if (grpSize <= 2) {
+                    udbBonus += (grpStyrke - 80) * 0.001;
+                }
+            } else if (e.type === "kuperet") {
+                // Kuperet: Nemmere at holde hjem, men check om der er favoritter
+                var harFavorit = false;
+                for (var fi = 0; fi < g.ryt.length; fi++) {
+                    if (g.ryt[fi].gc > 82) {
+                        harFavorit = true;
+                        break;
+                    }
+                }
+
+                if (harFavorit) {
+                    // Favoritter i udbrud: Feltet jagter hårdere, mindre bonus
+                    udbBonus = 0.02 + (grpStyrke - 70) * 0.001;
+                } else {
+                    // Uden favoritter: Nemmere at holde hjem
+                    udbBonus = 0.04 + (grpStyrke - 70) * 0.0015;
+                    if (grpSize >= 2) {
+                        udbBonus += 0.02;
+                    }
+                }
+            } else {
+                // Flad etape: Sværere at holde hjem - mindre bonus
+                udbBonus = 0.025;
+                if (grpSize >= 4) {
+                    udbBonus += 0.015; // Kun bonus for store udbrud
+                }
+            }
+            spd += udbBonus;
+
+            // Tilfældig variation - udbrud er dynamiske
+            spd += (Math.random() - 0.5) * 0.012;
+
+        } else if (g.type === "gruppetto") {
+            // Gruppetto får også lidt gruppefordel
+            spd += grpSizeBonus * 0.5;
+            spd *= 0.82;
+            // Gruppetto kan også variere lidt
+            spd += (Math.random() - 0.5) * 0.006;
+        }
+
+        // Stejle stigninger påvirker alle grupper forskelligt
+        if (stig > 15) {
+            // På stejle stigninger: Styrke vigtigere, gruppestørrelse mindre vigtig
+            var stejlFaktor = (grpStyrke - 60) * 0.001;
+            spd += stejlFaktor;
+            // Reducer gruppefordel på stejle stigninger
+            spd -= grpSizeBonus * 0.3;
+        }
+
+        // Nedkørsler - gruppefordel stadig vigtig (læ, hastighed)
+        if (stig < -10) {
+            spd *= 1.04;
+            // Store grupper kører hurtigere ned ad også
+            spd += grpSizeBonus * 0.5;
+        }
+
+        g.pos += spd;
     }
-    
-    // Ekstra straf for MEGET stejle stigninger (HC-bjerge)
-    if (stig > 40) {
-        baseTab *= 1.5;
-    } else if (stig > 30) {
-        baseTab *= 1.3;
+
+    var sg = findInArr(G.grp, function (g) {
+        return g.ryt.indexOf(G.spiller) >= 0;
+    });
+    if (sg)
+        G.km = Math.floor(sg.pos);
+
+    // Energitab - meget mere på stigninger, lidt mindre på fald
+    var hf = 1.0;
+    if (stig > 0) {
+        // Op ad bakke - eksponentielt hårdere jo stejlere
+        hf = 1.2 + stig * 0.015 + (stig * stig) * 0.0002;
+    } else if (stig < 0) {
+        // Ned ad bakke - man restituerer lidt
+        hf = 0.4 + (stig * 0.01); // stig er negativ, så dette reducerer hf
+        hf = Math.max(0.1, hf); // Kan komme ned til 10% energitab (næsten hvile)
     }
-    
-    r.energi = Math.max(0, r.energi - baseTab);
-}
-    
+
+    for (var i = 0; i < G.ryttere.length; i++) {
+        var r = G.ryttere[i];
+        if (r.ude)
+            continue;
+
+        var uf = (100 - r.ud) / 100;
+        var baseTab = info.enrg * hf * (1.4 + uf * 0.6); // Øget base fra 1.2 til 1.4
+
+        if (e.type === "bjerg") {
+            // I bjerge er klatreevne MEGET vigtig
+            var klatreEffektivitet = r.bj / 100;
+            if (stig > 0) {
+                // Op ad: Dårlige klatrere lider MEGET mere
+                baseTab *= (1.8 - klatreEffektivitet * 0.9) * 0.8;
+                // Ekstra hårdt på stejle stigninger
+                if (stig > 25) {
+                    baseTab *= 1.4 * 0.8;
+                } else if (stig > 15) {
+                    baseTab *= 1.2 * 0.8;
+                }
+            } else if (stig < -5) {
+                // Ned ad: Alle restituerer - gode klatrere lidt mere
+                var restitution = 0.03 + klatreEffektivitet * 0.02;
+                r.energi = Math.min(100, r.energi + restitution);
+                baseTab *= 0.3; // Meget lavt energitab ned ad
+            }
+        } else if (e.type === "kuperet") {
+            var klatreEffektivitet = (r.bj * 0.6 + r.fl * 0.4) / 100;
+            if (stig > 0) {
+                baseTab *= (1.5 - klatreEffektivitet * 0.6);
+            } else if (stig < -5) {
+                // Lidt restitution ned ad bakke
+                var restitution = 0.02 + klatreEffektivitet * 0.01;
+                r.energi = Math.min(100, r.energi + restitution);
+                baseTab *= 0.5;
+            }
+        } else if (e.type === "flad") {
+            // Flad: Tempo-evne er vigtigst
+            baseTab *= (1.2 - r.fl * 0.005);
+        }
+
+        // Ekstra straf for MEGET stejle stigninger (HC-bjerge)
+        if (stig > 40) {
+            baseTab *= 1.5;
+        } else if (stig > 30) {
+            baseTab *= 1.3;
+        }
+
+        r.energi = Math.max(0, r.energi - baseTab);
+    }
+
     // Ryttere falder fra i bjerge - især på stejle stigninger
     if ((e.type === "bjerg" || e.type === "kuperet") && stig > 12) {
-        var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
+        var felt = findInArr(G.grp, function (g) {
+            return g.type === "felt";
+        });
         if (felt && felt.ryt.length > 8) {
             // Jo stejlere, jo flere falder fra
             var basisChance = e.type === "bjerg" ? 0.02 : 0.008;
             var stejlBonus = Math.min(stig / 30, 1.5); // Op til 1.5x ved stejle stigninger
             var faldChance = basisChance * (1 + stejlBonus);
-        
+
             var faldne = [];
             for (var i = 0; i < felt.ryt.length; i++) {
                 var r = felt.ryt[i];
-                if (r.sp || r.ude) continue;
-            
+                if (r.sp || r.ude)
+                    continue;
+
                 // Risiko baseret på klatreevne, energi og stigningens stejlhed
                 var klatreManko = (100 - r.bj) / 100;
                 var energiManko = (100 - r.energi) / 100;
                 var riskFaktor = klatreManko * 0.5 + energiManko * 0.5;
-            
+
                 // Ekstra risiko ved stejle stigninger for dårlige klatrere
                 if (stig > 20 && r.bj < 70) {
                     riskFaktor *= 1.5;
                 }
-            
+
                 if (Math.random() < faldChance * riskFaktor) {
                     faldne.push(r);
                 }
             }
-        
+
             if (faldne.length > 0) {
-                var bagudGrp = findInArr(G.grp, function(g) { 
+                var bagudGrp = findInArr(G.grp, function (g) {
                     return g.type === "gruppetto" && g.pos < felt.pos && felt.pos - g.pos < 0.5; //Rettet fra 3 km til 0.5 km
                 });
-            
+
                 if (!bagudGrp && faldne.length >= 1) {
-                    bagudGrp = { type: "gruppetto", navn: "Bagud", ryt: [], pos: felt.pos - 0.2, tf: 0 };
+                    bagudGrp = {
+                        type: "gruppetto",
+                        navn: "Bagud",
+                        ryt: [],
+                        pos: felt.pos - 0.2,
+                        tf: 0
+                    };
                     G.grp.push(bagudGrp);
                 }
-            
+
                 if (bagudGrp) {
                     for (var i = 0; i < faldne.length; i++) {
-                        felt.ryt = felt.ryt.filter(function(x) { return x !== faldne[i]; });
+                        felt.ryt = felt.ryt.filter(function (x) {
+                            return x !== faldne[i];
+                        });
                         bagudGrp.ryt.push(faldne[i]);
                     }
                     if (faldne.length >= 2) {
@@ -864,154 +939,187 @@ for (var i = 0; i < G.ryttere.length; i++) {
         }
     }
 
-    
-// AI angreb - baseret på etapetype og energi
-if (e.type === "bjerg" && Math.random() < 0.05) {
-    aiAngrebBjerg();
-} else if (e.type === "kuperet" && Math.random() < 0.05) {
-    aiAngrebKuperet();
-} else if (e.type === "flad" && Math.random() < 0.04) {
-    aiAngrebEnergi();
-} else if (e.type === "kuperet" && Math.random() < 0.03) {
-    aiAngrebEnergi();
-}
+    // AI angreb - baseret på etapetype og energi
+    if (e.type === "bjerg" && Math.random() < 0.05) {
+        aiAngrebBjerg();
+    } else if (e.type === "kuperet" && Math.random() < 0.05) {
+        aiAngrebKuperet();
+    } else if (e.type === "flad" && Math.random() < 0.04) {
+        aiAngrebEnergi();
+    } else if (e.type === "kuperet" && Math.random() < 0.03) {
+        aiAngrebEnergi();
+    }
 
-// Favoritter angriber hinanden tæt på mål i bjerge
-if (e.type === "bjerg" && G.km > e.dist - 15) {
-    favoritAngrebSlut();
-}
+    // Favoritter angriber hinanden tæt på mål i bjerge
+    if (e.type === "bjerg" && G.km > e.dist - 15) {
+        favoritAngrebSlut();
+    }
 
-// Favoritter angriber på kuperet i sidste fjerdedel
-if (e.type === "kuperet" && G.km > e.dist * 0.75) {
-    favoritAngrebKuperet();
-}
+    // Favoritter angriber på kuperet i sidste fjerdedel
+    if (e.type === "kuperet" && G.km > e.dist * 0.75) {
+        favoritAngrebKuperet();
+    }
 
-    
     // Mellempunkter
-    if (G.mps && G.mps.length > 0) chkMP();
+    if (G.mps && G.mps.length > 0)
+        chkMP();
 
-    
     // AI udbrud - oftere på flad og kuperet
-var udbCount = 0;
-for (var i = 0; i < G.grp.length; i++) { if (G.grp[i].type === "udbrud") udbCount++; }
-var udbChance = info.uch * 1.5;
-if (e.type === "flad") udbChance = info.uch * 3;
-else if (e.type === "kuperet") udbChance = info.uch * 2.5;
-if (Math.random() < udbChance && udbCount < 5) aiUdb();
+    var udbCount = 0;
+    for (var i = 0; i < G.grp.length; i++) {
+        if (G.grp[i].type === "udbrud")
+            udbCount++;
+    }
+    var udbChance = info.uch * 1.5;
+    if (e.type === "flad")
+        udbChance = info.uch * 3;
+    else if (e.type === "kuperet")
+        udbChance = info.uch * 2.5;
+    if (Math.random() < udbChance && udbCount < 5)
+        aiUdb();
 
-    
     // Tilbyd udbrud - oftere i bjerge
     if (sg && sg.type === "felt" && G.spiller.energi > 20 && !G.vent) {
         var ch = 0.005;
-        if (e.type === "bjerg") ch = 0.020;
-        else if (e.type === "kuperet") ch = 0.012;
-        if (Math.random() < ch) { tilbyd(); return; }
+        if (e.type === "bjerg")
+            ch = 0.020;
+        else if (e.type === "kuperet")
+            ch = 0.012;
+        if (Math.random() < ch) {
+            tilbyd();
+            return;
+        }
     }
-    
+
     // Fusions-check (grupper der mødes)
     fusionGrupper();
-    
+
     chkIndhent();
-    
+
     // Sorter grupper
-    G.grp.sort(function(a, b) { return b.pos - a.pos; });
+    G.grp.sort(function (a, b) {
+        return b.pos - a.pos;
+    });
     var fp = G.grp[0] ? G.grp[0].pos : 0;
     for (var i = 0; i < G.grp.length; i++) {
         G.grp[i].tf = (fp - G.grp[i].pos) * info.sek;
     }
-    
+
     // Udkørte
     for (var i = 0; i < G.ryttere.length; i++) {
         var r = G.ryttere[i];
-        if (r.ude) continue;
+        if (r.ude)
+            continue;
         if (r.energi <= 1) {
-            var rg = findInArr(G.grp, function(g) { return g.ryt.indexOf(r) >= 0; });
+            var rg = findInArr(G.grp, function (g) {
+                return g.ryt.indexOf(r) >= 0;
+            });
             if (rg && rg.type !== "gruppetto") {
-                if (r.sp) G.msg = "💀 Du er udkørt!";
+                if (r.sp)
+                    G.msg = "💀 Du er udkørt!";
                 flytTilGruppetto(r);
             }
         }
     }
-    
+
     // Mål?
-    if (G.grp[0] && G.grp[0].pos >= e.dist) { afslut(); return; }
-    
+    if (G.grp[0] && G.grp[0].pos >= e.dist) {
+        afslut();
+        return;
+    }
+
     rend();
 }
 
 export function aiAngrebKuperet() {
-    var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
-    if (!felt || felt.ryt.length < 10) return;
-    
+    var felt = findInArr(G.grp, function (g) {
+        return g.type === "felt";
+    });
+    if (!felt || felt.ryt.length < 10)
+        return;
+
     var e = G.etaper[G.enr];
-    
+
     // Find ryttere med god energi - men IKKE de store GC-folk (undtagen sidste tredjedel)
     var kand = [];
     for (var i = 0; i < felt.ryt.length; i++) {
         var r = felt.ryt[i];
-        if (r.sp || r.ude) continue;
-        
+        if (r.sp || r.ude)
+            continue;
+
         // GC-favoritter holder sig i ro på kuperede etaper - kun aktive i sidste tredjedel
-        if (r.gc > 75 && G.km < e.dist * 0.67) continue;
+        if (r.gc > 75 && G.km < e.dist * 0.67)
+            continue;
         // Mellem-favoritter holder sig også mere i ro tidligt
-        if (r.gc > 70 && G.km < e.dist * 0.5) continue;
-        
+        if (r.gc > 70 && G.km < e.dist * 0.5)
+            continue;
+
         // Kræver god energi
-        if (r.energi < 60) continue;
-        
+        if (r.energi < 60)
+            continue;
+
         // Puncheurs og udbrudsspezialister
         var evneScore = (r.bj * 0.4 + r.spr * 0.3 + r.ud * 0.3) / 100;
-        if (evneScore < 0.65) continue;
-        
+        if (evneScore < 0.65)
+            continue;
+
         // Lavere angrebslyst end bjerg
         var angrebsLyst = (r.energi - 60) / 40; // 0-1
         angrebsLyst *= evneScore * 0.5; // Halveret ift. bjerg
-        
-        if (r.energi > 80) angrebsLyst *= 1.15;
-        
+
+        if (r.energi > 80)
+            angrebsLyst *= 1.15;
+
         if (Math.random() < angrebsLyst * 0.3) {
             kand.push(r);
         }
     }
-    
-    if (kand.length === 0) return;
-    
-    kand.sort(function(a, b) { 
+
+    if (kand.length === 0)
+        return;
+
+    kand.sort(function (a, b) {
         var aScore = (a.bj * 0.4 + a.spr * 0.3 + a.ud * 0.3);
         var bScore = (b.bj * 0.4 + b.spr * 0.3 + b.ud * 0.3);
-        return bScore - aScore; 
+        return bScore - aScore;
     });
-    
+
     var n = ri(1, Math.min(3, kand.length));
     var angribere = kand.slice(0, n);
-    
+
     for (var i = 0; i < angribere.length; i++) {
-        felt.ryt = felt.ryt.filter(function(x) { return x !== angribere[i]; });
+        felt.ryt = felt.ryt.filter(function (x) {
+            return x !== angribere[i];
+        });
     }
-    
+
     var navn = angribere.length === 1 ? angribere[0].navn.split(" ").pop() : "Angreb (" + angribere.length + ")";
-    G.grp.push({ 
-        type: "udbrud", 
-        navn: navn, 
-        ryt: angribere, 
-        pos: felt.pos + 0.3, 
-        tf: 0 
+    G.grp.push({
+        type: "udbrud",
+        navn: navn,
+        ryt: angribere,
+        pos: felt.pos + 0.3,
+        tf: 0
     });
-    
+
     G.msg = "💨 " + angribere[0].navn.split(" ").pop() + " angriber!";
 }
 
 export function aiAngrebBjerg() {
-    var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
-    if (!felt || felt.ryt.length < 8) return;
-    
+    var felt = findInArr(G.grp, function (g) {
+        return g.type === "felt";
+    });
+    if (!felt || felt.ryt.length < 8)
+        return;
+
     // Check om vi er på en stigning (første bjerg)
     var ki = Math.min(Math.floor(G.km), G.profil.length - 2);
     var stig = G.profil[ki + 1] - G.profil[ki];
-    
+
     // Favoritter venter til første rigtige stigning
-    if (stig < 10) return;
-    
+    if (stig < 10)
+        return;
+
     // Find stærke klatrere med god energi der angriber
     var kand = [];
     for (var i = 0; i < felt.ryt.length; i++) {
@@ -1020,130 +1128,149 @@ export function aiAngrebBjerg() {
             // Jo mere energi, jo mere angrebslysten
             var angrebsLyst = (r.energi - 30) / 70; // 0-1 baseret på energi over 30%
             angrebsLyst *= (r.bj / 100); // Modificer med klatreevne
-            
-            if (r.energi > 70) angrebsLyst *= 1.5; // Ekstra bonus for høj energi
-            if (r.energi > 85) angrebsLyst *= 1.3; // Endnu mere hvis næsten fuld energi
-            
+
+            if (r.energi > 70)
+                angrebsLyst *= 1.5; // Ekstra bonus for høj energi
+            if (r.energi > 85)
+                angrebsLyst *= 1.3; // Endnu mere hvis næsten fuld energi
+
             if (Math.random() < angrebsLyst * 0.6) {
                 kand.push(r);
             }
         }
     }
-    
-    if (kand.length === 0) return;
-    
+
+    if (kand.length === 0)
+        return;
+
     // Sortér efter en kombination af energi og klatreevne
-    kand.sort(function(a, b) { 
+    kand.sort(function (a, b) {
         var aScore = a.bj * 0.6 + a.energi * 0.4;
         var bScore = b.bj * 0.6 + b.energi * 0.4;
-        return bScore - aScore; 
+        return bScore - aScore;
     });
-    
+
     // Vælg 1-4 angribere (flere hvis de har god energi)
     var maxAngribere = kand[0].energi > 80 ? 4 : 3;
     var n = ri(1, Math.min(maxAngribere, kand.length));
     var angribere = kand.slice(0, n);
-    
+
     for (var i = 0; i < angribere.length; i++) {
-        felt.ryt = felt.ryt.filter(function(x) { return x !== angribere[i]; });
+        felt.ryt = felt.ryt.filter(function (x) {
+            return x !== angribere[i];
+        });
     }
-    
+
     var navn = angribere.length === 1 ? angribere[0].navn.split(" ").pop() : "Udbrud";
-    G.grp.push({ 
-        type: "udbrud", 
-        navn: navn, 
-        ryt: angribere, 
-        pos: felt.pos + 0.5, 
-        tf: 0 
+    G.grp.push({
+        type: "udbrud",
+        navn: navn,
+        ryt: angribere,
+        pos: felt.pos + 0.5,
+        tf: 0
     });
-    
+
     G.msg = "⚡ " + angribere[0].navn.split(" ").pop() + " angriber!";
 }
 
 export function aiAngrebEnergi() {
-    var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
-    if (!felt || felt.ryt.length < 12) return;
-    
+    var felt = findInArr(G.grp, function (g) {
+        return g.type === "felt";
+    });
+    if (!felt || felt.ryt.length < 12)
+        return;
+
     var e = G.etaper[G.enr];
-    
+
     // På flade og kuperede etaper
-    if (e.type !== "flad" && e.type !== "kuperet") return;
-    
+    if (e.type !== "flad" && e.type !== "kuperet")
+        return;
+
     // Find "lykkeriddere" - ryttere der IKKE er topsprintere eller topklatrere
     // De har god energi og udholdenhed, men ikke topevner
     var kand = [];
     for (var i = 0; i < felt.ryt.length; i++) {
         var r = felt.ryt[i];
-        if (r.sp || r.ude) continue;
-        
-        // Kræver god energi
-        if (r.energi < 70) continue;
-        
-        // IKKE topsprintere (de vil have massespurt)
-        if (r.spr > 85) continue;
-        
-        // IKKE GC-ryttere (de sparer sig)
-        if (r.gc > 78) continue;
+        if (r.sp || r.ude)
+            continue;
 
-        
+        // Kræver god energi
+        if (r.energi < 70)
+            continue;
+
+        // IKKE topsprintere (de vil have massespurt)
+        if (r.spr > 85)
+            continue;
+
+        // IKKE GC-ryttere (de sparer sig)
+        if (r.gc > 78)
+            continue;
+
         // God udholdenhed og tempo er vigtigt for udbrud
         var udbrudEvne = (r.ud + r.fl) / 2;
-        if (udbrudEvne < 75) continue;
-        
+        if (udbrudEvne < 75)
+            continue;
+
         // Jo mere energi og jo bedre udholdenhed, jo mere angrebslysten
         var angrebsLyst = (r.energi - 70) / 30; // 0-1 baseret på energi
         angrebsLyst *= (udbrudEvne / 100);
-        
+
         // Bonus for høj energi
-        if (r.energi > 85) angrebsLyst *= 1.3;
-        if (r.energi > 95) angrebsLyst *= 1.2;
-        
+        if (r.energi > 85)
+            angrebsLyst *= 1.3;
+        if (r.energi > 95)
+            angrebsLyst *= 1.2;
+
         if (Math.random() < angrebsLyst * 0.35) {
             kand.push(r);
         }
     }
-    
-    if (kand.length === 0) return;
-    
+
+    if (kand.length === 0)
+        return;
+
     // Sortér efter udholdenhed + energi (vigtigst for lange udbrud)
-    kand.sort(function(a, b) { 
+    kand.sort(function (a, b) {
         var aScore = (a.ud + a.fl) * 0.6 + a.energi * 0.4;
         var bScore = (b.ud + b.fl) * 0.6 + b.energi * 0.4;
-        return bScore - aScore; 
+        return bScore - aScore;
     });
-    
+
     // Typisk 2-6 lykkeriddere i et udbrud på flad etape
     var n = ri(2, Math.min(6, kand.length));
     var angribere = kand.slice(0, n);
-    
+
     for (var i = 0; i < angribere.length; i++) {
-        felt.ryt = felt.ryt.filter(function(x) { return x !== angribere[i]; });
+        felt.ryt = felt.ryt.filter(function (x) {
+            return x !== angribere[i];
+        });
     }
-    
-    G.grp.push({ 
-        type: "udbrud", 
-        navn: "Udbrud", 
-        ryt: angribere, 
-        pos: felt.pos + 0.25, 
-        tf: 0 
+
+    G.grp.push({
+        type: "udbrud",
+        navn: "Udbrud",
+        ryt: angribere,
+        pos: felt.pos + 0.25,
+        tf: 0
     });
-    
+
     G.msg = "🎯 " + angribere.length + " lykkeriddere stikker af!";
 }
 
 export function favoritAngrebSlut() {
     var e = G.etaper[G.enr];
-    
+
     // Check om vi er på en stigning
     var ki = Math.min(Math.floor(G.km), G.profil.length - 2);
     var stig = G.profil[ki + 1] - G.profil[ki];
     var erPaaStig = stig > 10;
-    
+
     // Find udbrud med flere favoritter
     for (var gi = 0; gi < G.grp.length; gi++) {
         var g = G.grp[gi];
-        if (g.type !== "udbrud" || g.ryt.length < 2) continue;
-        
+        if (g.type !== "udbrud" || g.ryt.length < 2)
+            continue;
+
         // Tæl favoritter i gruppen
         var favoritter = [];
         for (var i = 0; i < g.ryt.length; i++) {
@@ -1152,100 +1279,114 @@ export function favoritAngrebSlut() {
                 favoritter.push(r);
             }
         }
-        
+
         // Hvis 2+ favoritter, chance for angreb
         if (favoritter.length >= 2) {
             var kmTilMaal = e.dist - G.km;
             var angrebChance = 0.03;
-            
+
             // Højere chance jo tættere på mål
-            if (kmTilMaal < 5) angrebChance = 0.12;
-            else if (kmTilMaal < 10) angrebChance = 0.08;
-            else if (kmTilMaal < 15) angrebChance = 0.05;
-            
+            if (kmTilMaal < 5)
+                angrebChance = 0.12;
+            else if (kmTilMaal < 10)
+                angrebChance = 0.08;
+            else if (kmTilMaal < 15)
+                angrebChance = 0.05;
+
             // Ekstra høj chance på stigninger (sidste bjerg)
             if (erPaaStig) {
                 angrebChance *= 2.5;
                 // Endnu højere på stejle stigninger
-                if (stig > 20) angrebChance *= 1.5;
-                if (stig > 30) angrebChance *= 1.3;
+                if (stig > 20)
+                    angrebChance *= 1.5;
+                if (stig > 30)
+                    angrebChance *= 1.3;
             }
-            
+
             if (Math.random() < angrebChance) {
                 // Vælg en favorit der angriber (den med mest energi og bedst klatring)
-                favoritter.sort(function(a, b) {
+                favoritter.sort(function (a, b) {
                     var aScore = a.energi * 0.6 + a.bj * 0.4;
                     var bScore = b.energi * 0.6 + b.bj * 0.4;
                     return bScore - aScore;
                 });
-                
+
                 var angriber = favoritter[0];
-                
+
                 // Beregn hvor meget energi der skal bruges for at nå mål
                 var energiTilMaal = kmTilMaal * 0.8; // Ca. estimat
-                if (erPaaStig) energiTilMaal = kmTilMaal * 1.2; // Mere på stigninger
-                
+                if (erPaaStig)
+                    energiTilMaal = kmTilMaal * 1.2; // Mere på stigninger
+
                 // Kræver nok energi til at nå mål + lidt margin
                 var minEnergi = Math.max(20, energiTilMaal + 10);
-                if (angriber.energi < minEnergi || angriber.sp) continue;
-                
+                if (angriber.energi < minEnergi || angriber.sp)
+                    continue;
+
                 // Fjern fra nuværende gruppe
-g.ryt = g.ryt.filter(function(r) { return r !== angriber; });
+                g.ryt = g.ryt.filter(function (r) {
+                    return r !== angriber;
+                });
 
-// Andre favoritter forsøger at reagere
-var reagerende = [];
-for (var fi = 0; fi < g.ryt.length; fi++) {
-    var rival = g.ryt[fi];
-    if (rival.gc > 80 && !rival.ude && !rival.sp) {
-        // Reagerer hvis de har energi og er stærke nok
-        var reaktionsChance = (rival.energi - 30) / 70 * (rival.bj / 100);
-        if (rival.energi > 50 && Math.random() < reaktionsChance * 0.7) {
-            reagerende.push(rival);
-        }
-    }
-}
+                // Andre favoritter forsøger at reagere
+                var reagerende = [];
+                for (var fi = 0; fi < g.ryt.length; fi++) {
+                    var rival = g.ryt[fi];
+                    if (rival.gc > 80 && !rival.ude && !rival.sp) {
+                        // Reagerer hvis de har energi og er stærke nok
+                        var reaktionsChance = (rival.energi - 30) / 70 * (rival.bj / 100);
+                        if (rival.energi > 50 && Math.random() < reaktionsChance * 0.7) {
+                            reagerende.push(rival);
+                        }
+                    }
+                }
 
-// Fjern reagerende fra gruppen
-for (var ri = 0; ri < reagerende.length; ri++) {
-    g.ryt = g.ryt.filter(function(r) { return r !== reagerende[ri]; });
-    reagerende[ri].energi -= 6; // Koster energi at reagere
-}
+                // Fjern reagerende fra gruppen
+                for (var ri = 0; ri < reagerende.length; ri++) {
+                    g.ryt = g.ryt.filter(function (r) {
+                        return r !== reagerende[ri];
+                    });
+                    reagerende[ri].energi -= 6; // Koster energi at reagere
+                }
 
-// Opret udbrud med angriber og evt. reagerende
-var nyGrpRyttere = [angriber];
-for (var ri = 0; ri < reagerende.length; ri++) {
-    nyGrpRyttere.push(reagerende[ri]);
-}
+                // Opret udbrud med angriber og evt. reagerende
+                var nyGrpRyttere = [angriber];
+                for (var ri = 0; ri < reagerende.length; ri++) {
+                    nyGrpRyttere.push(reagerende[ri]);
+                }
 
-var nyNavn = nyGrpRyttere.length === 1 ? angriber.navn.split(" ").pop() : "Favoritgruppe";
-G.grp.push({
-    type: "udbrud",
-    navn: nyNavn,
-    ryt: nyGrpRyttere,
-    pos: g.pos + 0.3,
-    tf: 0
-});
+                var nyNavn = nyGrpRyttere.length === 1 ? angriber.navn.split(" ").pop() : "Favoritgruppe";
+                G.grp.push({
+                    type: "udbrud",
+                    navn: nyNavn,
+                    ryt: nyGrpRyttere,
+                    pos: g.pos + 0.3,
+                    tf: 0
+                });
 
-// Brug energi - mere på stejle stigninger
-var energiKost = erPaaStig ? 9 : 7;
-if (stig > 25) energiKost = 11;
-angriber.energi -= energiKost;
+                // Brug energi - mere på stejle stigninger
+                var energiKost = erPaaStig ? 9 : 7;
+                if (stig > 25)
+                    energiKost = 11;
+                angriber.energi -= energiKost;
 
-if (reagerende.length > 0) {
-    G.msg = "⚡ " + angriber.navn.split(" ").pop() + " ANGRIBER! " + reagerende.length + " følger!";
-} else {
-    G.msg = "⚡ " + angriber.navn.split(" ").pop() + " ANGRIBER!";
-}
+                if (reagerende.length > 0) {
+                    G.msg = "⚡ " + angriber.navn.split(" ").pop() + " ANGRIBER! " + reagerende.length + " følger!";
+                } else {
+                    G.msg = "⚡ " + angriber.navn.split(" ").pop() + " ANGRIBER!";
+                }
 
-// Kun ét angreb per loop
-return;
+                // Kun ét angreb per loop
+                return;
             }
         }
     }
-    
+
     // Check også hovedfeltet for favoritter der vil angribe på stigninger
     if (erPaaStig && G.km > e.dist - 25) {
-        var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
+        var felt = findInArr(G.grp, function (g) {
+            return g.type === "felt";
+        });
         if (felt && felt.ryt.length > 5) {
             var feltFavoritter = [];
             for (var i = 0; i < felt.ryt.length; i++) {
@@ -1254,66 +1395,72 @@ return;
                     feltFavoritter.push(r);
                 }
             }
-            
+
             if (feltFavoritter.length > 0) {
                 var angrebChance = 0.04;
-                if (stig > 20) angrebChance = 0.08;
-                if (stig > 30) angrebChance = 0.12;
-                
+                if (stig > 20)
+                    angrebChance = 0.08;
+                if (stig > 30)
+                    angrebChance = 0.12;
+
                 if (Math.random() < angrebChance) {
                     // Sortér efter energi og klatreevne
-                    feltFavoritter.sort(function(a, b) {
+                    feltFavoritter.sort(function (a, b) {
                         return (b.energi * 0.5 + b.bj * 0.5) - (a.energi * 0.5 + a.bj * 0.5);
                     });
-                    
+
                     var angriber = feltFavoritter[0];
                     var kmTilMaal = e.dist - G.km;
                     var energiTilMaal = kmTilMaal * 1.2;
-                    
+
                     if (angriber.energi > energiTilMaal + 15) {
-    felt.ryt = felt.ryt.filter(function(r) { return r !== angriber; });
-    
-    // Andre favoritter forsøger at reagere fra feltet
-    var reagerende = [];
-    for (var fi = 0; fi < felt.ryt.length; fi++) {
-        var rival = felt.ryt[fi];
-        if (rival.gc > 80 && !rival.ude && !rival.sp && rival.energi > 45) {
-            var reaktionsChance = (rival.energi - 40) / 60 * (rival.bj / 100);
-            if (Math.random() < reaktionsChance * 0.6) {
-                reagerende.push(rival);
-            }
-        }
-    }
-    
-    // Fjern reagerende fra feltet
-    for (var ri = 0; ri < reagerende.length; ri++) {
-        felt.ryt = felt.ryt.filter(function(r) { return r !== reagerende[ri]; });
-        reagerende[ri].energi -= 7;
-    }
-    
-    // Opret udbrud med angriber og evt. reagerende
-    var nyGrpRyttere = [angriber];
-    for (var ri = 0; ri < reagerende.length; ri++) {
-        nyGrpRyttere.push(reagerende[ri]);
-    }
-    
-    var nyNavn = nyGrpRyttere.length === 1 ? angriber.navn.split(" ").pop() : "Favoritgruppe";
-    G.grp.push({
-        type: "udbrud",
-        navn: nyNavn,
-        ryt: nyGrpRyttere,
-        pos: felt.pos + 0.4,
-        tf: 0
-    });
-    
-    angriber.energi -= 11;
-    
-    if (reagerende.length > 0) {
-        G.msg = "🔥 " + angriber.navn.split(" ").pop() + " ANGRIBER! " + reagerende.length + " reagerer!";
-    } else {
-        G.msg = "🔥 " + angriber.navn.split(" ").pop() + " ANGRIBER FRA FELTET!";
-    }
-}
+                        felt.ryt = felt.ryt.filter(function (r) {
+                            return r !== angriber;
+                        });
+
+                        // Andre favoritter forsøger at reagere fra feltet
+                        var reagerende = [];
+                        for (var fi = 0; fi < felt.ryt.length; fi++) {
+                            var rival = felt.ryt[fi];
+                            if (rival.gc > 80 && !rival.ude && !rival.sp && rival.energi > 45) {
+                                var reaktionsChance = (rival.energi - 40) / 60 * (rival.bj / 100);
+                                if (Math.random() < reaktionsChance * 0.6) {
+                                    reagerende.push(rival);
+                                }
+                            }
+                        }
+
+                        // Fjern reagerende fra feltet
+                        for (var ri = 0; ri < reagerende.length; ri++) {
+                            felt.ryt = felt.ryt.filter(function (r) {
+                                return r !== reagerende[ri];
+                            });
+                            reagerende[ri].energi -= 7;
+                        }
+
+                        // Opret udbrud med angriber og evt. reagerende
+                        var nyGrpRyttere = [angriber];
+                        for (var ri = 0; ri < reagerende.length; ri++) {
+                            nyGrpRyttere.push(reagerende[ri]);
+                        }
+
+                        var nyNavn = nyGrpRyttere.length === 1 ? angriber.navn.split(" ").pop() : "Favoritgruppe";
+                        G.grp.push({
+                            type: "udbrud",
+                            navn: nyNavn,
+                            ryt: nyGrpRyttere,
+                            pos: felt.pos + 0.4,
+                            tf: 0
+                        });
+
+                        angriber.energi -= 11;
+
+                        if (reagerende.length > 0) {
+                            G.msg = "🔥 " + angriber.navn.split(" ").pop() + " ANGRIBER! " + reagerende.length + " reagerer!";
+                        } else {
+                            G.msg = "🔥 " + angriber.navn.split(" ").pop() + " ANGRIBER FRA FELTET!";
+                        }
+                    }
 
                 }
             }
@@ -1323,32 +1470,42 @@ return;
 
 export function favoritAngrebKuperet() {
     var e = G.etaper[G.enr];
-    
+
     // Favoritter angriber kun i sidste tredjedel på kuperet
-    if (G.km < e.dist * 0.67) return;
-    
-    var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
-    if (!felt || felt.ryt.length < 8) return;
-    
+    if (G.km < e.dist * 0.67)
+        return;
+
+    var felt = findInArr(G.grp, function (g) {
+        return g.type === "felt";
+    });
+    if (!felt || felt.ryt.length < 8)
+        return;
+
     // Check om vi er på en stigning
     var ki = Math.min(Math.floor(G.km), G.profil.length - 2);
     var stig = G.profil[ki + 1] - G.profil[ki];
-    
+
     // Kun angreb på stigninger
-    if (stig < 8) return;
-    
+    if (stig < 8)
+        return;
+
     var kmTilMaal = e.dist - G.km;
     var angrebChance = 0.03;
-    
-    if (kmTilMaal < 10) angrebChance = 0.08;
-    else if (kmTilMaal < 20) angrebChance = 0.05;
-    
+
+    if (kmTilMaal < 10)
+        angrebChance = 0.08;
+    else if (kmTilMaal < 20)
+        angrebChance = 0.05;
+
     // Højere chance på stejlere stigninger
-    if (stig > 15) angrebChance *= 1.5;
-    if (stig > 25) angrebChance *= 1.3;
-    
-    if (Math.random() > angrebChance) return;
-    
+    if (stig > 15)
+        angrebChance *= 1.5;
+    if (stig > 25)
+        angrebChance *= 1.3;
+
+    if (Math.random() > angrebChance)
+        return;
+
     // Find favoritter med god energi
     var favoritter = [];
     for (var i = 0; i < felt.ryt.length; i++) {
@@ -1360,72 +1517,79 @@ export function favoritAngrebKuperet() {
             }
         }
     }
-    
-    if (favoritter.length === 0) return;
-    
+
+    if (favoritter.length === 0)
+        return;
+
     // Sortér efter energi og evner
-    favoritter.sort(function(a, b) {
+    favoritter.sort(function (a, b) {
         return (b.energi * 0.4 + b.bj * 0.4 + b.gc * 0.2) - (a.energi * 0.4 + a.bj * 0.4 + a.gc * 0.2);
     });
-    
-    var angriber = favoritter[0];
-    
-    felt.ryt = felt.ryt.filter(function(r) { return r !== angriber; });
 
-// Andre favoritter forsøger at reagere
-var reagerende = [];
-for (var fi = 0; fi < felt.ryt.length; fi++) {
-    var rival = felt.ryt[fi];
-    if (rival.gc > 78 && !rival.ude && !rival.sp && rival.energi > 40) {
-        var reaktionsChance = (rival.energi - 35) / 65 * ((rival.bj + rival.gc) / 200);
-        if (Math.random() < reaktionsChance * 0.5) {
-            reagerende.push(rival);
+    var angriber = favoritter[0];
+
+    felt.ryt = felt.ryt.filter(function (r) {
+        return r !== angriber;
+    });
+
+    // Andre favoritter forsøger at reagere
+    var reagerende = [];
+    for (var fi = 0; fi < felt.ryt.length; fi++) {
+        var rival = felt.ryt[fi];
+        if (rival.gc > 78 && !rival.ude && !rival.sp && rival.energi > 40) {
+            var reaktionsChance = (rival.energi - 35) / 65 * ((rival.bj + rival.gc) / 200);
+            if (Math.random() < reaktionsChance * 0.5) {
+                reagerende.push(rival);
+            }
         }
     }
-}
 
-// Fjern reagerende fra feltet
-for (var ri = 0; ri < reagerende.length; ri++) {
-    felt.ryt = felt.ryt.filter(function(r) { return r !== reagerende[ri]; });
-    reagerende[ri].energi -= 5;
-}
+    // Fjern reagerende fra feltet
+    for (var ri = 0; ri < reagerende.length; ri++) {
+        felt.ryt = felt.ryt.filter(function (r) {
+            return r !== reagerende[ri];
+        });
+        reagerende[ri].energi -= 5;
+    }
 
-// Opret udbrud med angriber og evt. reagerende
-var nyGrpRyttere = [angriber];
-for (var ri = 0; ri < reagerende.length; ri++) {
-    nyGrpRyttere.push(reagerende[ri]);
-}
+    // Opret udbrud med angriber og evt. reagerende
+    var nyGrpRyttere = [angriber];
+    for (var ri = 0; ri < reagerende.length; ri++) {
+        nyGrpRyttere.push(reagerende[ri]);
+    }
 
-var nyNavn = nyGrpRyttere.length === 1 ? angriber.navn.split(" ").pop() : "Favoritgruppe";
-G.grp.push({
-    type: "udbrud",
-    navn: nyNavn,
-    ryt: nyGrpRyttere,
-    pos: felt.pos + 0.35,
-    tf: 0
-});
+    var nyNavn = nyGrpRyttere.length === 1 ? angriber.navn.split(" ").pop() : "Favoritgruppe";
+    G.grp.push({
+        type: "udbrud",
+        navn: nyNavn,
+        ryt: nyGrpRyttere,
+        pos: felt.pos + 0.35,
+        tf: 0
+    });
 
-angriber.energi -= 7;
+    angriber.energi -= 7;
 
-if (reagerende.length > 0) {
-    G.msg = "⚡ " + angriber.navn.split(" ").pop() + " angriber! " + reagerende.length + " følger!";
-} else {
-    G.msg = "⚡ " + angriber.navn.split(" ").pop() + " angriber på bakken!";
-}
+    if (reagerende.length > 0) {
+        G.msg = "⚡ " + angriber.navn.split(" ").pop() + " angriber! " + reagerende.length + " følger!";
+    } else {
+        G.msg = "⚡ " + angriber.navn.split(" ").pop() + " angriber på bakken!";
+    }
 }
 
 export function fusionGrupper() {
     // Sortér efter position
-    G.grp.sort(function(a, b) { return b.pos - a.pos; });
-    
+    G.grp.sort(function (a, b) {
+        return b.pos - a.pos;
+    });
+
     var fusioneret = true;
     while (fusioneret) {
         fusioneret = false;
-        
+
         for (var i = 0; i < G.grp.length - 1; i++) {
             var g1 = G.grp[i];
             var g2 = G.grp[i + 1];
-            
+
             // Hvis to grupper er tæt nok på hinanden (< 0.15 km)
             var afstand = g1.pos - g2.pos;
             if (afstand >= 0 && afstand < 0.15) {
@@ -1435,7 +1599,7 @@ export function fusionGrupper() {
                         g1.ryt.push(g2.ryt[j]);
                     }
                 }
-                
+
                 // Bestem nyt navn og type
                 if (g1.type === "felt" || g2.type === "felt") {
                     g1.type = "felt";
@@ -1448,7 +1612,7 @@ export function fusionGrupper() {
                     g1.type = "gruppetto";
                     g1.navn = "Gruppetto";
                 }
-                
+
                 // Fjern den tomme gruppe
                 G.grp.splice(i + 1, 1);
                 fusioneret = true;
@@ -1456,49 +1620,64 @@ export function fusionGrupper() {
             }
         }
     }
-    
+
     // Fjern tomme grupper
-    G.grp = G.grp.filter(function(g) { return g.ryt.length > 0; });
+    G.grp = G.grp.filter(function (g) {
+        return g.ryt.length > 0;
+    });
 }
 
 export function chkMP() {
     var e = G.etaper[G.enr];
-    
+
     // Check alle mellempunkter der ikke er done
     for (var mi = 0; mi < G.mps.length; mi++) {
         var mp = G.mps[mi];
-        if (mp.done) continue;
-        
+        if (mp.done)
+            continue;
+
         // Check om førende gruppe har krydset
-        G.grp.sort(function(a, b) { return b.pos - a.pos; });
-        if (G.grp.length === 0 || G.grp[0].pos < mp.km) continue;
-        
+        G.grp.sort(function (a, b) {
+            return b.pos - a.pos;
+        });
+        if (G.grp.length === 0 || G.grp[0].pos < mp.km)
+            continue;
+
         mp.done = true;
-        
+
         // Saml ALLE ryttere fra ALLE grupper, sorteret efter position
         var alleRyttere = [];
         for (var gi = 0; gi < G.grp.length; gi++) {
             var g = G.grp[gi];
             var so = g.ryt.slice();
-            
+
             // Sortér internt i gruppen efter relevant evne
             if (mp.type === "sprint") {
-                so.sort(function(a, b) { return (b.spr + ri(-8,8)) - (a.spr + ri(-8,8)); });
+                so.sort(function (a, b) {
+                    return (b.spr + ri(-8, 8)) - (a.spr + ri(-8, 8));
+                });
             } else {
-                so.sort(function(a, b) { return (b.bj + ri(-8,8)) - (a.bj + ri(-8,8)); });
+                so.sort(function (a, b) {
+                    return (b.bj + ri(-8, 8)) - (a.bj + ri(-8, 8));
+                });
             }
-            
+
             for (var ri2 = 0; ri2 < so.length; ri2++) {
-                alleRyttere.push({ r: so[ri2], grpPos: g.pos });
+                alleRyttere.push({
+                    r: so[ri2],
+                    grpPos: g.pos
+                });
             }
         }
-        
+
         // Sortér efter gruppeposition (højeste først)
-        alleRyttere.sort(function(a, b) { return b.grpPos - a.grpPos; });
-        
+        alleRyttere.sort(function (a, b) {
+            return b.grpPos - a.grpPos;
+        });
+
         // Giv point
         var pointModtagere = Math.min(mp.pts.length, alleRyttere.length);
-        
+
         for (var i = 0; i < pointModtagere; i++) {
             var pts = mp.pts[i];
             if (mp.type === "sprint") {
@@ -1507,97 +1686,124 @@ export function chkMP() {
                 G.bjgPts[alleRyttere[i].r.navn] = (G.bjgPts[alleRyttere[i].r.navn] || 0) + pts;
             }
         }
-        
+
         // Gem resultat til visning
-        G.lastMpResult = { type: mp.type, top10: [] };
+        G.lastMpResult = {
+            type: mp.type,
+            top10: []
+        };
         for (var i = 0; i < pointModtagere; i++) {
-            G.lastMpResult.top10.push({ 
-                navn: alleRyttere[i].r.navn, 
-                sp: alleRyttere[i].r.sp, 
-                pts: mp.pts[i] 
+            G.lastMpResult.top10.push({
+                navn: alleRyttere[i].r.navn,
+                sp: alleRyttere[i].r.sp,
+                pts: mp.pts[i]
             });
         }
-        
+
         // Besked
         var spi = -1;
         for (var i = 0; i < pointModtagere; i++) {
-            if (alleRyttere[i].r.sp) { spi = i; break; }
+            if (alleRyttere[i].r.sp) {
+                spi = i;
+                break;
+            }
         }
         var em = mp.type === "sprint" ? "🟢 SPRINT" : "🔴 BJERG";
-        
+
         if (spi >= 0) {
             G.msg = em + ": Du blev nr. " + (spi + 1) + "! (+" + mp.pts[spi] + " pts)";
         } else {
             G.msg = em + ": " + alleRyttere[0].r.navn.split(" ").pop() + " vinder!";
         }
-        
+
         // Fjern mellempunkt-resultat efter 6 sekunder
-        setTimeout(function() {
+        setTimeout(function () {
             G.lastMpResult = null;
         }, 6000);
-        
+
         // Kun ét mellempunkt ad gangen
         return;
     }
 }
 
 export function aiUdb() {
-    var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
-    if (!felt || felt.ryt.length < 15) return;
-    
+    var felt = findInArr(G.grp, function (g) {
+        return g.type === "felt";
+    });
+    if (!felt || felt.ryt.length < 15)
+        return;
+
     var e = G.etaper[G.enr];
     var info = ETYPER[e.type];
-    var n = e.type === "bjerg" ? ri(1,3) : e.type === "kuperet" ? ri(2,5) : ri(info.min, 8);
-    
-// Check om vi er på en stigning
-var ki = Math.min(Math.floor(G.km), G.profil.length - 2);
-var stig = G.profil[ki + 1] - G.profil[ki];
+    var n = e.type === "bjerg" ? ri(1, 3) : e.type === "kuperet" ? ri(2, 5) : ri(info.min, 8);
 
-var kand = [];
-for (var i = 0; i < felt.ryt.length; i++) {
-    var r = felt.ryt[i];
-    if (r.sp || r.ude) continue;
-    
-    // Basis: energi over 35%
-    if (r.energi < 35) continue;
-    
-// På bjergetaper: Favoritter (gc > 75) venter til første stigning
-if (e.type === "bjerg" && r.gc > 75 && stig < 10) continue;
+    // Check om vi er på en stigning
+    var ki = Math.min(Math.floor(G.km), G.profil.length - 2);
+    var stig = G.profil[ki + 1] - G.profil[ki];
 
-// På kuperede etaper: GC-favoritter venter til sidste tredjedel
-if (e.type === "kuperet" && r.gc > 70 && G.km < e.dist * 0.67) continue;
+    var kand = [];
+    for (var i = 0; i < felt.ryt.length; i++) {
+        var r = felt.ryt[i];
+        if (r.sp || r.ude)
+            continue;
 
-        
+        // Basis: energi over 35%
+        if (r.energi < 35)
+            continue;
+
+        // På bjergetaper: Favoritter (gc > 75) venter til første stigning
+        if (e.type === "bjerg" && r.gc > 75 && stig < 10)
+            continue;
+
+        // På kuperede etaper: GC-favoritter venter til sidste tredjedel
+        if (e.type === "kuperet" && r.gc > 70 && G.km < e.dist * 0.67)
+            continue;
+
         // Beregn angrebslyst baseret på energi
-var energiBonus = (r.energi - 35) / 65; // 0-1
-var basisChance = 0.3;
+        var energiBonus = (r.energi - 35) / 65; // 0-1
+        var basisChance = 0.3;
 
-// Højere chance med mere energi
-if (r.energi > 60) basisChance += 0.2;
-if (r.energi > 80) basisChance += 0.2;
+        // Højere chance med mere energi
+        if (r.energi > 60)
+            basisChance += 0.2;
+        if (r.energi > 80)
+            basisChance += 0.2;
 
-// Modificer med relevante evner - højere chance på flad og kuperet for ikke-GC ryttere
-if (e.type === "bjerg") {
-    basisChance *= (r.bj / 80);
-} else if (e.type === "flad") {
-    basisChance *= (r.spr / 70); // Lettere for sprintere
-    if (r.gc < 75) basisChance *= 1.5; // Ikke-GC ryttere er mere aggressive
-    if (r.ud > 80) basisChance *= 1.3; // Udholdende ryttere
-} else if (e.type === "kuperet") {
-    basisChance *= ((r.bj + r.spr) / 140);
-    if (r.gc < 75) basisChance *= 1.4; // Ikke-GC ryttere er mere aggressive
-    if (r.bj > 75) basisChance *= 1.2; // Gode klatrere
-}
-        
+        // Modificer med relevante evner - højere chance på flad og kuperet for ikke-GC ryttere
+        if (e.type === "bjerg") {
+            basisChance *= (r.bj / 80);
+        } else if (e.type === "flad") {
+            basisChance *= (r.spr / 70); // Lettere for sprintere
+            if (r.gc < 75)
+                basisChance *= 1.5; // Ikke-GC ryttere er mere aggressive
+            if (r.ud > 80)
+                basisChance *= 1.3; // Udholdende ryttere
+        } else if (e.type === "kuperet") {
+            basisChance *= ((r.bj + r.spr) / 140);
+            if (r.gc < 75)
+                basisChance *= 1.4; // Ikke-GC ryttere er mere aggressive
+            if (r.bj > 75)
+                basisChance *= 1.2; // Gode klatrere
+        }
+
         if (Math.random() < basisChance * energiBonus) {
             kand.push(r);
         }
     }
-    
-    if (e.type === "bjerg") kand.sort(function(a,b) { return (b.bj + b.energi*0.3) - (a.bj + a.energi*0.3); });
-    else if (e.type === "flad") kand.sort(function(a,b) { return (b.spr + b.energi*0.3) - (a.spr + a.energi*0.3); });
-    else kand.sort(function(a,b) { return b.energi - a.energi; });
-    
+
+    if (e.type === "bjerg")
+        kand.sort(function (a, b) {
+            return (b.bj + b.energi * 0.3) - (a.bj + a.energi * 0.3);
+        });
+    else if (e.type === "flad")
+        kand.sort(function (a, b) {
+            return (b.spr + b.energi * 0.3) - (a.spr + a.energi * 0.3);
+        });
+    else
+        kand.sort(function (a, b) {
+            return b.energi - a.energi;
+        });
+
     if (kand.length < n) {
         // Fyld op med tilfældige energiske ryttere
         var ekstra = [];
@@ -1607,88 +1813,122 @@ if (e.type === "bjerg") {
                 ekstra.push(r);
             }
         }
-        ekstra.sort(function(a,b) { return b.energi - a.energi; });
+        ekstra.sort(function (a, b) {
+            return b.energi - a.energi;
+        });
         while (kand.length < n && ekstra.length > 0) {
             kand.push(ekstra.shift());
         }
     }
-    
-    if (kand.length === 0) return;
-    
+
+    if (kand.length === 0)
+        return;
+
     var udb = kand.slice(0, n);
     for (var i = 0; i < udb.length; i++) {
-        felt.ryt = felt.ryt.filter(function(x) { return x !== udb[i]; });
+        felt.ryt = felt.ryt.filter(function (x) {
+            return x !== udb[i];
+        });
         udb[i].gi = G.grp.length;
     }
-    
+
     var udbNum = 1;
-for (var i = 0; i < G.grp.length; i++) { if (G.grp[i].type === "udbrud") udbNum++; }
-
-// Check om der er store favoritter med (gc > 85)
-var harStorFavorit = false;
-for (var i = 0; i < udb.length; i++) {
-    if (udb[i].gc > 85) {
-        harStorFavorit = true;
-        break;
+    for (var i = 0; i < G.grp.length; i++) {
+        if (G.grp[i].type === "udbrud")
+            udbNum++;
     }
-}
 
-var udbNavn = harStorFavorit ? "Favoritgruppe" : "Udbrud";
-G.grp.push({ type: "udbrud", navn: udbNavn, ryt: udb, pos: felt.pos + 0.3, tf: 0 });
+    // Check om der er store favoritter med (gc > 85)
+    var harStorFavorit = false;
+    for (var i = 0; i < udb.length; i++) {
+        if (udb[i].gc > 85) {
+            harStorFavorit = true;
+            break;
+        }
+    }
+
+    var udbNavn = harStorFavorit ? "Favoritgruppe" : "Udbrud";
+    G.grp.push({
+        type: "udbrud",
+        navn: udbNavn,
+        ryt: udb,
+        pos: felt.pos + 0.3,
+        tf: 0
+    });
 
     G.msg = "🚴💨 " + udb.length + " ryttere angriber!";
 }
 
 export function tilbyd() {
-    var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
-    if (!felt) return;
-    
+    var felt = findInArr(G.grp, function (g) {
+        return g.type === "felt";
+    });
+    if (!felt)
+        return;
+
     var e = G.etaper[G.enr];
-    var n = e.type === "bjerg" ? ri(0,2) : e.type === "kuperet" ? ri(1,3) : ri(2,5);
-    
+    var n = e.type === "bjerg" ? ri(0, 2) : e.type === "kuperet" ? ri(1, 3) : ri(2, 5);
+
     var kand = [];
     for (var i = 0; i < felt.ryt.length; i++) {
-        if (!felt.ryt[i].sp && felt.ryt[i].energi > 35) kand.push(felt.ryt[i]);
+        if (!felt.ryt[i].sp && felt.ryt[i].energi > 35)
+            kand.push(felt.ryt[i]);
     }
     var med = sh(kand).slice(0, n);
     var cost = e.type === "bjerg" ? 5 : e.type === "kuperet" ? 4 : 3;
-    
+
     G.vent = true;
-    G.udata = { med: med, cost: cost };
-    
+    G.udata = {
+        med: med,
+        cost: cost
+    };
+
     // Automatisk nej efter 5 sekunder
-    G.udbrudTimeout = setTimeout(function() {
+    G.udbrudTimeout = setTimeout(function () {
         if (G.vent && G.udata) {
             G.msg = "⏱️ For langsom - du bliver i feltet.";
             rejUdb();
         }
     }, 5000);
-    
+
     rend();
 }
 
 export function accUdb() {
-    if (!G.udata) return;
-    
+    if (!G.udata)
+        return;
+
     // Stop timeout
     if (G.udbrudTimeout) {
         clearTimeout(G.udbrudTimeout);
         G.udbrudTimeout = null;
     }
-    
-    var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
 
-    if (!felt) return;
-    
+    var felt = findInArr(G.grp, function (g) {
+        return g.type === "felt";
+    });
+
+    if (!felt)
+        return;
+
     var d = G.udata;
-    if (G.spiller.energi < d.cost) { G.msg = "❌ Ikke nok energi!"; G.vent = false; G.udata = null; return; }
-    
-    G.spiller.energi -= d.cost;
-    felt.ryt = felt.ryt.filter(function(r) { return r !== G.spiller; });
-    for (var i = 0; i < d.med.length; i++) {
-        felt.ryt = felt.ryt.filter(function(x) { return x !== d.med[i]; });
+    if (G.spiller.energi < d.cost) {
+        G.msg = "❌ Ikke nok energi!";
+        G.vent = false;
+        G.udata = null;
+        return;
     }
-    
+
+    G.spiller.energi -= d.cost;
+    felt.ryt = felt.ryt.filter(function (r) {
+        return r !== G.spiller;
+    });
+    for (var i = 0; i < d.med.length; i++) {
+        felt.ryt = felt.ryt.filter(function (x) {
+            return x !== d.med[i];
+        });
+    }
+
     // GC-ryttere reagerer på spillerens angreb
     var e = G.etaper[G.enr];
     var reagerende = [];
@@ -1698,33 +1938,47 @@ export function accUdb() {
             // Højere chance for at reagere jo bedre GC-rytter
             var reaktionsChance = (r.gc - 75) / 25 * (r.energi / 100);
             // Øget chance på bjerge og kuperet
-            if (e.type === "bjerg") reaktionsChance *= 1.3;
-            else if (e.type === "kuperet") reaktionsChance *= 1.1;
-            
+            if (e.type === "bjerg")
+                reaktionsChance *= 1.3;
+            else if (e.type === "kuperet")
+                reaktionsChance *= 1.1;
+
             if (Math.random() < reaktionsChance * 0.7) {
                 reagerende.push(r);
             }
         }
     }
-    
+
     // Fjern reagerende fra feltet
     for (var i = 0; i < reagerende.length; i++) {
-        felt.ryt = felt.ryt.filter(function(x) { return x !== reagerende[i]; });
+        felt.ryt = felt.ryt.filter(function (x) {
+            return x !== reagerende[i];
+        });
         reagerende[i].energi -= 4;
     }
-    
+
     var ni = G.grp.length;
     G.spiller.gi = ni;
-    for (var i = 0; i < d.med.length; i++) d.med[i].gi = ni;
-    for (var i = 0; i < reagerende.length; i++) reagerende[i].gi = ni;
-    
+    for (var i = 0; i < d.med.length; i++)
+        d.med[i].gi = ni;
+    for (var i = 0; i < reagerende.length; i++)
+        reagerende[i].gi = ni;
+
     var ryt = [G.spiller];
-    for (var i = 0; i < d.med.length; i++) ryt.push(d.med[i]);
-    for (var i = 0; i < reagerende.length; i++) ryt.push(reagerende[i]);
-    
+    for (var i = 0; i < d.med.length; i++)
+        ryt.push(d.med[i]);
+    for (var i = 0; i < reagerende.length; i++)
+        ryt.push(reagerende[i]);
+
     var navn = ryt.length > 1 ? "Udbrud" : "Solo";
-    G.grp.push({ type: "udbrud", navn: navn, ryt: ryt, pos: felt.pos + 0.6, tf: 0 });
-    
+    G.grp.push({
+        type: "udbrud",
+        navn: navn,
+        ryt: ryt,
+        pos: felt.pos + 0.6,
+        tf: 0
+    });
+
     if (reagerende.length > 0) {
         G.msg = "🚀 Du angriber! " + reagerende.length + " GC-ryttere reagerer!";
     } else if (d.med.length > 0) {
@@ -1732,8 +1986,9 @@ export function accUdb() {
     } else {
         G.msg = "🚀 SOLO ANGREB!";
     }
-    
-    G.vent = false; G.udata = null;
+
+    G.vent = false;
+    G.udata = null;
 }
 
 export function rejUdb() {
@@ -1742,128 +1997,158 @@ export function rejUdb() {
         clearTimeout(G.udbrudTimeout);
         G.udbrudTimeout = null;
     }
-    
-    var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
+
+    var felt = findInArr(G.grp, function (g) {
+        return g.type === "felt";
+    });
     var d = G.udata;
-    
+
     if (d && d.med.length > 0 && Math.random() < 0.5 && felt) {
         for (var i = 0; i < d.med.length; i++) {
-            felt.ryt = felt.ryt.filter(function(x) { return x !== d.med[i]; });
+            felt.ryt = felt.ryt.filter(function (x) {
+                return x !== d.med[i];
+            });
         }
         var udbNum = 1;
-        for (var i = 0; i < G.grp.length; i++) { if (G.grp[i].type === "udbrud") udbNum++; }
-        G.grp.push({ type: "udbrud", navn: "Udbrud", ryt: d.med, pos: felt.pos + 0.3, tf: 0 });
+        for (var i = 0; i < G.grp.length; i++) {
+            if (G.grp[i].type === "udbrud")
+                udbNum++;
+        }
+        G.grp.push({
+            type: "udbrud",
+            navn: "Udbrud",
+            ryt: d.med,
+            pos: felt.pos + 0.3,
+            tf: 0
+        });
         G.msg = d.med.length + " kørte alligevel!";
     } else {
         G.msg = "Du bliver i feltet.";
     }
-    G.vent = false; G.udata = null;
+    G.vent = false;
+    G.udata = null;
     rend();
 }
 
 export function chkIndhent() {
-    var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
-    if (!felt) return;
-    
+    var felt = findInArr(G.grp, function (g) {
+        return g.type === "felt";
+    });
+    if (!felt)
+        return;
+
     var e = G.etaper[G.enr];
     var info = ETYPER[e.type];
-    
-// Feltet jagter - MEGET mindre effektivt i bjerge
-var jagteRate = (2 - info.felt) * 0.0001 * info.grpBonus;
-if (e.type === "bjerg") jagteRate *= 0.45;
-else if (e.type === "kuperet") jagteRate *= 0.1;
-else if (e.type === "flad") jagteRate *= 0.1;
-    
+
+    // Feltet jagter - MEGET mindre effektivt i bjerge
+    var jagteRate = (2 - info.felt) * 0.0001 * info.grpBonus;
+    if (e.type === "bjerg")
+        jagteRate *= 0.45;
+    else if (e.type === "kuperet")
+        jagteRate *= 0.1;
+    else if (e.type === "flad")
+        jagteRate *= 0.1;
+
     var newGrp = [];
-for (var i = 0; i < G.grp.length; i++) {
-    var g = G.grp[i];
-    if (g.type === "udbrud") {
-        var afstand = g.pos - felt.pos;
-        
-        // Check om der er klassementryttere i udbruddet
-        var harKlassement = false;
-        for (var ui = 0; ui < g.ryt.length; ui++) {
-            if (g.ryt[ui].gc > 82) {
-                harKlassement = true;
-                break;
+    for (var i = 0; i < G.grp.length; i++) {
+        var g = G.grp[i];
+        if (g.type === "udbrud") {
+            var afstand = g.pos - felt.pos;
+
+            // Check om der er klassementryttere i udbruddet
+            var harKlassement = false;
+            for (var ui = 0; ui < g.ryt.length; ui++) {
+                if (g.ryt[ui].gc > 82) {
+                    harKlassement = true;
+                    break;
+                }
             }
-        }
-        
-        // Beregn gennemsnitlig energi i udbruddet
-        var udbrudEnergi = 0;
-        for (var ui = 0; ui < g.ryt.length; ui++) {
-            udbrudEnergi += g.ryt[ui].energi;
-        }
-        udbrudEnergi = g.ryt.length > 0 ? udbrudEnergi / g.ryt.length : 50;
-        
-        // Modificer jagterate baseret på klassement og energi
-var modJagteRate = jagteRate;
-if (!harKlassement) {
-    // Uden klassementryttere jagter feltet mindre aggressivt
-    if (e.type === "bjerg") modJagteRate *= 0.5;
-    else if (e.type === "kuperet") modJagteRate *= 0.55;
-    else modJagteRate *= 0.70;
-    
-    // Hvis udbruddet har meget energi, er de endnu sværere at hente
-    if (udbrudEnergi > 70) modJagteRate *= 0.7;
-    else if (udbrudEnergi > 50) modJagteRate *= 0.85;
-} else {
-    // MED klassementryttere jagter feltet MEGET hårdere
-    if (e.type === "kuperet") modJagteRate *= 1.8;
-    else if (e.type === "flad") modJagteRate *= 1.5;
-}
 
-       
-// Felt kører kun op hvis ret tæt på - venter længere på flade/kuperede
-// Udbrud kan få op til 1 min forspring (ca. 0.8-1.2 km ved normal hastighed)
-var jagtAfstand = 5;
-if (e.type === "flad") jagtAfstand = 3;
-else if (e.type === "kuperet") jagtAfstand = 4;
+            // Beregn gennemsnitlig energi i udbruddet
+            var udbrudEnergi = 0;
+            for (var ui = 0; ui < g.ryt.length; ui++) {
+                udbrudEnergi += g.ryt[ui].energi;
+            }
+            udbrudEnergi = g.ryt.length > 0 ? udbrudEnergi / g.ryt.length : 50;
 
-// Beregn tidsforskel i sekunder (afstand * sek per km)
-var tidsForskel = afstand * info.sek;
+            // Modificer jagterate baseret på klassement og energi
+            var modJagteRate = jagteRate;
+            if (!harKlassement) {
+                // Uden klassementryttere jagter feltet mindre aggressivt
+                if (e.type === "bjerg")
+                    modJagteRate *= 0.5;
+                else if (e.type === "kuperet")
+                    modJagteRate *= 0.55;
+                else
+                    modJagteRate *= 0.70;
 
-// Først start jagten når udbruddet har fået nok forspring
-// Nemmere at holde hjem på kuperet end flad
-var minTidsForskel = 0;
-if (e.type === "kuperet") minTidsForskel = 150; // 2.5 minutter - nemmest at holde hjem
-else if (e.type === "flad") minTidsForskel = 120; // 2 minutter
-else if (e.type === "bjerg") minTidsForskel = 30; // 30 sekunder
+                // Hvis udbruddet har meget energi, er de endnu sværere at hente
+                if (udbrudEnergi > 70)
+                    modJagteRate *= 0.7;
+                else if (udbrudEnergi > 50)
+                    modJagteRate *= 0.85;
+            } else {
+                // MED klassementryttere jagter feltet MEGET hårdere
+                if (e.type === "kuperet")
+                    modJagteRate *= 1.8;
+                else if (e.type === "flad")
+                    modJagteRate *= 1.5;
+            }
 
-if (tidsForskel > minTidsForskel && afstand < jagtAfstand) {
-    felt.pos += modJagteRate;
-}
+            // Felt kører kun op hvis ret tæt på - venter længere på flade/kuperede
+            // Udbrud kan få op til 1 min forspring (ca. 0.8-1.2 km ved normal hastighed)
+            var jagtAfstand = 5;
+            if (e.type === "flad")
+                jagtAfstand = 3;
+            else if (e.type === "kuperet")
+                jagtAfstand = 4;
 
-// Feltet sætter farten op hvis de er mere end 5 minutter bagud
-if (tidsForskel > 300) {
-    // Check om der er GC-ryttere i feltet
-    var harGCiFelt = false;
-    for (var fi = 0; fi < felt.ryt.length; fi++) {
-        if (felt.ryt[fi].gc > 78) {
-            harGCiFelt = true;
-            break;
-        }
-    }
-    
-    if (harGCiFelt) {
-        // Feltet jagter MEGET hårdere - ekstra fart
-        var panikRate = 0.08;
-        if (tidsForskel > 400) panikRate = 0.15; // Over 6.5 min
-        if (tidsForskel > 480) panikRate = 0.25; // Over 8 min
-        if (tidsForskel > 600) panikRate = 0.40; // Over 10 min
-        felt.pos += panikRate;
-        
-        // Sæt besked hvis de virkelig jagter
-        if (tidsForskel > 400 && Math.random() < 0.02) {
-            G.msg = "🔥 Feltet sætter fuld fart på!";
-        }
-    }
-}
+            // Beregn tidsforskel i sekunder (afstand * sek per km)
+            var tidsForskel = afstand * info.sek;
 
+            // Først start jagten når udbruddet har fået nok forspring
+            // Nemmere at holde hjem på kuperet end flad
+            var minTidsForskel = 0;
+            if (e.type === "kuperet")
+                minTidsForskel = 150; // 2.5 minutter - nemmest at holde hjem
+            else if (e.type === "flad")
+                minTidsForskel = 120; // 2 minutter
+            else if (e.type === "bjerg")
+                minTidsForskel = 30; // 30 sekunder
 
+            if (tidsForskel > minTidsForskel && afstand < jagtAfstand) {
+                felt.pos += modJagteRate;
+            }
 
+            // Feltet sætter farten op hvis de er mere end 5 minutter bagud
+            if (tidsForskel > 300) {
+                // Check om der er GC-ryttere i feltet
+                var harGCiFelt = false;
+                for (var fi = 0; fi < felt.ryt.length; fi++) {
+                    if (felt.ryt[fi].gc > 78) {
+                        harGCiFelt = true;
+                        break;
+                    }
+                }
 
-         
+                if (harGCiFelt) {
+                    // Feltet jagter MEGET hårdere - ekstra fart
+                    var panikRate = 0.08;
+                    if (tidsForskel > 400)
+                        panikRate = 0.15; // Over 6.5 min
+                    if (tidsForskel > 480)
+                        panikRate = 0.25; // Over 8 min
+                    if (tidsForskel > 600)
+                        panikRate = 0.40; // Over 10 min
+                    felt.pos += panikRate;
+
+                    // Sæt besked hvis de virkelig jagter
+                    if (tidsForskel > 400 && Math.random() < 0.02) {
+                        G.msg = "🔥 Feltet sætter fuld fart på!";
+                    }
+                }
+            }
+
             // Indhent kun hvis MEGET tæt
             if (afstand < 0.08) {
                 for (var j = 0; j < g.ryt.length; j++) {
@@ -1879,14 +2164,17 @@ if (tidsForskel > 300) {
         newGrp.push(g);
     }
     G.grp = newGrp;
-    
+
     // Slå små gruppettoer sammen
     var gruppettoer = [];
     for (var i = 0; i < G.grp.length; i++) {
-        if (G.grp[i].type === "gruppetto") gruppettoer.push(G.grp[i]);
+        if (G.grp[i].type === "gruppetto")
+            gruppettoer.push(G.grp[i]);
     }
     if (gruppettoer.length > 1) {
-        gruppettoer.sort(function(a, b) { return b.pos - a.pos; });
+        gruppettoer.sort(function (a, b) {
+            return b.pos - a.pos;
+        });
         for (var i = 1; i < gruppettoer.length; i++) {
             if (gruppettoer[0].pos - gruppettoer[i].pos < 1) {
                 for (var j = 0; j < gruppettoer[i].ryt.length; j++) {
@@ -1896,19 +2184,33 @@ if (tidsForskel > 300) {
             }
         }
         // Fjern tomme grupper
-        G.grp = G.grp.filter(function(g) { return g.ryt.length > 0; });
+        G.grp = G.grp.filter(function (g) {
+            return g.ryt.length > 0;
+        });
     }
 }
 
 export function flytTilGruppetto(r) {
     for (var i = 0; i < G.grp.length; i++) {
-        G.grp[i].ryt = G.grp[i].ryt.filter(function(x) { return x !== r; });
+        G.grp[i].ryt = G.grp[i].ryt.filter(function (x) {
+            return x !== r;
+        });
     }
-    
-    var grp = findInArr(G.grp, function(g) { return g.type === "gruppetto"; });
+
+    var grp = findInArr(G.grp, function (g) {
+        return g.type === "gruppetto";
+    });
     if (!grp) {
-        var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
-        grp = { type: "gruppetto", navn: "Gruppetto", ryt: [], pos: (felt ? felt.pos : G.km) - 3, tf: 0 };
+        var felt = findInArr(G.grp, function (g) {
+            return g.type === "felt";
+        });
+        grp = {
+            type: "gruppetto",
+            navn: "Gruppetto",
+            ryt: [],
+            pos: (felt ? felt.pos : G.km) - 3,
+            tf: 0
+        };
         G.grp.push(grp);
     }
     grp.ryt.push(r);
@@ -1918,158 +2220,198 @@ export function flytTilGruppetto(r) {
 export function rensGrupper() {
     // Fjern udgåede ryttere fra alle grupper
     for (var i = 0; i < G.grp.length; i++) {
-        G.grp[i].ryt = G.grp[i].ryt.filter(function(r) { return !r.ude; });
+        G.grp[i].ryt = G.grp[i].ryt.filter(function (r) {
+            return !r.ude;
+        });
     }
     // Fjern tomme grupper
-    G.grp = G.grp.filter(function(g) { return g.ryt.length > 0; });
+    G.grp = G.grp.filter(function (g) {
+        return g.ryt.length > 0;
+    });
 }
 
 export function accel() {
-    if (G.vent) return;
-    
+    if (G.vent)
+        return;
+
     var e = G.etaper[G.enr];
     var info = ETYPER[e.type];
     var cost = Math.round(2 + info.enrg * 35);
-    
+
     // Billigere at accelerere i bjerge hvis man er god klatrer
     if (e.type === "bjerg") {
         cost = Math.round(cost * (1.2 - G.spiller.bj / 200));
     }
-    
-    if (G.spiller.energi < cost) { G.msg = "❌ Ikke nok energi!"; rend(); return; }
-    G.spiller.energi -= cost;
-    
-    var sg = findInArr(G.grp, function(g) { return g.ryt.indexOf(G.spiller) >= 0; });
-    if (!sg) return;
-    
-    if (sg.type === "felt") {
-        var udb = findInArr(G.grp, function(g) { 
-            return g.type === "udbrud" && g.pos > sg.pos && g.pos - sg.pos < 5; 
-        });
-        
-if (udb) {
-    // Find kun den NÆRMESTE gruppe foran
-    var nærmeste = null;
-    var mindsteAfstand = 999;
-    for (var gi = 0; gi < G.grp.length; gi++) {
-        var grp = G.grp[gi];
-        if (grp.pos > sg.pos && grp.pos - sg.pos < mindsteAfstand) {
-            mindsteAfstand = grp.pos - sg.pos;
-            nærmeste = grp;
-        }
-    }
-    
-    if (!nærmeste || mindsteAfstand > 2) {
-        G.msg = "❌ Ingen gruppe tæt nok på!";
+
+    if (G.spiller.energi < cost) {
+        G.msg = "❌ Ikke nok energi!";
         rend();
         return;
     }
-    
-    // Sværere at komme op jo længere væk gruppen er
-    var afstandsFaktor = 1 - (mindsteAfstand / 2) * 0.3;
-    var ch = 0.35 * afstandsFaktor;
-    if (e.type === "bjerg") ch = (0.45 + G.spiller.bj / 200) * afstandsFaktor;
-    else if (e.type === "kuperet") ch = (0.40 + G.spiller.bj / 300) * afstandsFaktor;
-    else ch = (0.35 + G.spiller.fl / 300) * afstandsFaktor;
-    
-    if (Math.random() < ch) {
-        sg.ryt = sg.ryt.filter(function(r) { return r !== G.spiller; });
-        
-        // GC-ryttere i feltet reagerer når spilleren kører op til udbrud
-        var reagerende = [];
-        for (var i = 0; i < sg.ryt.length; i++) {
-            var r = sg.ryt[i];
-            if (r.gc > 78 && !r.ude && r.energi > 30) {
-                var reaktionsChance = (r.gc - 75) / 25 * (r.energi / 100);
-                if (e.type === "bjerg") reaktionsChance *= 1.4;
-                else if (e.type === "kuperet") reaktionsChance *= 1.2;
-                
-                if (Math.random() < reaktionsChance * 0.8) {
-                    reagerende.push(r);
+    G.spiller.energi -= cost;
+
+    var sg = findInArr(G.grp, function (g) {
+        return g.ryt.indexOf(G.spiller) >= 0;
+    });
+    if (!sg)
+        return;
+
+    if (sg.type === "felt") {
+        var udb = findInArr(G.grp, function (g) {
+            return g.type === "udbrud" && g.pos > sg.pos && g.pos - sg.pos < 5;
+        });
+
+        if (udb) {
+            // Find kun den NÆRMESTE gruppe foran
+            var nærmeste = null;
+            var mindsteAfstand = 999;
+            for (var gi = 0; gi < G.grp.length; gi++) {
+                var grp = G.grp[gi];
+                if (grp.pos > sg.pos && grp.pos - sg.pos < mindsteAfstand) {
+                    mindsteAfstand = grp.pos - sg.pos;
+                    nærmeste = grp;
                 }
             }
-        }
-        
-        // Fjern reagerende fra feltet
-        for (var i = 0; i < reagerende.length; i++) {
-            sg.ryt = sg.ryt.filter(function(x) { return x !== reagerende[i]; });
-            reagerende[i].energi -= 5;
-            nærmeste.ryt.push(reagerende[i]);
-        }
-        
-        nærmeste.ryt.push(G.spiller);
-        G.spiller.gi = G.grp.indexOf(nærmeste);
-        
-        if (reagerende.length > 0) {
-            G.msg = "🎉 Op til gruppen foran! " + reagerende.length + " GC-ryttere følger!";
-        } else {
-            G.msg = "🎉 Op til gruppen foran!";
-        }
-    } else {
-        G.msg = "❌ Kunne ikke komme op...";
-    }
-}
- else {
-            var ch = 0.18;
-            if (e.type === "bjerg") ch = 0.40 + G.spiller.bj / 150;
-            else if (e.type === "kuperet") ch = 0.30 + G.spiller.bj / 250;
-            else ch = 0.15 + G.spiller.spr / 350 + G.spiller.fl / 400;
-            
+
+            if (!nærmeste || mindsteAfstand > 2) {
+                G.msg = "❌ Ingen gruppe tæt nok på!";
+                rend();
+                return;
+            }
+
+            // Sværere at komme op jo længere væk gruppen er
+            var afstandsFaktor = 1 - (mindsteAfstand / 2) * 0.3;
+            var ch = 0.35 * afstandsFaktor;
+            if (e.type === "bjerg")
+                ch = (0.45 + G.spiller.bj / 200) * afstandsFaktor;
+            else if (e.type === "kuperet")
+                ch = (0.40 + G.spiller.bj / 300) * afstandsFaktor;
+            else
+                ch = (0.35 + G.spiller.fl / 300) * afstandsFaktor;
+
             if (Math.random() < ch) {
-                sg.ryt = sg.ryt.filter(function(r) { return r !== G.spiller; });
-                
+                sg.ryt = sg.ryt.filter(function (r) {
+                    return r !== G.spiller;
+                });
+
+                // GC-ryttere i feltet reagerer når spilleren kører op til udbrud
+                var reagerende = [];
+                for (var i = 0; i < sg.ryt.length; i++) {
+                    var r = sg.ryt[i];
+                    if (r.gc > 78 && !r.ude && r.energi > 30) {
+                        var reaktionsChance = (r.gc - 75) / 25 * (r.energi / 100);
+                        if (e.type === "bjerg")
+                            reaktionsChance *= 1.4;
+                        else if (e.type === "kuperet")
+                            reaktionsChance *= 1.2;
+
+                        if (Math.random() < reaktionsChance * 0.8) {
+                            reagerende.push(r);
+                        }
+                    }
+                }
+
+                // Fjern reagerende fra feltet
+                for (var i = 0; i < reagerende.length; i++) {
+                    sg.ryt = sg.ryt.filter(function (x) {
+                        return x !== reagerende[i];
+                    });
+                    reagerende[i].energi -= 5;
+                    nærmeste.ryt.push(reagerende[i]);
+                }
+
+                nærmeste.ryt.push(G.spiller);
+                G.spiller.gi = G.grp.indexOf(nærmeste);
+
+                if (reagerende.length > 0) {
+                    G.msg = "🎉 Op til gruppen foran! " + reagerende.length + " GC-ryttere følger!";
+                } else {
+                    G.msg = "🎉 Op til gruppen foran!";
+                }
+            } else {
+                G.msg = "❌ Kunne ikke komme op...";
+            }
+        } else {
+            var ch = 0.18;
+            if (e.type === "bjerg")
+                ch = 0.40 + G.spiller.bj / 150;
+            else if (e.type === "kuperet")
+                ch = 0.30 + G.spiller.bj / 250;
+            else
+                ch = 0.15 + G.spiller.spr / 350 + G.spiller.fl / 400;
+
+            if (Math.random() < ch) {
+                sg.ryt = sg.ryt.filter(function (r) {
+                    return r !== G.spiller;
+                });
+
                 var fø = [];
                 if (e.type !== "bjerg") {
                     var maxF = e.type === "flad" ? 5 : 3;
                     var kand = [];
                     for (var i = 0; i < sg.ryt.length; i++) {
-                        if (sg.ryt[i].energi > 35 && !sg.ryt[i].ude) kand.push(sg.ryt[i]);
+                        if (sg.ryt[i].energi > 35 && !sg.ryt[i].ude)
+                            kand.push(sg.ryt[i]);
                     }
                     fø = sh(kand).slice(0, ri(0, maxF));
                     for (var i = 0; i < fø.length; i++) {
-                        sg.ryt = sg.ryt.filter(function(x) { return x !== fø[i]; });
+                        sg.ryt = sg.ryt.filter(function (x) {
+                            return x !== fø[i];
+                        });
                     }
                 }
-                
+
                 var ni = G.grp.length;
                 G.spiller.gi = ni;
-                for (var i = 0; i < fø.length; i++) fø[i].gi = ni;
-                
+                for (var i = 0; i < fø.length; i++)
+                    fø[i].gi = ni;
+
                 // GC-ryttere reagerer på spillerens angreb
-var e = G.etaper[G.enr];
-var reagerende = [];
-for (var i = 0; i < sg.ryt.length; i++) {
-    var r = sg.ryt[i];
-    if (r.gc > 78 && !r.ude && r.energi > 35) {
-        var reaktionsChance = (r.gc - 75) / 25 * (r.energi / 100);
-        if (e.type === "bjerg") reaktionsChance *= 1.3;
-        else if (e.type === "kuperet") reaktionsChance *= 1.1;
-        
-        if (Math.random() < reaktionsChance * 0.7) {
-            reagerende.push(r);
-        }
-    }
-}
+                var e = G.etaper[G.enr];
+                var reagerende = [];
+                for (var i = 0; i < sg.ryt.length; i++) {
+                    var r = sg.ryt[i];
+                    if (r.gc > 78 && !r.ude && r.energi > 35) {
+                        var reaktionsChance = (r.gc - 75) / 25 * (r.energi / 100);
+                        if (e.type === "bjerg")
+                            reaktionsChance *= 1.3;
+                        else if (e.type === "kuperet")
+                            reaktionsChance *= 1.1;
 
-// Fjern reagerende fra feltet
-for (var i = 0; i < reagerende.length; i++) {
-    sg.ryt = sg.ryt.filter(function(x) { return x !== reagerende[i]; });
-    reagerende[i].energi -= 4;
-    fø.push(reagerende[i]);
-}
+                        if (Math.random() < reaktionsChance * 0.7) {
+                            reagerende.push(r);
+                        }
+                    }
+                }
 
-var ryt = [G.spiller];
-for (var i = 0; i < fø.length; i++) ryt.push(fø[i]);
-var navn = fø.length > 0 ? "Udbrud" : "Solo";
-G.grp.push({ type: "udbrud", navn: navn, ryt: ryt, pos: sg.pos + 0.5, tf: 0 });
+                // Fjern reagerende fra feltet
+                for (var i = 0; i < reagerende.length; i++) {
+                    sg.ryt = sg.ryt.filter(function (x) {
+                        return x !== reagerende[i];
+                    });
+                    reagerende[i].energi -= 4;
+                    fø.push(reagerende[i]);
+                }
 
-if (reagerende.length > 0) {
-    G.msg = "🚀 Angreb! " + reagerende.length + " GC-ryttere reagerer!";
-} else if (fø.length > 0) {
-    G.msg = "🚀 Angreb! " + fø.length + " følger!";
-} else {
-    G.msg = "🚀 SOLO ANGREB!";
-}
+                var ryt = [G.spiller];
+                for (var i = 0; i < fø.length; i++)
+                    ryt.push(fø[i]);
+                var navn = fø.length > 0 ? "Udbrud" : "Solo";
+                G.grp.push({
+                    type: "udbrud",
+                    navn: navn,
+                    ryt: ryt,
+                    pos: sg.pos + 0.5,
+                    tf: 0
+                });
+
+                if (reagerende.length > 0) {
+                    G.msg = "🚀 Angreb! " + reagerende.length + " GC-ryttere reagerer!";
+                } else if (fø.length > 0) {
+                    G.msg = "🚀 Angreb! " + fø.length + " følger!";
+                } else {
+                    G.msg = "🚀 SOLO ANGREB!";
+                }
             } else {
                 G.msg = "❌ Angrebet blev lukket ned!";
             }
@@ -2077,7 +2419,7 @@ if (reagerende.length > 0) {
     } else if (sg.type === "udbrud") {
         // ANGRIB FRA UDBRUD - prøv at stikke af solo!
         var grpSize = sg.ryt.length;
-        
+
         if (grpSize === 1) {
             // Allerede solo - bare sæt tempo
             sg.pos += 0.5;
@@ -2085,26 +2427,30 @@ if (reagerende.length > 0) {
         } else {
             // Prøv at slippe fra gruppen
             var ch = 0.20; // Basis chance
-            
+
             // Nemmere i bjerge for gode klatrere
             if (e.type === "bjerg") {
                 ch = 0.35 + (G.spiller.bj - 70) / 150;
                 // Ekstra bonus på stejle stigninger
                 var ki = Math.min(Math.floor(G.km), G.profil.length - 2);
                 var stig = G.profil[ki + 1] - G.profil[ki];
-                if (stig > 15) ch += 0.15;
-                if (stig > 25) ch += 0.10;
+                if (stig > 15)
+                    ch += 0.15;
+                if (stig > 25)
+                    ch += 0.10;
             } else if (e.type === "kuperet") {
                 ch = 0.25 + (G.spiller.bj - 70) / 200;
             } else {
                 // Flad - svært at slippe, men muligt med god energi og tempo
                 ch = 0.15 + (G.spiller.fl - 70) / 250 + (G.spiller.energi - 50) / 300;
             }
-            
+
             // Lettere at slippe fra små grupper
-            if (grpSize <= 3) ch += 0.10;
-            if (grpSize === 2) ch += 0.10;
-            
+            if (grpSize <= 3)
+                ch += 0.10;
+            if (grpSize === 2)
+                ch += 0.10;
+
             // Sværere hvis de andre har god energi
             var andresEnergi = 0;
             for (var i = 0; i < sg.ryt.length; i++) {
@@ -2113,69 +2459,78 @@ if (reagerende.length > 0) {
                 }
             }
             andresEnergi = andresEnergi / (grpSize - 1);
-            if (andresEnergi > 70) ch -= 0.10;
-            if (andresEnergi > 85) ch -= 0.10;
-            
+            if (andresEnergi > 70)
+                ch -= 0.10;
+            if (andresEnergi > 85)
+                ch -= 0.10;
+
             // Bonus hvis du har meget mere energi end de andre
-            if (G.spiller.energi - andresEnergi > 20) ch += 0.15;
-            if (G.spiller.energi - andresEnergi > 35) ch += 0.10;
-            
+            if (G.spiller.energi - andresEnergi > 20)
+                ch += 0.15;
+            if (G.spiller.energi - andresEnergi > 35)
+                ch += 0.10;
+
             ch = Math.max(0.05, Math.min(0.85, ch)); // Mellem 5% og 85%
-            
-if (Math.random() < ch) {
-    // Succes! Slip væk
-    sg.ryt = sg.ryt.filter(function(r) { return r !== G.spiller; });
-    
-    // GC-ryttere i gruppen reagerer
-    var e = G.etaper[G.enr];
-    var reagerende = [];
-    for (var i = 0; i < sg.ryt.length; i++) {
-        var r = sg.ryt[i];
-        if (r.gc > 78 && !r.ude && r.energi > 30) {
-            var reaktionsChance = (r.gc - 75) / 25 * (r.energi / 100);
-            if (e.type === "bjerg") reaktionsChance *= 1.4;
-            else if (e.type === "kuperet") reaktionsChance *= 1.2;
-            
-            if (Math.random() < reaktionsChance * 0.6) {
-                reagerende.push(r);
-            }
-        }
-    }
-    
-    // Fjern reagerende fra gruppen
-    for (var i = 0; i < reagerende.length; i++) {
-        sg.ryt = sg.ryt.filter(function(x) { return x !== reagerende[i]; });
-        reagerende[i].energi -= 5;
-    }
-    
-    // Opret nyt udbrud
-    var ni = G.grp.length;
-    G.spiller.gi = ni;
-    var nyRyt = [G.spiller];
-    for (var i = 0; i < reagerende.length; i++) {
-        nyRyt.push(reagerende[i]);
-        reagerende[i].gi = ni;
-    }
-    
-    var nyNavn = reagerende.length > 0 ? "Udbrud" : "Solo: " + G.spiller.navn.split(" ").pop();
-    G.grp.push({ 
-        type: "udbrud", 
-        navn: nyNavn, 
-        ryt: nyRyt, 
-        pos: sg.pos + 0.4, 
-        tf: 0 
-    });
-    
-    if (reagerende.length > 0) {
-        G.msg = "🚀 Du angriber! " + reagerende.length + " følger med!";
-    } else {
-        G.msg = "🚀 DU SLIPPER VÆK! Solo angreb!";
-    }
-}
- else {
+
+            if (Math.random() < ch) {
+                // Succes! Slip væk
+                sg.ryt = sg.ryt.filter(function (r) {
+                    return r !== G.spiller;
+                });
+
+                // GC-ryttere i gruppen reagerer
+                var e = G.etaper[G.enr];
+                var reagerende = [];
+                for (var i = 0; i < sg.ryt.length; i++) {
+                    var r = sg.ryt[i];
+                    if (r.gc > 78 && !r.ude && r.energi > 30) {
+                        var reaktionsChance = (r.gc - 75) / 25 * (r.energi / 100);
+                        if (e.type === "bjerg")
+                            reaktionsChance *= 1.4;
+                        else if (e.type === "kuperet")
+                            reaktionsChance *= 1.2;
+
+                        if (Math.random() < reaktionsChance * 0.6) {
+                            reagerende.push(r);
+                        }
+                    }
+                }
+
+                // Fjern reagerende fra gruppen
+                for (var i = 0; i < reagerende.length; i++) {
+                    sg.ryt = sg.ryt.filter(function (x) {
+                        return x !== reagerende[i];
+                    });
+                    reagerende[i].energi -= 5;
+                }
+
+                // Opret nyt udbrud
+                var ni = G.grp.length;
+                G.spiller.gi = ni;
+                var nyRyt = [G.spiller];
+                for (var i = 0; i < reagerende.length; i++) {
+                    nyRyt.push(reagerende[i]);
+                    reagerende[i].gi = ni;
+                }
+
+                var nyNavn = reagerende.length > 0 ? "Udbrud" : "Solo: " + G.spiller.navn.split(" ").pop();
+                G.grp.push({
+                    type: "udbrud",
+                    navn: nyNavn,
+                    ryt: nyRyt,
+                    pos: sg.pos + 0.4,
+                    tf: 0
+                });
+
+                if (reagerende.length > 0) {
+                    G.msg = "🚀 Du angriber! " + reagerende.length + " følger med!";
+                } else {
+                    G.msg = "🚀 DU SLIPPER VÆK! Solo angreb!";
+                }
+            } else {
                 // Mislykket - men du presser tempoet
                 sg.pos += 0.2;
-                
+
                 // Forskellige beskeder afhængigt af situation
                 var beskeder = [
                     "❌ De holder dit hjul!",
@@ -2189,16 +2544,19 @@ if (Math.random() < ch) {
         }
     } else if (sg.type === "gruppetto") {
         // Fra gruppetto - prøv at komme op til næste gruppe
-        var foran = findInArr(G.grp, function(g) { 
-            return g.pos > sg.pos && g.pos - sg.pos < 3; 
+        var foran = findInArr(G.grp, function (g) {
+            return g.pos > sg.pos && g.pos - sg.pos < 3;
         });
-        
+
         if (foran) {
             var ch = 0.30;
-            if (e.type === "bjerg") ch += G.spiller.bj / 200;
-            
+            if (e.type === "bjerg")
+                ch += G.spiller.bj / 200;
+
             if (Math.random() < ch) {
-                sg.ryt = sg.ryt.filter(function(r) { return r !== G.spiller; });
+                sg.ryt = sg.ryt.filter(function (r) {
+                    return r !== G.spiller;
+                });
                 foran.ryt.push(G.spiller);
                 G.spiller.gi = G.grp.indexOf(foran);
                 G.msg = "💪 Op til gruppen foran!";
@@ -2215,68 +2573,113 @@ if (Math.random() < ch) {
 }
 
 export function pause() {
-    if (G.vent) return;
-    if (G.iv) { clearInterval(G.iv); G.iv = null; G.msg = "⏸️ PAUSE"; }
-    else { G.iv = setInterval(loop, 500); G.msg = ""; }
+    if (G.vent)
+        return;
+    if (G.iv) {
+        clearInterval(G.iv);
+        G.iv = null;
+        G.msg = "⏸️ PAUSE";
+    } else {
+        G.iv = setInterval(loop, 500);
+        G.msg = "";
+    }
     rend();
 }
 
 export function getGruppeFarve(g, spiller, gcLeder, spLeder, bjLeder) {
     // Check om spilleren er i gruppen - altid hvid (højeste prioritet)
     if (g.ryt.indexOf(spiller) >= 0) {
-        return { border: "#fff", bg: "#222", text: "#fff" };
+        return {
+            border: "#fff",
+            bg: "#222",
+            text: "#fff"
+        };
     }
-    
+
     // Check for trøjebærere i gruppen (prioritet: gul > grøn > rød)
-    var harGul = false, harGroen = false, harRoed = false;
+    var harGul = false,
+    harGroen = false,
+    harRoed = false;
     for (var i = 0; i < g.ryt.length; i++) {
         var r = g.ryt[i];
-        if (r === gcLeder) harGul = true;
-        if (r === spLeder) harGroen = true;
-        if (r === bjLeder) harRoed = true;
+        if (r === gcLeder)
+            harGul = true;
+        if (r === spLeder)
+            harGroen = true;
+        if (r === bjLeder)
+            harRoed = true;
     }
-    
+
     if (harGul) {
-        return { border: "#ff0", bg: "#330", text: "#ff0" };
+        return {
+            border: "#ff0",
+            bg: "#330",
+            text: "#ff0"
+        };
     }
     if (harGroen) {
-        return { border: "#0f0", bg: "#020", text: "#0f0" };
+        return {
+            border: "#0f0",
+            bg: "#020",
+            text: "#0f0"
+        };
     }
     if (harRoed) {
-        return { border: "#f44", bg: "#200", text: "#f44" };
+        return {
+            border: "#f44",
+            bg: "#200",
+            text: "#f44"
+        };
     }
-    
+
     // Gruppetto/Bagud er grå
     if (g.type === "gruppetto") {
-        return { border: "#888", bg: "#111", text: "#888" };
+        return {
+            border: "#888",
+            bg: "#111",
+            text: "#888"
+        };
     }
-    
+
     // Feltet er blåt
     if (g.type === "felt") {
-        return { border: "#6af", bg: "#035", text: "#6af" };
+        return {
+            border: "#6af",
+            bg: "#035",
+            text: "#6af"
+        };
     }
-    
+
     // Udbrud er orange
     if (g.type === "udbrud") {
-        return { border: "#f80", bg: "#210", text: "#f80" };
+        return {
+            border: "#f80",
+            bg: "#210",
+            text: "#f80"
+        };
     }
-    
-    return { border: "#888", bg: "#111", text: "#888" };
+
+    return {
+        border: "#888",
+        bg: "#111",
+        text: "#888"
+    };
 }
 
 export function rend() {
-	var popupId = 0;
+    var popupId = 0;
     var e = G.etaper[G.enr];
     var info = ETYPER[e.type];
     var r = G.spiller;
-    var sg = findInArr(G.grp, function(g) { return g.ryt.indexOf(r) >= 0; });
-	
+    var sg = findInArr(G.grp, function (g) {
+        return g.ryt.indexOf(r) >= 0;
+    });
 
     // Beregn korrekt tid baseret på position og gennemsnitshastighed
     var førsteGrp = G.grp[0];
     var kørtKm = førsteGrp ? førsteGrp.pos : 0;
     var visningsTid = Math.round(kørtKm * info.sek);
-    
+
     var mod = "";
     if (G.vent && G.udata) {
         var d = G.udata;
@@ -2291,20 +2694,28 @@ export function rend() {
             '<button class="btn btn-big btn-r" onclick="rejUdb()">[N] NEJ</button>' +
             '</div></div></div>';
     }
-    
+
     var pmod = "";
-/*     if (!G.iv && !G.vent) {
-        pmod = '<div class="modal"><div class="mbox" style="border-color:#3399ff">' +
-            '<h2 style="color:#3399ff">⏸️ PAUSE</h2>' +
-            '<button class="btn btn-big" style="border-color:#3399ff;color:#fff" onclick="pause()">[P] FORTSÆT</button>' +
-            '</div></div>';
+    /*     if (!G.iv && !G.vent) {
+    pmod = '<div class="modal"><div class="mbox" style="border-color:#3399ff">' +
+    '<h2 style="color:#3399ff">⏸️ PAUSE</h2>' +
+    '<button class="btn btn-big" style="border-color:#3399ff;color:#fff" onclick="pause()">[P] FORTSÆT</button>' +
+    '</div></div>';
     } */
-    
+
     // Find trøjebærere til farveberegning
-    var aktiveRyttere = G.ryttere.filter(function(r) { return !r.ude; });
-    var gcLeder = aktiveRyttere.slice().sort(function(a,b) { return a.stid - b.stid; })[0];
-    var spLeder = aktiveRyttere.slice().sort(function(a,b) { return (G.sprPts[b.navn]||0) - (G.sprPts[a.navn]||0); })[0];
-    var bjLeder = aktiveRyttere.slice().sort(function(a,b) { return (G.bjgPts[b.navn]||0) - (G.bjgPts[a.navn]||0); })[0];
+    var aktiveRyttere = G.ryttere.filter(function (r) {
+        return !r.ude;
+    });
+    var gcLeder = aktiveRyttere.slice().sort(function (a, b) {
+        return a.stid - b.stid;
+    })[0];
+    var spLeder = aktiveRyttere.slice().sort(function (a, b) {
+        return (G.sprPts[b.navn] || 0) - (G.sprPts[a.navn] || 0);
+    })[0];
+    var bjLeder = aktiveRyttere.slice().sort(function (a, b) {
+        return (G.bjgPts[b.navn] || 0) - (G.bjgPts[a.navn] || 0);
+    })[0];
 
     var gh = '<div style="display:flex;flex-wrap:wrap;gap:4px">';
     for (var i = 0; i < G.grp.length; i++) {
@@ -2312,256 +2723,286 @@ export function rend() {
         var her = g.ryt.indexOf(r) >= 0;
         var farve = getGruppeFarve(g, r, gcLeder, spLeder, bjLeder);
         var et = G.etaper[G.enr];
-var et = G.etaper[G.enr];
-var grpNavn = g.navn;
+        var et = G.etaper[G.enr];
+        var grpNavn = g.navn;
 
-// Find om dette er den forreste gruppe
-var erForrest = true;
-for (var gi2 = 0; gi2 < G.grp.length; gi2++) {
-    if (G.grp[gi2].pos > g.pos) {
-        erForrest = false;
-        break;
-    }
-}
-
-// Find feltet (hovedfelt)
-var feltGrp = findInArr(G.grp, function(gg) { return gg.type === "felt"; });
-
-// Hvis gruppen kun har én rytter, brug rytterens navn
-if (g.ryt.length === 1) {
-    grpNavn = g.ryt[0].navn.split(" ").pop();
-} else if (erForrest) {
-    // Forreste gruppe hedder altid noget passende
-    if (g.type === "felt") {
-        grpNavn = "Feltet";
-    } else if (g.type === "udbrud") {
-        grpNavn = "Udbrud";
-    } else {
-        grpNavn = "Førende gruppe";
-    }
-} else if (feltGrp && g.type === "udbrud" && g.pos < feltGrp.pos) {
-    // Udbrud der ligger BAG feltet = bagud
-    grpNavn = "Bagud";
-} else if (feltGrp && g.type === "udbrud" && g.pos > feltGrp.pos) {
-    // Udbrud der ligger MELLEM forreste gruppe og feltet = Forfølgere
-    grpNavn = "Forfølgere";
-} else if (g.type === "gruppetto") {
-    // Find om dette er den bagerste gruppe
-    var erBagerst = true;
-    for (var gi2 = 0; gi2 < G.grp.length; gi2++) {
-        if (G.grp[gi2].type === "gruppetto" && G.grp[gi2].pos < g.pos) {
-            erBagerst = false;
-            break;
+        // Find om dette er den forreste gruppe
+        var erForrest = true;
+        for (var gi2 = 0; gi2 < G.grp.length; gi2++) {
+            if (G.grp[gi2].pos > g.pos) {
+                erForrest = false;
+                break;
+            }
         }
-    }
-    if (erBagerst && (et.type === "bjerg" || et.type === "kuperet")) {
-        grpNavn = "Gruppetto";
-    } else {
-        grpNavn = "Bagud";
-    }
-}
+
+        // Find feltet (hovedfelt)
+        var feltGrp = findInArr(G.grp, function (gg) {
+            return gg.type === "felt";
+        });
+
+        // Hvis gruppen kun har én rytter, brug rytterens navn
+        if (g.ryt.length === 1) {
+            grpNavn = g.ryt[0].navn.split(" ").pop();
+        } else if (erForrest) {
+            // Forreste gruppe hedder altid noget passende
+            if (g.type === "felt") {
+                grpNavn = "Feltet";
+            } else if (g.type === "udbrud") {
+                grpNavn = "Udbrud";
+            } else {
+                grpNavn = "Førende gruppe";
+            }
+        } else if (feltGrp && g.type === "udbrud" && g.pos < feltGrp.pos) {
+            // Udbrud der ligger BAG feltet = bagud
+            grpNavn = "Bagud";
+        } else if (feltGrp && g.type === "udbrud" && g.pos > feltGrp.pos) {
+            // Udbrud der ligger MELLEM forreste gruppe og feltet = Forfølgere
+            grpNavn = "Forfølgere";
+        } else if (g.type === "gruppetto") {
+            // Find om dette er den bagerste gruppe
+            var erBagerst = true;
+            for (var gi2 = 0; gi2 < G.grp.length; gi2++) {
+                if (G.grp[gi2].type === "gruppetto" && G.grp[gi2].pos < g.pos) {
+                    erBagerst = false;
+                    break;
+                }
+            }
+            if (erBagerst && (et.type === "bjerg" || et.type === "kuperet")) {
+                grpNavn = "Gruppetto";
+            } else {
+                grpNavn = "Bagud";
+            }
+        }
         var emo = g.type === "udbrud" ? "🚴💨" : g.type === "felt" ? "🚴🚴🚴" : "🚴";
         var tid = g.tf < 1 ? '<span style="color:#0f0">FORREST</span>' : '<span style="color:' + farve.text + '">+' + ft(g.tf) + '</span>';
-        
-// Sortér gruppens ryttere efter samlet klassement (lavest stid først)
-var sorteretRyt = g.ryt.slice().sort(function(a, b) { return a.stid - b.stid; });
 
+        // Sortér gruppens ryttere efter samlet klassement (lavest stid først)
+        var sorteretRyt = g.ryt.slice().sort(function (a, b) {
+            return a.stid - b.stid;
+        });
 
-//Fem vises, resten er i hover-box
-var navne = "";
-var extraNavne = "";
-var vis = Math.min(sorteretRyt.length, 5);
-for (var j = 0; j < sorteretRyt.length; j++) {
-    var rr = sorteretRyt[j];
-    var kort = rr.navn.split(" ").pop();
-    var rFarve = rr.sp ? "#fff" : rr.holdClr;
-    var rWeight = rr.sp ? ";font-weight:bold" : "";
-    
-	//Viste navne
-	if(j<vis){
-		navne += '<span style="color:' + rFarve + rWeight + '">' + kort + '</span>';
-		if (j < vis - 1) navne += ", ";
-	}
-	else //skjulte navne i popup
-	{	extraNavne += '<span style="color:' + rFarve + rWeight + '">' + kort + '</span>';
-		if (j < sorteretRyt.length - 1) extraNavne += ", ";
-	}
-}
-if (g.ryt.length > 5) {
-    navne += ' <span style="color:#666">+' + (g.ryt.length - 5) + '</span>';
-}
+        //Fem vises, resten er i hover-box
+        var navne = "";
+        var extraNavne = "";
+        var vis = Math.min(sorteretRyt.length, 5);
+        for (var j = 0; j < sorteretRyt.length; j++) {
+            var rr = sorteretRyt[j];
+            var kort = rr.navn.split(" ").pop();
+            var rFarve = rr.sp ? "#fff" : rr.holdClr;
+            var rWeight = rr.sp ? ";font-weight:bold" : "";
+
+            //Viste navne
+            if (j < vis) {
+                navne += '<span style="color:' + rFarve + rWeight + '">' + kort + '</span>';
+                if (j < vis - 1)
+                    navne += ", ";
+            } else //skjulte navne i popup
+            {
+                extraNavne += '<span style="color:' + rFarve + rWeight + '">' + kort + '</span>';
+                if (j < sorteretRyt.length - 1)
+                    extraNavne += ", ";
+            }
+        }
+        if (g.ryt.length > 5) {
+            navne += ' <span style="color:#666">+' + (g.ryt.length - 5) + '</span>';
+        }
         var boxStyle = 'border:' + (her ? '3px' : '2px') + ' solid ' + farve.border + ';' +
             'background:' + farve.bg + ';' +
             (her ? 'box-shadow:0 0 10px ' + farve.border + '4;' : '') +
             'padding:8px;margin:4px;border-radius:4px;font-size:12px;display:inline-block;vertical-align:top;min-width:200px';
-        
+
         var visAntal = (g.type !== "udbrud" || grpNavn.indexOf("(") === -1) ? ' (' + g.ryt.length + ')' : '';
-gh += '<div style="' + boxStyle + '">' +
-'<div style="display:flex;justify-content:space-between;align-items:center;color:' + farve.text + '">' +
-'<span>' + emo + ' ' + grpNavn + visAntal + (her ? ' ◄' : '') + '</span>' +
-'<span style="margin-left:10px">Km ' + Math.floor(g.pos) + '</span></div>' +
-            '<div>' + tid + '</div>' +
-            '<div id="navn" style="font-size:10px" onclick="togglePopup(\'riderpopup'+ (++popupId) + '\')">' + navne + '</div><div id="riderpopup' + popupId + '" class="navne-popup">' + extraNavne +'</div></div>';
+        gh += '<div style="' + boxStyle + '">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;color:' + farve.text + '">' +
+        '<span>' + emo + ' ' + grpNavn + visAntal + (her ? ' ◄' : '') + '</span>' +
+        '<span style="margin-left:10px">Km ' + Math.floor(g.pos) + '</span></div>' +
+        '<div>' + tid + '</div>' +
+        '<div id="navn" style="font-size:10px" onclick="togglePopup(\'riderpopup' + (++popupId) + '\')">' + navne + '</div><div id="riderpopup' + popupId + '" class="navne-popup">' + extraNavne + '</div></div>';
     }
     gh += '</div>';
-    
-var jer = "";
-if (G.spiller) {
-    var aktive = G.ryttere.slice().filter(function(r) { return !r.ude; });
-    var gcS = aktive.slice().sort(function(a,b) { return a.stid - b.stid; });
-    var spS = aktive.slice().sort(function(a,b) { return (G.sprPts[b.navn]||0) - (G.sprPts[a.navn]||0); });
-    var bjS = aktive.slice().sort(function(a,b) { return (G.bjgPts[b.navn]||0) - (G.bjgPts[a.navn]||0); });
-    
-    var gcNavn = "-", spNavn = "-", bjNavn = "-";
-    var spPtsTxt = "", bjPtsTxt = "";
-    
-    // GUL trøje: kun vis navn hvis mindst én etape er kørt (enr > 0)
-    if (G.enr > 0 && gcS.length > 0) {
-        gcNavn = gcS[0].navn.split(" ").pop();
+
+    var jer = "";
+    if (G.spiller) {
+        var aktive = G.ryttere.slice().filter(function (r) {
+            return !r.ude;
+        });
+        var gcS = aktive.slice().sort(function (a, b) {
+            return a.stid - b.stid;
+        });
+        var spS = aktive.slice().sort(function (a, b) {
+            return (G.sprPts[b.navn] || 0) - (G.sprPts[a.navn] || 0);
+        });
+        var bjS = aktive.slice().sort(function (a, b) {
+            return (G.bjgPts[b.navn] || 0) - (G.bjgPts[a.navn] || 0);
+        });
+
+        var gcNavn = "-",
+        spNavn = "-",
+        bjNavn = "-";
+        var spPtsTxt = "",
+        bjPtsTxt = "";
+
+        // GUL trøje: kun vis navn hvis mindst én etape er kørt (enr > 0)
+        if (G.enr > 0 && gcS.length > 0) {
+            gcNavn = gcS[0].navn.split(" ").pop();
+        }
+
+        // GRØN trøje: kun vis navn hvis der er point i den aktuelle tour
+        var maxSpPts = 0;
+        for (var i = 0; i < aktive.length; i++) {
+            var pts = G.sprPts[aktive[i].navn] || 0;
+            if (pts > maxSpPts)
+                maxSpPts = pts;
+        }
+        if (maxSpPts > 0 && spS.length > 0) {
+            spNavn = spS[0].navn.split(" ").pop();
+            spPtsTxt = " (" + maxSpPts + ")";
+        }
+
+        // PRIKKET trøje: kun vis navn hvis der er bjergpoint i den aktuelle tour
+        var maxBjPts = 0;
+        for (var i = 0; i < aktive.length; i++) {
+            var ptsb = G.bjgPts[aktive[i].navn] || 0;
+            if (ptsb > maxBjPts)
+                maxBjPts = ptsb;
+        }
+        if (maxBjPts > 0 && bjS.length > 0) {
+            bjNavn = bjS[0].navn.split(" ").pop();
+            bjPtsTxt = " (" + maxBjPts + ")";
+        }
+
+        jer = '<div class="jerseys">' +
+            '<div class="jersey jy">🟡 ' + gcNavn + '</div>' +
+            '<div class="jersey jg">🟢 ' + spNavn + spPtsTxt + '</div>' +
+            '<div class="jersey jp">🔴 ' + bjNavn + bjPtsTxt + '</div>' +
+            '</div>';
     }
-    
-    // GRØN trøje: kun vis navn hvis der er point i den aktuelle tour
-    var maxSpPts = 0;
-    for (var i = 0; i < aktive.length; i++) {
-        var pts = G.sprPts[aktive[i].navn] || 0;
-        if (pts > maxSpPts) maxSpPts = pts;
+
+    var mpRes = "";
+    if (G.lastMpResult) {
+        var mpr = G.lastMpResult;
+        var icon = mpr.type === "sprint" ? "🟢" : "🔴";
+        var items = "";
+        for (var i = 0; i < mpr.top10.length; i++) {
+            var x = mpr.top10[i];
+            var farve = x.sp ? 'style="color:#fff;font-weight:bold"' : '';
+            items += '<span ' + farve + '>' + (i + 1) + '. ' + x.navn.split(" ").pop() + ' (+' + x.pts + ')</span>';
+            if (i < mpr.top10.length - 1)
+                items += " | ";
+        }
+        mpRes = '<div class="mp-result"><h4>' + icon + ' ' + (mpr.type === "sprint" ? "SPRINT" : "BJERG") + '</h4>' +
+            '<div style="font-size:10px">' + items + '</div></div>';
     }
-    if (maxSpPts > 0 && spS.length > 0) {
-        spNavn = spS[0].navn.split(" ").pop();
-        spPtsTxt = " (" + maxSpPts + ")";
-    }
-    
-    // PRIKKET trøje: kun vis navn hvis der er bjergpoint i den aktuelle tour
-    var maxBjPts = 0;
-    for (var i = 0; i < aktive.length; i++) {
-        var ptsb = G.bjgPts[aktive[i].navn] || 0;
-        if (ptsb > maxBjPts) maxBjPts = ptsb;
-    }
-    if (maxBjPts > 0 && bjS.length > 0) {
-        bjNavn = bjS[0].navn.split(" ").pop();
-        bjPtsTxt = " (" + maxBjPts + ")";
-    }
-    
-    jer = '<div class="jerseys">' +
-        '<div class="jersey jy">🟡 ' + gcNavn + '</div>' +
-        '<div class="jersey jg">🟢 ' + spNavn + spPtsTxt + '</div>' +
-        '<div class="jersey jp">🔴 ' + bjNavn + bjPtsTxt + '</div>' +
-    '</div>';
-}
-    
-var mpRes = "";
-if (G.lastMpResult) {
-    var mpr = G.lastMpResult;
-    var icon = mpr.type === "sprint" ? "🟢" : "🔴";
-    var items = "";
-    for (var i = 0; i < mpr.top10.length; i++) {
-        var x = mpr.top10[i];
-        var farve = x.sp ? 'style="color:#fff;font-weight:bold"' : '';
-        items += '<span ' + farve + '>' + (i+1) + '. ' + x.navn.split(" ").pop() + ' (+' + x.pts + ')</span>';
-        if (i < mpr.top10.length - 1) items += " | ";
-    }
-    mpRes = '<div class="mp-result"><h4>' + icon + ' ' + (mpr.type === "sprint" ? "SPRINT" : "BJERG") + '</h4>' +
-        '<div style="font-size:10px">' + items + '</div></div>';
-}
-    
+
     var typeClr = e.type === 'bjerg' ? '#f44' : e.type === 'kuperet' ? '#f80' : e.type === 'tt' ? '#0ff' : '#0f0';
     var eClass = ec(r.energi, 100);
     var eTxtClass = r.energi < 25 ? 'bad' : r.energi < 50 ? 'warn' : 'ok';
-    
-    var sgFarve = sg ? getGruppeFarve(sg, r, gcLeder, spLeder, bjLeder) : { border: "#6af", bg: "#035", text: "#6af" };
+
+    var sgFarve = sg ? getGruppeFarve(sg, r, gcLeder, spLeder, bjLeder) : {
+        border: "#6af",
+        bg: "#035",
+        text: "#6af"
+    };
     var pTxt = sg && sg.tf < 1 ? "Forrest" : "+" + ft(sg ? sg.tf : 0);
     var pClass = sg && sg.tf < 1 ? 'ok' : 'warn';
     var aDis = r.energi < 3 || G.vent ? " disabled" : "";
     var pDis = G.vent ? " disabled" : "";
     var pBtn = G.iv ? "PAUSE" : "FORTSÆT";
-    
+
     // Beregn gennemsnitshastighed
     var gnsHastighed = visningsTid > 0 ? Math.round((kørtKm / visningsTid) * 3600 * 10) / 10 : 0;
-    
+
     R(mod + pmod +
-    // KNAPPER ØVERST
-    '<div style="background:#000;padding:8px;margin-bottom:8px;border:1px solid #0a0;border-radius:4px;text-align:center">' +
+        // KNAPPER ØVERST
+        '<div style="background:#000;padding:8px;margin-bottom:8px;border:1px solid #0a0;border-radius:4px;text-align:center">' +
         '<button class="btn btn-big btn-y" onclick="accel()" style="min-width:140px"' + aDis + '>[A] ACCELERER</button>' +
         '<button class="btn btn-big" onclick="pause()" style="min-width:140px"' + pDis + '>[P] ' + pBtn + '</button>' +
-    '</div>' +
- // ETAPE INFO
-// -- Desktop Version --
-'<div class="top-bar-desktop" style="display:flex;align-items:center;padding:8px;background:#020;border:1px solid #0a0;border-radius:4px;margin-bottom:8px">' +
-    '<div style="flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Etape ' + e.nr + ':</strong> ' + e.start + ' → ' + e.slut + '</div>' +
-    '<div style="display:flex;align-items:center;justify-content:center;gap:15px">' +
+        '</div>' +
+        // ETAPE INFO
+        // -- Desktop Version --
+        '<div class="top-bar-desktop" style="display:flex;align-items:center;padding:8px;background:#020;border:1px solid #0a0;border-radius:4px;margin-bottom:8px">' +
+        '<div style="flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>Etape ' + e.nr + ':</strong> ' + e.start + ' → ' + e.slut + '</div>' +
+        '<div style="display:flex;align-items:center;justify-content:center;gap:15px">' +
         '<span style="padding:4px 10px;border:2px solid ' + typeClr + ';color:' + typeClr + ';border-radius:10px;font-size:12px;width:70px;text-align:center">' + info.n.toUpperCase() + '</span>' +
         '<span class="cyan" style="font-size:20px;font-weight:bold;width:145px;text-align:center">Km ' + G.km + '/' + e.dist + '</span>' +
         '<span style="width:100px;text-align:center">' + getStigningVis() + '</span>' +
-    '</div>' +
-    '<div style="flex:1;text-align:right;">' +
+        '</div>' +
+        '<div style="flex:1;text-align:right;">' +
         '<div class="time-display" style="display:inline-block">⏱️ ' + ft(visningsTid) + '</div>' +
-    '</div>' +
-'</div>' +
+        '</div>' +
+        '</div>' +
 
-// -- Mobil Version --
-'<div class="top-bar-mobile" style="background:#020;border:1px solid #0a0;border-radius:4px;margin-bottom:8px;padding:8px;text-align:center;">' +
-    // Række 1: Etape Info
-    '<div style="font-size:14px;margin-bottom:8px;"><strong>Etape ' + e.nr + ':</strong> ' + e.start + ' → ' + e.slut + '</div>' +
-    // Række 2 (NU): Type og KM
-    '<div style="display:flex;justify-content:space-around;align-items:center;margin-bottom:8px;">' +
+        // -- Mobil Version --
+        '<div class="top-bar-mobile" style="background:#020;border:1px solid #0a0;border-radius:4px;margin-bottom:8px;padding:8px;text-align:center;">' +
+        // Række 1: Etape Info
+        '<div style="font-size:14px;margin-bottom:8px;"><strong>Etape ' + e.nr + ':</strong> ' + e.start + ' → ' + e.slut + '</div>' +
+        // Række 2 (NU): Type og KM
+        '<div style="display:flex;justify-content:space-around;align-items:center;margin-bottom:8px;">' +
         '<span style="padding:4px 10px;border:2px solid ' + typeClr + ';color:' + typeClr + ';border-radius:10px;font-size:12px;width:70px;text-align:center">' + info.n.toUpperCase() + '</span>' +
         '<span class="cyan" style="font-size:18px;font-weight:bold;">Km ' + G.km + '/' + e.dist + '</span>' +
-    '</div>' +
-    // Række 3 (NU): Stigning og Tid
-    '<div style="display:flex;justify-content:space-around;align-items:center;">' +
+        '</div>' +
+        // Række 3 (NU): Stigning og Tid
+        '<div style="display:flex;justify-content:space-around;align-items:center;">' +
         '<span style="width:100px;text-align:center">' + getStigningVis() + '</span>' +
         '<div class="time-display">⏱️ ' + ft(visningsTid) + '</div>' +
-    '</div>' +
-'</div>' +
-    '<canvas id="cv"></canvas>' + jer +
-    '<div class="box" style="padding:10px;display:flex;flex-wrap:wrap;gap:15px;align-items:center">' +
+        '</div>' +
+        '</div>' +
+        '<canvas id="cv"></canvas>' + jer +
+        '<div class="box" style="padding:10px;display:flex;flex-wrap:wrap;gap:15px;align-items:center">' +
         '<div><strong>Energi:</strong> <div class="ebar"><div class="efill ' + eClass + '" style="width:' + r.energi + '%"></div></div> ' +
         '<span class="' + eTxtClass + '">' + Math.round(r.energi) + '%</span></div>' +
         '<div><strong>Gruppe:</strong> <span style="color:' + sgFarve.text + ';font-weight:bold">' + (sg ? sg.navn : "?") + '</span></div>' +
         '<div><strong>Position:</strong> <span class="' + pClass + '">' + pTxt + '</span></div>' +
-    '</div>' +
-    (G.msg ? '<div style="padding:10px;border:2px solid #f80;background:#210;border-radius:6px;text-align:center;margin:8px 0">' + G.msg + '</div>' : '') +
-    mpRes + gh);
-    
+        '</div>' +
+        (G.msg ? '<div style="padding:10px;border:2px solid #f80;background:#210;border-radius:6px;text-align:center;margin:8px 0">' + G.msg + '</div>' : '') +
+        mpRes + gh);
+
     tegnP();
 }
 
 export function tegnP() {
     var c = $("cv");
-    if (!c) return;
+    if (!c)
+        return;
     c.width = c.parentElement.clientWidth - 4;
     c.height = 220;
     var ctx = c.getContext("2d");
     var e = G.etaper[G.enr];
     var p = G.profil;
-    
+
     ctx.fillStyle = "#010";
     ctx.fillRect(0, 0, c.width, c.height);
-    
-    var maxH = Math.max.apply(null, p), minH = Math.min.apply(null, p);
 
-// Y-aksen starter altid ved 0m
-minH = 0;
+    var maxH = Math.max.apply(null, p),
+    minH = Math.min.apply(null, p);
 
-// Max er højeste punkt + 200m luft
-maxH = maxH + 200;
+    // Y-aksen starter altid ved 0m
+    minH = 0;
 
-// Minimum 1000m spænd for flade/kuperede etaper
-var rng = maxH - minH;
-if (rng < 1000) {
-    maxH = 1000;
-    rng = 1000;
-}
+    // Max er højeste punkt + 200m luft
+    maxH = maxH + 200;
 
+    // Minimum 1000m spænd for flade/kuperede etaper
+    var rng = maxH - minH;
+    if (rng < 1000) {
+        maxH = 1000;
+        rng = 1000;
+    }
 
-    var l = 45, b = 28, w = c.width - l - 12, h = c.height - b - 15;
-    
+    var l = 45,
+    b = 28,
+    w = c.width - l - 12,
+    h = c.height - b - 15;
+
     // Profil
     ctx.beginPath();
     for (var i = 0; i < p.length; i++) {
-        var x = l + (i / (p.length-1)) * w;
+        var x = l + (i / (p.length - 1)) * w;
         var y = 12 + h - ((p[i] - minH) / rng) * h;
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        if (i === 0)
+            ctx.moveTo(x, y);
+        else
+            ctx.lineTo(x, y);
     }
     ctx.strokeStyle = "#0f0";
     ctx.lineWidth = 3;
@@ -2570,70 +3011,89 @@ if (rng < 1000) {
     ctx.lineTo(l, 12 + h);
     ctx.fillStyle = "rgba(0,100,0,0.3)";
     ctx.fill();
-    
+
     // Mellempunkter
-if (G.mps) {
-    for (var mi = 0; mi < G.mps.length; mi++) {
-        var mp = G.mps[mi];
-        var mx = l + (mp.km / e.dist) * w;
-        ctx.strokeStyle = mp.type === "sprint" ? "#0f0" : "#f44";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([6, 4]);
-        ctx.beginPath();
-        ctx.moveTo(mx, 12);
-        ctx.lineTo(mx, 12 + h);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = mp.done ? "#666" : (mp.type === "sprint" ? "#0f0" : "#f44");
-        ctx.font = "16px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(mp.type === "sprint" ? "🟢" : "🔴", mx, 26);
-    }
-}
-    
-    // Find trøjebærere
-    var aktiveRyttere = G.ryttere.filter(function(r) { return !r.ude; });
-    var gcLeder = aktiveRyttere.slice().sort(function(a,b) { return a.stid - b.stid; })[0];
-    var spLeder = aktiveRyttere.slice().sort(function(a,b) { return (G.sprPts[b.navn]||0) - (G.sprPts[a.navn]||0); })[0];
-    var bjLeder = aktiveRyttere.slice().sort(function(a,b) { return (G.bjgPts[b.navn]||0) - (G.bjgPts[a.navn]||0); })[0];
-    
-    for (var i = 0; i < G.grp.length; i++) {
-    var g = G.grp[i];
-    var km = Math.min(g.pos, e.dist);
-    var gx = l + (km / e.dist) * w;
-    var idx = Math.min(Math.floor(km), p.length - 1);
-    var gy = 12 + h - ((p[idx] - minH) / rng) * h;
-    var her = false;
-    for (var ri = 0; ri < g.ryt.length; ri++) {
-        if (g.ryt[ri].sp === true) {
-            her = true;
-            break;
+    if (G.mps) {
+        for (var mi = 0; mi < G.mps.length; mi++) {
+            var mp = G.mps[mi];
+            var mx = l + (mp.km / e.dist) * w;
+            ctx.strokeStyle = mp.type === "sprint" ? "#0f0" : "#f44";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(mx, 12);
+            ctx.lineTo(mx, 12 + h);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = mp.done ? "#666" : (mp.type === "sprint" ? "#0f0" : "#f44");
+            ctx.font = "16px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(mp.type === "sprint" ? "🟢" : "🔴", mx, 26);
         }
     }
 
-        
-// Bestem farve baseret på trøjer
-var col;
-if (her) {
-    col = "#fff";
-} else {
-    var harGul = false, harGroen = false, harRoed = false;
-    for (var j = 0; j < g.ryt.length; j++) {
-        if (g.ryt[j] === gcLeder) harGul = true;
-        if (g.ryt[j] === spLeder) harGroen = true;
-        if (g.ryt[j] === bjLeder) harRoed = true;
-    }
-    if (harGul) col = "#ff0";
-    else if (harGroen) col = "#0f0";
-    else if (harRoed) col = "#f44";
-    else if (g.type === "gruppetto") col = "#888";
-    else if (g.type === "felt") col = "#6af";
-    else if (g.type === "udbrud") col = "#f80";
-    else col = "#888";
-}
-        
+    // Find trøjebærere
+    var aktiveRyttere = G.ryttere.filter(function (r) {
+        return !r.ude;
+    });
+    var gcLeder = aktiveRyttere.slice().sort(function (a, b) {
+        return a.stid - b.stid;
+    })[0];
+    var spLeder = aktiveRyttere.slice().sort(function (a, b) {
+        return (G.sprPts[b.navn] || 0) - (G.sprPts[a.navn] || 0);
+    })[0];
+    var bjLeder = aktiveRyttere.slice().sort(function (a, b) {
+        return (G.bjgPts[b.navn] || 0) - (G.bjgPts[a.navn] || 0);
+    })[0];
+
+    for (var i = 0; i < G.grp.length; i++) {
+        var g = G.grp[i];
+        var km = Math.min(g.pos, e.dist);
+        var gx = l + (km / e.dist) * w;
+        var idx = Math.min(Math.floor(km), p.length - 1);
+        var gy = 12 + h - ((p[idx] - minH) / rng) * h;
+        var her = false;
+        for (var ri = 0; ri < g.ryt.length; ri++) {
+            if (g.ryt[ri].sp === true) {
+                her = true;
+                break;
+            }
+        }
+
+        // Bestem farve baseret på trøjer
+        var col;
+        if (her) {
+            col = "#fff";
+        } else {
+            var harGul = false,
+            harGroen = false,
+            harRoed = false;
+            for (var j = 0; j < g.ryt.length; j++) {
+                if (g.ryt[j] === gcLeder)
+                    harGul = true;
+                if (g.ryt[j] === spLeder)
+                    harGroen = true;
+                if (g.ryt[j] === bjLeder)
+                    harRoed = true;
+            }
+            if (harGul)
+                col = "#ff0";
+            else if (harGroen)
+                col = "#0f0";
+            else if (harRoed)
+                col = "#f44";
+            else if (g.type === "gruppetto")
+                col = "#888";
+            else if (g.type === "felt")
+                col = "#6af";
+            else if (g.type === "udbrud")
+                col = "#f80";
+            else
+                col = "#888";
+        }
+
         var rad = her ? 16 : (g.type === "felt" ? 12 : 10);
-        
+
         // Glow for spillerens gruppe
         if (her) {
             ctx.beginPath();
@@ -2641,7 +3101,7 @@ if (her) {
             ctx.fillStyle = "rgba(255,255,255,0.25)";
             ctx.fill();
         }
-        
+
         // Cirkel
         ctx.beginPath();
         ctx.arc(gx, gy - 16, rad, 0, Math.PI * 2);
@@ -2650,20 +3110,20 @@ if (her) {
         ctx.strokeStyle = col;
         ctx.lineWidth = her ? 4 : 2;
         ctx.stroke();
-        
+
         // Antal
         ctx.fillStyle = "#fff";
         ctx.font = her ? "bold 13px monospace" : "11px monospace";
         ctx.textAlign = "center";
         ctx.fillText(g.ryt.length, gx, gy - 12);
-        
+
         // Tidsforskel
         if (g.tf >= 1) {
             ctx.font = "10px monospace";
             ctx.fillStyle = col;
             ctx.fillText("+" + Math.floor(g.tf) + "s", gx, gy + 5);
         }
-        
+
         // Gruppenavn for spillerens gruppe
         if (her) {
             ctx.font = "11px monospace";
@@ -2671,7 +3131,7 @@ if (her) {
             ctx.fillText("DIG", gx, gy - 32);
         }
     }
-    
+
     // Mål
     ctx.strokeStyle = "#fff";
     ctx.setLineDash([5, 5]);
@@ -2683,7 +3143,7 @@ if (her) {
     ctx.fillStyle = "#fff";
     ctx.font = "20px sans-serif";
     ctx.fillText("🏁", l + w, 28);
-    
+
     ctx.fillStyle = "#666";
     ctx.font = "11px monospace";
     ctx.textAlign = "right";
@@ -2700,12 +3160,13 @@ export function startTT() {
     G.enkRes = [];
     for (var i = 0; i < G.ryttere.length; i++) {
         var r = G.ryttere[i];
-        if (r.sp || r.ude) continue; // Spring spilleren og udgåede ryttere over
+        if (r.sp || r.ude)
+            continue; // Spring spilleren og udgåede ryttere over
         var base = e.dist * 70;
         var ttf = (100 - r.tt) / 100;
         var ef = (100 - r.energi) / 150;
         var tid = base * (1 + ttf * 0.28 + ef * 0.06) * rf(0.985, 1.02);
-        
+
         // AI kan accelerere så længe de har energi
         while (r.energi > 20) {
             // Sandsynlighed for at accelerere baseret på TT-evne og energi
@@ -2717,13 +3178,19 @@ export function startTT() {
                 break;
             }
         }
-        
-        G.enkRes.push({ r: r, tid: Math.round(tid) });
+
+        G.enkRes.push({
+            r: r,
+            tid: Math.round(tid)
+        });
     }
-    G.enkRes.sort(function(a, b) { return a.tid - b.tid; });
+    G.enkRes.sort(function (a, b) {
+        return a.tid - b.tid;
+    });
     G.sTid = 0;
     G.km = 0;
-    if (G.iv) clearInterval(G.iv);
+    if (G.iv)
+        clearInterval(G.iv);
     G.iv = setInterval(loopTT, 500);
     rendTT();
 }
@@ -2733,119 +3200,135 @@ export function loopTT() {
     var info = ETYPER[e.type];
     G.tid += info.sek;
     G.sTid += info.sek;
-    
+
     var ttb = G.spiller.tt / 100;
     var eb = G.spiller.energi / 100;
     // Meget hurtigere fremgang - ca 1 km per opdatering
     var spd = 44 + 10 * ttb;
     G.km = Math.min(G.km + (spd * info.sek / 3600), e.dist);
-    
+
     var uf = (100 - G.spiller.ud) / 100;
     G.spiller.energi = Math.max(0, G.spiller.energi - info.enrg * 0.7 * (1 + uf * 0.3));
-    
-    if (G.km >= e.dist - 0.01) { G.km = e.dist; afslutTT(); return; }
+
+    if (G.km >= e.dist - 0.01) {
+        G.km = e.dist;
+        afslutTT();
+        return;
+    }
     rendTT();
 }
 
 export function accTT() {
-    if (G.spiller.energi < 3) { G.msg = "❌ Ingen energi!"; rendTT(); return; }
+    if (G.spiller.energi < 3) {
+        G.msg = "❌ Ingen energi!";
+        rendTT();
+        return;
+    }
     G.spiller.energi -= 3;
     G.sTid -= 8;
     G.msg = "💨 FULD GAS!";
-    
-// Midlertidig visuel feedback på knappen
-var btn = document.querySelector('button[onclick="accTT()"]');
-if (btn) {
-    btn.style.background = "#066";
-    btn.style.color = "#fff";
-        setTimeout(function() {
+
+    // Midlertidig visuel feedback på knappen
+    var btn = document.querySelector('button[onclick="accTT()"]');
+    if (btn) {
+        btn.style.background = "#066";
+        btn.style.color = "#fff";
+        setTimeout(function () {
             btn.style.background = "";
             btn.style.color = "";
         }, 200);
     }
-    
+
     rendTT();
 }
 
 export function rendTT() {
     var e = G.etaper[G.enr];
     var r = G.spiller;
-    
+
     var pct = Math.round((G.km / e.dist) * 100);
-    
+
     // Beregn hastighed
     var hastighed = G.sTid > 0 ? Math.round((G.km / G.sTid) * 3600 * 10) / 10 : 0;
-    
+
     var top5 = "";
     for (var i = 0; i < Math.min(5, G.enkRes.length); i++) {
         var x = G.enkRes[i];
-        top5 += '<div class="row"><span>' + (i+1) + '. ' + x.r.navn.substring(0,18) + '</span><span>' + ft(x.tid) + '</span></div>';
+        top5 += '<div class="row"><span>' + (i + 1) + '. ' + x.r.navn.substring(0, 18) + '</span><span>' + ft(x.tid) + '</span></div>';
     }
-    
+
     R(
-    // KNAP ØVERST
-    '<div style="background:#000;padding:8px;margin-bottom:8px;border:1px solid #0aa;border-radius:4px;text-align:center">' +
+        // KNAP ØVERST
+        '<div style="background:#000;padding:8px;margin-bottom:8px;border:1px solid #0aa;border-radius:4px;text-align:center">' +
         '<button class="btn btn-big" style="border-color:#3399ff;color:#3399ff;min-width:200px" onclick="accTT()"' + (r.energi < 3 ? ' disabled' : '') + '>[A] FULD GAS!</button>' +
-    '</div>' +
-    '<div style="padding:8px;background:#011;border:1px solid #0aa;border-radius:4px;margin-bottom:8px">' +
+        '</div>' +
+        '<div style="padding:8px;background:#011;border:1px solid #0aa;border-radius:4px;margin-bottom:8px">' +
         '<strong>Etape ' + e.nr + ':</strong> ' + e.start + ' | ENKELTSTART ⏱️ ' + e.dist + ' km</div>' +
-    '<canvas id="cv"></canvas>' +
-    '<div style="text-align:center;padding:15px">' +
+        '<canvas id="cv"></canvas>' +
+        '<div style="text-align:center;padding:15px">' +
         '<div class="time-display" style="font-size:36px;color:#3399ff">⏱️ ' + ft(G.sTid) + '</div>' +
-    '</div>' +
-    '<div style="text-align:center;font-size:18px;color:#3399ff;margin-bottom:5px">Km ' + G.km.toFixed(1) + ' / ' + e.dist + ' (' + pct + '%)</div>' +
-    '<div style="text-align:center;color:#888;font-size:11px;margin-bottom:8px">Hastighed: ' + hastighed + ' km/t</div>' +
-    '<div style="width:80%;margin:0 auto 15px;background:#222;border-radius:10px;height:20px;overflow:hidden">' +
+        '</div>' +
+        '<div style="text-align:center;font-size:18px;color:#3399ff;margin-bottom:5px">Km ' + G.km.toFixed(1) + ' / ' + e.dist + ' (' + pct + '%)</div>' +
+        '<div style="text-align:center;color:#888;font-size:11px;margin-bottom:8px">Hastighed: ' + hastighed + ' km/t</div>' +
+        '<div style="width:80%;margin:0 auto 15px;background:#222;border-radius:10px;height:20px;overflow:hidden">' +
         '<div style="width:' + pct + '%;height:100%;background:linear-gradient(90deg,#0aa,#3399ff);border-radius:10px"></div>' +
-    '</div>' +
-    '<div class="box" style="display:flex;flex-wrap:wrap;gap:15px;justify-content:center">' +
-        '<div><strong>Energi:</strong> <div class="ebar"><div class="efill ' + ec(r.energi,100) + '" style="width:' + r.energi + '%"></div></div> ' + Math.round(r.energi) + '%</div>' +
-    '</div>' +
-    (G.msg ? '<div style="padding:8px;border:1px solid #3399ff;background:#012;border-radius:4px;text-align:center;margin:8px 0">' + G.msg + '</div>' : '') +
-    '<div class="box"><h3>Top 5:</h3>' + top5 + '</div>');
-    
+        '</div>' +
+        '<div class="box" style="display:flex;flex-wrap:wrap;gap:15px;justify-content:center">' +
+        '<div><strong>Energi:</strong> <div class="ebar"><div class="efill ' + ec(r.energi, 100) + '" style="width:' + r.energi + '%"></div></div> ' + Math.round(r.energi) + '%</div>' +
+        '</div>' +
+        (G.msg ? '<div style="padding:8px;border:1px solid #3399ff;background:#012;border-radius:4px;text-align:center;margin:8px 0">' + G.msg + '</div>' : '') +
+        '<div class="box"><h3>Top 5:</h3>' + top5 + '</div>');
+
     tegnTTP();
 }
 
 export function tegnTTP() {
     var c = $("cv");
-    if (!c) return;
+    if (!c)
+        return;
     c.width = c.parentElement.clientWidth - 4;
     c.height = 130;
     var ctx = c.getContext("2d");
     var e = G.etaper[G.enr];
     var p = G.profil;
-    
+
     ctx.fillStyle = "#011";
     ctx.fillRect(0, 0, c.width, c.height);
-    
-    var maxH = Math.max.apply(null, p), minH = Math.min.apply(null, p);
 
-// Y-aksen starter altid ved 0m
-minH = 0;
+    var maxH = Math.max.apply(null, p),
+    minH = Math.min.apply(null, p);
 
-// Max er højeste punkt + 100m luft
-maxH = maxH + 100;
+    // Y-aksen starter altid ved 0m
+    minH = 0;
 
-// Minimum 500m spænd for enkeltstart
-var rng = maxH - minH;
-if (rng < 750) {
-    maxH = 750;
-    rng = 750;
-}
+    // Max er højeste punkt + 100m luft
+    maxH = maxH + 100;
 
-    var l = 35, bm = 18, w = c.width - l - 8, h = c.height - bm - 8;
-    
+    // Minimum 500m spænd for enkeltstart
+    var rng = maxH - minH;
+    if (rng < 750) {
+        maxH = 750;
+        rng = 750;
+    }
+
+    var l = 35,
+    bm = 18,
+    w = c.width - l - 8,
+    h = c.height - bm - 8;
+
     ctx.beginPath();
     for (var i = 0; i < p.length; i++) {
-        var x = l + (i / (p.length-1)) * w;
+        var x = l + (i / (p.length - 1)) * w;
         var y = 8 + h - ((p[i] - minH) / rng) * h;
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        if (i === 0)
+            ctx.moveTo(x, y);
+        else
+            ctx.lineTo(x, y);
     }
     ctx.strokeStyle = "#088";
     ctx.lineWidth = 3;
     ctx.stroke();
-    
+
     var km = Math.min(G.km, e.dist);
     var px = l + (km / e.dist) * w;
     var idx = Math.min(Math.floor(km), p.length - 1);
@@ -2861,7 +3344,7 @@ if (rng < 750) {
     ctx.font = "12px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("🚴", px, py - 6);
-    
+
     ctx.strokeStyle = "#fff";
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
@@ -2876,8 +3359,13 @@ if (rng < 750) {
 export function afslutTT() {
     clearInterval(G.iv);
     G.iv = null;
-    G.enkRes.push({ r: G.spiller, tid: G.sTid });
-    G.enkRes.sort(function(a, b) { return a.tid - b.tid; });
+    G.enkRes.push({
+        r: G.spiller,
+        tid: G.sTid
+    });
+    G.enkRes.sort(function (a, b) {
+        return a.tid - b.tid;
+    });
     for (var i = 0; i < G.enkRes.length; i++) {
         G.enkRes[i].r.stid += G.enkRes[i].tid;
     }
@@ -2891,38 +3379,56 @@ export function afslutTT() {
 export function afslut() {
     clearInterval(G.iv);
     G.iv = null;
-    
+
     var e = G.etaper[G.enr];
     var info = ETYPER[e.type];
     var res = [];
-    
-    G.grp.sort(function(a, b) { return b.pos - a.pos; });
+
+    G.grp.sort(function (a, b) {
+        return b.pos - a.pos;
+    });
     var førerTid = e.dist * info.sek;
-    
+
     for (var gi = 0; gi < G.grp.length; gi++) {
         var g = G.grp[gi];
         var gTid = førerTid + g.tf;
         var so = g.ryt.slice();
-        
+
         // Fjern udgåede fra gruppen
-        so = so.filter(function(r) { return !r.ude; });
-        
-        if (e.type === "bjerg") so.sort(function(a,b) { return (b.bj + ri(-8,8)) - (a.bj + ri(-8,8)); });
-        else so.sort(function(a,b) { return (b.spr + ri(-8,8)) - (a.spr + ri(-8,8)); });
-        
+        so = so.filter(function (r) {
+            return !r.ude;
+        });
+
+        if (e.type === "bjerg")
+            so.sort(function (a, b) {
+                return (b.bj + ri(-8, 8)) - (a.bj + ri(-8, 8));
+            });
+        else
+            so.sort(function (a, b) {
+                return (b.spr + ri(-8, 8)) - (a.spr + ri(-8, 8));
+            });
+
         for (var i = 0; i < so.length; i++) {
-            res.push({ r: so[i], tid: gTid, sprintPos: i });
+            res.push({
+                r: so[i],
+                tid: gTid,
+                sprintPos: i
+            });
         }
     }
-    
+
     // Fjern evt. udgåede der er sluppet igennem
-    res = res.filter(function(x) { return !x.r.ude; });
-    
-    res.sort(function(a, b) { return a.tid - b.tid || a.sprintPos - b.sprintPos; });
-    
+    res = res.filter(function (x) {
+        return !x.r.ude;
+    });
+
+    res.sort(function (a, b) {
+        return a.tid - b.tid || a.sprintPos - b.sprintPos;
+    });
+
     // Vinderens tid på DENNE etape
     var vinderTid = res[0] ? res[0].tid : førerTid;
-    
+
     // Tidsgrænse: Procent af vinderens tid (varierer efter etapetype)
     // Bjergetaper har højere grænse (mere tilgivende)
     var tidsProcent;
@@ -2935,9 +3441,9 @@ export function afslut() {
     } else {
         tidsProcent = 0.12; // 12% af vindertid (flad)
     }
-    
+
     var tidsGrænse = vinderTid * tidsProcent;
-    
+
     // Check for ryttere der er ude af tidsgrænsen på DENNE etape
     var udeRyttere = [];
     for (var i = 0; i < res.length; i++) {
@@ -2948,89 +3454,98 @@ export function afslut() {
             udeRyttere.push(x.r);
         }
     }
-    
+
     // Bonus sekunder til top 3
     for (var i = 0; i < Math.min(3, res.length); i++) {
         if (!res[i].r.ude) {
             res[i].r.stid -= BONUS[i];
         }
     }
-    
+
     // Sprint points ved flad OG kuperet etape
     if (e.type === "flad" || e.type === "kuperet") {
         for (var i = 0; i < Math.min(SPR_PTS_FINISH.length, res.length); i++) {
             if (!res[i].r.ude) {
-                G.sprPts[res[i].r.navn] = (G.sprPts[res[i].r.navn]||0) + SPR_PTS_FINISH[i];
+                G.sprPts[res[i].r.navn] = (G.sprPts[res[i].r.navn] || 0) + SPR_PTS_FINISH[i];
             }
         }
     }
-    
+
     // Bjerg points ved bjergetape
     if (e.type === "bjerg") {
         for (var i = 0; i < Math.min(BJG_PTS_FINISH.length, res.length); i++) {
             if (!res[i].r.ude) {
-                G.bjgPts[res[i].r.navn] = (G.bjgPts[res[i].r.navn]||0) + BJG_PTS_FINISH[i];
+                G.bjgPts[res[i].r.navn] = (G.bjgPts[res[i].r.navn] || 0) + BJG_PTS_FINISH[i];
             }
         }
     }
-    
+
     // Samlet tid - kun for aktive
     for (var i = 0; i < res.length; i++) {
         if (!res[i].r.ude) {
             res[i].r.stid += res[i].tid;
         }
     }
-    
+
     // Restitution (kun for aktive ryttere)
     for (var i = 0; i < G.ryttere.length; i++) {
-        if (G.ryttere[i].ude) continue;
+        if (G.ryttere[i].ude)
+            continue;
         var rest = G.ryttere[i].re / 100 * 28 + 12;
         G.ryttere[i].energi = Math.min(100, G.ryttere[i].energi + rest);
     }
-       
-	visRes(res, false, udeRyttere, vinderTid, tidsGrænse);
+
+    visRes(res, false, udeRyttere, vinderTid, tidsGrænse);
 }
 
 export function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
-	 
-	gemSpil(true);
+
+    gemSpil(true);
     var e = G.etaper[G.enr];
     var vTid = res[0] ? res[0].tid : 0;
     var spi = -1;
-    for (var i = 0; i < res.length; i++) { if (res[i].r.sp) { spi = i; break; } }
-    
-    var aktive = G.ryttere.filter(function(r) { return !r.ude; }).length;
-    
+    for (var i = 0; i < res.length; i++) {
+        if (res[i].r.sp) {
+            spi = i;
+            break;
+        }
+    }
+
+    var aktive = G.ryttere.filter(function (r) {
+        return !r.ude;
+    }).length;
+
     var html = '<h2>🏁 ETAPE ' + e.nr + (erTT ? ' TT' : '') + ' SLUT!</h2>';
-    
+
     // Vis tidsgrænse info
     if (tidsGrænse && !erTT) {
         html += '<div style="text-align:center;color:#888;font-size:11px;margin-bottom:8px">' +
-            'Tidsgrænse: +' + ft(tidsGrænse) + ' (' + Math.round(tidsGrænse / vinderTid * 100) + '% af vindertid)' +
-            '</div>';
+        'Tidsgrænse: +' + ft(tidsGrænse) + ' (' + Math.round(tidsGrænse / vinderTid * 100) + '% af vindertid)' +
+        '</div>';
     }
-    
+
     html += '<div class="box"><h3>Resultat:</h3>';
     for (var i = 0; i < Math.min(12, res.length); i++) {
         var x = res[i];
-        if (x.r.ude) continue; // Spring udgåede over i resultatlisten
+        if (x.r.ude)
+            continue; // Spring udgåede over i resultatlisten
         var pos = i + 1;
         var diff = x.tid - vTid;
         var cls = x.r.sp ? "row pl" : "row";
         var med = pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : "";
-        var bn = pos <= 3 && !erTT ? ' <span class="ok">(-' + BONUS[pos-1] + 's)</span>' : "";
+        var bn = pos <= 3 && !erTT ? ' <span class="ok">(-' + BONUS[pos - 1] + 's)</span>' : "";
         var tidTxt = pos === 1 ? ft(x.tid) : (diff === 0 ? "s.t." : '+' + ft(diff));
-        html += '<div class="' + cls + '"><span>' + med + ' ' + pos + '. ' + x.r.navn.substring(0,32) + ' <span style="color:#666">' + x.r.holdAbbr + '</span></span>' +
-            '<span>' + tidTxt + bn + (x.r.sp ? ' ◄' : '') + '</span></div>';
+        html += '<div class="' + cls + '"><span>' + med + ' ' + pos + '. ' + x.r.navn.substring(0, 32) + ' <span style="color:#666">' + x.r.holdAbbr + '</span></span>' +
+        '<span>' + tidTxt + bn + (x.r.sp ? ' ◄' : '') + '</span></div>';
     }
     if (spi >= 12 && !res[spi].r.ude) {
         var x = res[spi];
         var diff = x.tid - vTid;
         var tidTxt = diff === 0 ? "s.t." : '+' + ft(diff);
-        html += '<br><div class="row pl"><span>' + (spi+1) + '. ' + x.r.navn + '</span><span>' + tidTxt + ' ◄</span></div>';
+        html += '<br><div class="row pl"><span>' + (spi + 1) + '. ' + x.r.navn + '</span><span>' + tidTxt + ' ◄</span></div>';
     }
     html += '</div>';
-    
+
     // Vis ryttere der er ude pga. tidsgrænse
     if (udeRyttere && udeRyttere.length > 0) {
         html += '<div class="box" style="border-color:#f44"><h3 style="color:#f44">❌ UDEN FOR TIDSGRÆNSEN:</h3>';
@@ -3049,100 +3564,130 @@ export function visRes(res, erTT, udeRyttere, vinderTid, tidsGrænse) {
         html += '<p style="color:#888;font-size:10px;margin-top:8px">Disse ryttere er ude af Tour de France</p>';
         html += '</div>';
     }
-    
+
     html += '<p style="text-align:center;color:#888;font-size:11px;margin-top:10px">' + aktive + ' ryttere stadig i løbet</p>';
-    
+
     html += '<div class="ctrls"><button class="btn btn-big btn-y" onclick="samlet()">STILLING →</button></div>';
     R(html);
 }
 
-
 export function samlet() {
-    var aktive = G.ryttere.filter(function(r) { return !r.ude; });
-    var gcS = aktive.slice().sort(function(a,b) { return a.stid - b.stid; });
-    var spS = aktive.slice().sort(function(a,b) { return (G.sprPts[b.navn]||0) - (G.sprPts[a.navn]||0); });
-    var bjS = aktive.slice().sort(function(a,b) { return (G.bjgPts[b.navn]||0) - (G.bjgPts[a.navn]||0); });
-    
+    var aktive = G.ryttere.filter(function (r) {
+        return !r.ude;
+    });
+    var gcS = aktive.slice().sort(function (a, b) {
+        return a.stid - b.stid;
+    });
+    var spS = aktive.slice().sort(function (a, b) {
+        return (G.sprPts[b.navn] || 0) - (G.sprPts[a.navn] || 0);
+    });
+    var bjS = aktive.slice().sort(function (a, b) {
+        return (G.bjgPts[b.navn] || 0) - (G.bjgPts[a.navn] || 0);
+    });
+
     var fTid = gcS[0] ? gcS[0].stid : 0;
-    var data, titel;
-    if (G.stilTab === "gc") { data = gcS; titel = "🟡 SAMLET"; }
-    else if (G.stilTab === "sp") { data = spS; titel = "🟢 SPRINT"; }
-    else { data = bjS; titel = "🔴 BJERG"; }
-    
+    var data,
+    titel;
+    if (G.stilTab === "gc") {
+        data = gcS;
+        titel = "🟡 SAMLET";
+    } else if (G.stilTab === "sp") {
+        data = spS;
+        titel = "🟢 SPRINT";
+    } else {
+        data = bjS;
+        titel = "🔴 BJERG";
+    }
+
     var spi = -1;
-    for (var i = 0; i < data.length; i++) { if (data[i].sp) { spi = i; break; } }
-    
-    var udeAntal = G.ryttere.filter(function(r) { return r.ude; }).length;
-    
-var maxSpPts = 0;
-for (var i = 0; i < aktive.length; i++) {
-    var ptsSp = G.sprPts[aktive[i].navn] || 0;
-    if (ptsSp > maxSpPts) maxSpPts = ptsSp;
-}
+    for (var i = 0; i < data.length; i++) {
+        if (data[i].sp) {
+            spi = i;
+            break;
+        }
+    }
 
-var maxBjPts = 0;
-for (var i = 0; i < aktive.length; i++) {
-    var ptsBj = G.bjgPts[aktive[i].navn] || 0;
-    if (ptsBj > maxBjPts) maxBjPts = ptsBj;
-}
+    var udeAntal = G.ryttere.filter(function (r) {
+        return r.ude;
+    }).length;
 
-var spNavn = "-";
-var bjNavn = "-";
-var spTopTxt = "";
-var bjTopTxt = "";
+    var maxSpPts = 0;
+    for (var i = 0; i < aktive.length; i++) {
+        var ptsSp = G.sprPts[aktive[i].navn] || 0;
+        if (ptsSp > maxSpPts)
+            maxSpPts = ptsSp;
+    }
 
-if (maxSpPts > 0 && spS.length > 0) {
-    spNavn = spS[0].navn.split(" ").pop();
-    spTopTxt = " (" + maxSpPts + ")";
-}
-if (maxBjPts > 0 && bjS.length > 0) {
-    bjNavn = bjS[0].navn.split(" ").pop();
-    bjTopTxt = " (" + maxBjPts + ")";
-}
+    var maxBjPts = 0;
+    for (var i = 0; i < aktive.length; i++) {
+        var ptsBj = G.bjgPts[aktive[i].navn] || 0;
+        if (ptsBj > maxBjPts)
+            maxBjPts = ptsBj;
+    }
 
-var html = '<h2>STILLING - Etape ' + (G.enr + 1) + '</h2>' +
-'<div class="jerseys">' +
-    '<div class="jersey jy">🟡 ' + (gcS[0] ? gcS[0].navn.split(" ").pop() : "-") + '</div>' +
-    '<div class="jersey jg">🟢 ' + spNavn + spTopTxt + '</div>' +
-    '<div class="jersey jp">🔴 ' + bjNavn + bjTopTxt + '</div>' +
-'</div>' +
-    (udeAntal > 0 ? '<p style="text-align:center;color:#f44;font-size:11px">' + udeAntal + ' rytter' + (udeAntal > 1 ? 'e' : '') + ' ude af touren</p>' : '') +
-    '<div class="tabs">' +
-        '<div class="tab ' + (G.stilTab==='gc'?'active':'') + '" onclick="G.stilTab=\'gc\';samlet()">🟡 Samlet</div>' +
-        '<div class="tab ' + (G.stilTab==='sp'?'active':'') + '" onclick="G.stilTab=\'sp\';samlet()">🟢 Sprint</div>' +
-        '<div class="tab ' + (G.stilTab==='bj'?'active':'') + '" onclick="G.stilTab=\'bj\';samlet()">🔴 Bjerg</div>' +
-    '</div>' +
-    '<div class="box"><h3>' + titel + '</h3>';
-    
+    var spNavn = "-";
+    var bjNavn = "-";
+    var spTopTxt = "";
+    var bjTopTxt = "";
+
+    if (maxSpPts > 0 && spS.length > 0) {
+        spNavn = spS[0].navn.split(" ").pop();
+        spTopTxt = " (" + maxSpPts + ")";
+    }
+    if (maxBjPts > 0 && bjS.length > 0) {
+        bjNavn = bjS[0].navn.split(" ").pop();
+        bjTopTxt = " (" + maxBjPts + ")";
+    }
+
+    var html = '<h2>STILLING - Etape ' + (G.enr + 1) + '</h2>' +
+        '<div class="jerseys">' +
+        '<div class="jersey jy">🟡 ' + (gcS[0] ? gcS[0].navn.split(" ").pop() : "-") + '</div>' +
+        '<div class="jersey jg">🟢 ' + spNavn + spTopTxt + '</div>' +
+        '<div class="jersey jp">🔴 ' + bjNavn + bjTopTxt + '</div>' +
+        '</div>' +
+        (udeAntal > 0 ? '<p style="text-align:center;color:#f44;font-size:11px">' + udeAntal + ' rytter' + (udeAntal > 1 ? 'e' : '') + ' ude af touren</p>' : '') +
+        '<div class="tabs">' +
+        '<div class="tab ' + (G.stilTab === 'gc' ? 'active' : '') + '" onclick="G.stilTab=\'gc\';samlet()">🟡 Samlet</div>' +
+        '<div class="tab ' + (G.stilTab === 'sp' ? 'active' : '') + '" onclick="G.stilTab=\'sp\';samlet()">🟢 Sprint</div>' +
+        '<div class="tab ' + (G.stilTab === 'bj' ? 'active' : '') + '" onclick="G.stilTab=\'bj\';samlet()">🔴 Bjerg</div>' +
+        '</div>' +
+        '<div class="box"><h3>' + titel + '</h3>';
+
     for (var i = 0; i < Math.min(15, data.length); i++) {
         var r = data[i];
         var pos = i + 1;
         var cls = r.sp ? "row pl" : "row";
         var val;
-        if (G.stilTab === "gc") val = pos === 1 ? ft(r.stid) : '+' + ft(r.stid - fTid);
-        else if (G.stilTab === "sp") val = (G.sprPts[r.navn] || 0) + ' pts';
-        else val = (G.bjgPts[r.navn] || 0) + ' pts';
+        if (G.stilTab === "gc")
+            val = pos === 1 ? ft(r.stid) : '+' + ft(r.stid - fTid);
+        else if (G.stilTab === "sp")
+            val = (G.sprPts[r.navn] || 0) + ' pts';
+        else
+            val = (G.bjgPts[r.navn] || 0) + ' pts';
         var j = G.stilTab === "gc" && pos === 1 ? "🟡 " : "";
-        html += '<div class="' + cls + '"><span>' + j + pos + '. ' + r.navn.substring(0,32) + ' <span style="color:#666">' + r.holdAbbr + '</span></span><span>' + val + (r.sp ? ' ◄' : '') + '</span></div>';
+        html += '<div class="' + cls + '"><span>' + j + pos + '. ' + r.navn.substring(0, 32) + ' <span style="color:#666">' + r.holdAbbr + '</span></span><span>' + val + (r.sp ? ' ◄' : '') + '</span></div>';
     }
-    
+
     if (spi >= 15) {
         var r = data[spi];
         var val;
-        if (G.stilTab === "gc") val = '+' + ft(r.stid - fTid);
-        else if (G.stilTab === "sp") val = (G.sprPts[r.navn] || 0) + ' pts';
-        else val = (G.bjgPts[r.navn] || 0) + ' pts';
-        html += '<br><div class="row pl"><span>' + (spi+1) + '. ' + r.navn + '</span><span>' + val + ' ◄</span></div>';
+        if (G.stilTab === "gc")
+            val = '+' + ft(r.stid - fTid);
+        else if (G.stilTab === "sp")
+            val = (G.sprPts[r.navn] || 0) + ' pts';
+        else
+            val = (G.bjgPts[r.navn] || 0) + ' pts';
+        html += '<br><div class="row pl"><span>' + (spi + 1) + '. ' + r.navn + '</span><span>' + val + ' ◄</span></div>';
     }
     html += '</div>';
-    
-if (G.enr < 20) {
-    html += '<div class="ctrls">' +
+
+    if (G.enr < 20) {
+        html += '<div class="ctrls">' +
         '<button class="btn btn-big btn-y" onclick="naeste()">NÆSTE ETAPE →</button>' +
         '</div>';
-} else {
-    html += '<div class="ctrls"><button class="btn btn-big btn-y" onclick="slut()">SLUTRESULTAT 🏆</button></div>';
-}
+    } else {
+        html += '<div class="ctrls"><button class="btn btn-big btn-y" onclick="slut()">SLUTRESULTAT 🏆</button></div>';
+    }
 
     R(html);
 }
@@ -3154,173 +3699,208 @@ export function naeste() {
 }
 
 /* export function resumeFromSave() {
-  // hvis spillet ikke er sat ordentligt op
-  if (!G.etaper || !G.etaper.length || !G.navn) {
-    intro();
-    return;
-  }
+// hvis spillet ikke er sat ordentligt op
+if (!G.etaper || !G.etaper.length || !G.navn) {
+intro();
+return;
+}
 
-  // hvis spillet er færdigt
-  if (G.enr >= G.etaper.length) {
-    // kald din slutskærm hvis du har en
-    // visSlut();
-    intro(); // fallback
-    return;
-  }
+// hvis spillet er færdigt
+if (G.enr >= G.etaper.length) {
+// kald din slutskærm hvis du har en
+// visSlut();
+intro(); // fallback
+return;
+}
 
-  // hop direkte til den etape som save peger på
-	alert(
-	  "Gemt spil indlæst\n\n" +
-	  "Rytter: " + G.navn + "\n" +
-	  "Starter på etape: " + (G.enr + 1)
-	);
+// hop direkte til den etape som save peger på
+alert(
+"Gemt spil indlæst\n\n" +
+"Rytter: " + G.navn + "\n" +
+"Starter på etape: " + (G.enr + 1)
+);
 
 //TODO: find ud af hvordan G.grp bliver nulstillet for lige nu er det den gamle data som ligger
-	resetGrupperTilFelt();
+resetGrupperTilFelt();
 
-  naeste();
+naeste();
 } */
 
 export function slut() {
-    var aktive = G.ryttere.filter(function(r) { return !r.ude; });
-    var gcS = aktive.slice().sort(function(a,b) { return a.stid - b.stid; });
-    var spS = aktive.slice().sort(function(a,b) { return (G.sprPts[b.navn]||0) - (G.sprPts[a.navn]||0); });
-    var bjS = aktive.slice().sort(function(a,b) { return (G.bjgPts[b.navn]||0) - (G.bjgPts[a.navn]||0); });
-    
+    var aktive = G.ryttere.filter(function (r) {
+        return !r.ude;
+    });
+    var gcS = aktive.slice().sort(function (a, b) {
+        return a.stid - b.stid;
+    });
+    var spS = aktive.slice().sort(function (a, b) {
+        return (G.sprPts[b.navn] || 0) - (G.sprPts[a.navn] || 0);
+    });
+    var bjS = aktive.slice().sort(function (a, b) {
+        return (G.bjgPts[b.navn] || 0) - (G.bjgPts[a.navn] || 0);
+    });
+
     var fTid = gcS[0] ? gcS[0].stid : 0;
-    var data, titel;
-    if (G.stilTab === "gc") { data = gcS; titel = "🟡 SAMLET KLASSEMENT"; }
-    else if (G.stilTab === "sp") { data = spS; titel = "🟢 POINTKONKURRENCEN"; }
-    else { data = bjS; titel = "🔴 BJERGKONKURRENCEN"; }
-    
+    var data,
+    titel;
+    if (G.stilTab === "gc") {
+        data = gcS;
+        titel = "🟡 SAMLET KLASSEMENT";
+    } else if (G.stilTab === "sp") {
+        data = spS;
+        titel = "🟢 POINTKONKURRENCEN";
+    } else {
+        data = bjS;
+        titel = "🔴 BJERGKONKURRENCEN";
+    }
+
     var spiGC = -1;
-    for (var i = 0; i < gcS.length; i++) { if (gcS[i].sp) { spiGC = i; break; } }
-    
-    var spi = -1;
-    for (var i = 0; i < data.length; i++) { if (data[i].sp) { spi = i; break; } }
-    
-    var msg = spiGC === 0 ? "🎉🎉 DU VANDT TOUREN! 🎉🎉"
-        : spiGC <= 2 ? "🎊 PODIUM!"
-        : spiGC <= 9 ? "👏 Top 10!"
-        : spiGC <= 19 ? "👍 Top 20!"
-        : "Du gennemførte!";
-    
-    var troeje = "";
-    if (spS[0] && spS[0].sp) troeje += " 🟢 GRØN TRØJE!";
-    if (bjS[0] && bjS[0].sp) troeje += " 🔴 PRIKKET TRØJE!";
-    if (gcS[0] && gcS[0].sp) troeje += " 🟡 GUL TRØJE!";
-    
-    // GC-bonus (1-10 baseret på placering i GC)
-var bonusGC = Math.max(0, 11 - Math.min(spiGC + 1, 11));
-if (spiGC >= 10) bonusGC = 0;
-
-// Ekstra podium-bonus
-if (spiGC === 0) {
-    bonusGC += 2;  // 1. plads: +1 podium + 1 gul trøje
-} else if (spiGC === 1) {
-    bonusGC += 1;  // 2. plads: +1 podium
-} else if (spiGC === 2) {
-    bonusGC += 1;  // 3. plads: +1 podium
-}
-
-// Ekstra bonuspoint for trøjer (grøn og prikket), 5..1 for top 5
-function troejeBonus(liste, maxPlads) {
-    var total = 0;
-    var max = Math.min(maxPlads, liste.length);
-    for (var i = 0; i < max; i++) {
-        var plac = i + 1;
-        var pts = Math.max(0, 6 - plac); // 1->5, 2->4, 3->3, 4->2, 5->1
-        if (liste[i].sp) {
-            total += pts;
+    for (var i = 0; i < gcS.length; i++) {
+        if (gcS[i].sp) {
+            spiGC = i;
+            break;
         }
     }
-    return total;
-}
 
-var bonusSp = troejeBonus(spS, 5); // grøn trøje top 5
-var bonusBj = troejeBonus(bjS, 5); // prikket trøje top 5
+    var spi = -1;
+    for (var i = 0; i < data.length; i++) {
+        if (data[i].sp) {
+            spi = i;
+            break;
+        }
+    }
 
-var bonusTroeer = bonusSp + bonusBj;
+    var msg = spiGC === 0 ? "🎉🎉 DU VANDT TOUREN! 🎉🎉"
+         : spiGC <= 2 ? "🎊 PODIUM!"
+         : spiGC <= 9 ? "👏 Top 10!"
+         : spiGC <= 19 ? "👍 Top 20!"
+         : "Du gennemførte!";
 
-// Samlet bonus
-var bonusPoint = bonusGC + bonusTroeer;
-    
+    var troeje = "";
+    if (spS[0] && spS[0].sp)
+        troeje += " 🟢 GRØN TRØJE!";
+    if (bjS[0] && bjS[0].sp)
+        troeje += " 🔴 PRIKKET TRØJE!";
+    if (gcS[0] && gcS[0].sp)
+        troeje += " 🟡 GUL TRØJE!";
+
+    // GC-bonus (1-10 baseret på placering i GC)
+    var bonusGC = Math.max(0, 11 - Math.min(spiGC + 1, 11));
+    if (spiGC >= 10)
+        bonusGC = 0;
+
+    // Ekstra podium-bonus
+    if (spiGC === 0) {
+        bonusGC += 2; // 1. plads: +1 podium + 1 gul trøje
+    } else if (spiGC === 1) {
+        bonusGC += 1; // 2. plads: +1 podium
+    } else if (spiGC === 2) {
+        bonusGC += 1; // 3. plads: +1 podium
+    }
+
+    // Ekstra bonuspoint for trøjer (grøn og prikket), 5..1 for top 5
+    function troejeBonus(liste, maxPlads) {
+        var total = 0;
+        var max = Math.min(maxPlads, liste.length);
+        for (var i = 0; i < max; i++) {
+            var plac = i + 1;
+            var pts = Math.max(0, 6 - plac); // 1->5, 2->4, 3->3, 4->2, 5->1
+            if (liste[i].sp) {
+                total += pts;
+            }
+        }
+        return total;
+    }
+
+    var bonusSp = troejeBonus(spS, 5); // grøn trøje top 5
+    var bonusBj = troejeBonus(bjS, 5); // prikket trøje top 5
+
+    var bonusTroeer = bonusSp + bonusBj;
+
+    // Samlet bonus
+    var bonusPoint = bonusGC + bonusTroeer;
+
     var html = '<div style="text-align:center"><div style="font-size:50px">🏆</div><h1>TOUR DE FRANCE SLUT!</h1></div>' +
-    '<div class="box" style="text-align:center;border-color:#ff0"><h2>' + msg + '</h2>' + (troeje ? '<p class="hl">' + troeje + '</p>' : '') + '</div>' +
-    '<div class="jerseys">' +
+        '<div class="box" style="text-align:center;border-color:#ff0"><h2>' + msg + '</h2>' + (troeje ? '<p class="hl">' + troeje + '</p>' : '') + '</div>' +
+        '<div class="jerseys">' +
         '<div class="jersey jy">🟡 ' + (gcS[0] ? gcS[0].navn : "-") + '</div>' +
-        '<div class="jersey jg">🟢 ' + (spS[0] ? spS[0].navn : "-") + ' (' + (G.sprPts[spS[0] ? spS[0].navn : ""]||0) + ')</div>' +
-        '<div class="jersey jp">🔴 ' + (bjS[0] ? bjS[0].navn : "-") + ' (' + (G.bjgPts[bjS[0] ? bjS[0].navn : ""]||0) + ')</div>' +
-    '</div>' +
-    '<div class="tabs">' +
-        '<div class="tab ' + (G.stilTab==='gc'?'active':'') + '" onclick="G.stilTab=\'gc\';slut()">🟡 Samlet</div>' +
-        '<div class="tab ' + (G.stilTab==='sp'?'active':'') + '" onclick="G.stilTab=\'sp\';slut()">🟢 Sprint</div>' +
-        '<div class="tab ' + (G.stilTab==='bj'?'active':'') + '" onclick="G.stilTab=\'bj\';slut()">🔴 Bjerg</div>' +
-    '</div>' +
-    '<div class="box"><h3>' + titel + '</h3>';
-    
+        '<div class="jersey jg">🟢 ' + (spS[0] ? spS[0].navn : "-") + ' (' + (G.sprPts[spS[0] ? spS[0].navn : ""] || 0) + ')</div>' +
+        '<div class="jersey jp">🔴 ' + (bjS[0] ? bjS[0].navn : "-") + ' (' + (G.bjgPts[bjS[0] ? bjS[0].navn : ""] || 0) + ')</div>' +
+        '</div>' +
+        '<div class="tabs">' +
+        '<div class="tab ' + (G.stilTab === 'gc' ? 'active' : '') + '" onclick="G.stilTab=\'gc\';slut()">🟡 Samlet</div>' +
+        '<div class="tab ' + (G.stilTab === 'sp' ? 'active' : '') + '" onclick="G.stilTab=\'sp\';slut()">🟢 Sprint</div>' +
+        '<div class="tab ' + (G.stilTab === 'bj' ? 'active' : '') + '" onclick="G.stilTab=\'bj\';slut()">🔴 Bjerg</div>' +
+        '</div>' +
+        '<div class="box"><h3>' + titel + '</h3>';
+
     for (var i = 0; i < Math.min(15, data.length); i++) {
         var r = data[i];
         var pos = i + 1;
         var cls = r.sp ? "row pl" : "row";
         var med = pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : "";
         var val;
-        if (G.stilTab === "gc") val = pos === 1 ? ft(r.stid) : '+' + ft(r.stid - fTid);
-        else if (G.stilTab === "sp") val = (G.sprPts[r.navn] || 0) + ' pts';
-        else val = (G.bjgPts[r.navn] || 0) + ' pts';
+        if (G.stilTab === "gc")
+            val = pos === 1 ? ft(r.stid) : '+' + ft(r.stid - fTid);
+        else if (G.stilTab === "sp")
+            val = (G.sprPts[r.navn] || 0) + ' pts';
+        else
+            val = (G.bjgPts[r.navn] || 0) + ' pts';
         html += '<div class="' + cls + '"><span>' + med + ' ' + pos + '. ' + r.navn + ' <span style="color:#666">' + r.holdAbbr + '</span></span><span>' + val + (r.sp ? ' ◄' : '') + '</span></div>';
     }
-    
+
     if (spi >= 15) {
         var r = data[spi];
         var val;
-        if (G.stilTab === "gc") val = '+' + ft(r.stid - fTid);
-        else if (G.stilTab === "sp") val = (G.sprPts[r.navn] || 0) + ' pts';
-        else val = (G.bjgPts[r.navn] || 0) + ' pts';
-        html += '<br><div class="row pl"><span>' + (spi+1) + '. ' + r.navn + '</span><span>' + val + ' ◄</span></div>';
+        if (G.stilTab === "gc")
+            val = '+' + ft(r.stid - fTid);
+        else if (G.stilTab === "sp")
+            val = (G.sprPts[r.navn] || 0) + ' pts';
+        else
+            val = (G.bjgPts[r.navn] || 0) + ' pts';
+        html += '<br><div class="row pl"><span>' + (spi + 1) + '. ' + r.navn + '</span><span>' + val + ' ◄</span></div>';
     }
     html += '</div>';
-    
+
     // Gem trøjevindere til næste tour
     G.lastGcVinder = gcS[0] ? gcS[0].navn : null;
     G.lastSpVinder = spS[0] ? spS[0].navn : null;
     G.lastBjVinder = bjS[0] ? bjS[0].navn : null;
 
-// Gem bonus point til senere
-G.bonusPoint = bonusPoint;
-G.bonusGC = bonusGC;
-G.bonusTroeer = bonusTroeer;
-G.slutPlacering = spiGC + 1;
-    
+    // Gem bonus point til senere
+    G.bonusPoint = bonusPoint;
+    G.bonusGC = bonusGC;
+    G.bonusTroeer = bonusTroeer;
+    G.slutPlacering = spiGC + 1;
+
     if (G.tourNr >= 12) {
         html += '<div class="box" style="text-align:center;border-color:#f80">' +
-            '<h3 style="color:#f80">🎖️ Karrieren er slut!</h3>' +
-            '<p>Du har kørt dit sidste Tour de France og trækker dig tilbage som professionel.</p>' +
-            '<p style="color:#888">Tillykke med en flot karriere, ' + G.navn + '!</p>' +
+        '<h3 style="color:#f80">🎖️ Karrieren er slut!</h3>' +
+        '<p>Du har kørt dit sidste Tour de France og trækker dig tilbage som professionel.</p>' +
+        '<p style="color:#888">Tillykke med en flot karriere, ' + G.navn + '!</p>' +
         '</div>' +
         '<div class="ctrls"><button class="btn btn-big" onclick="location.reload()">NY KARRIERE</button></div>';
     } else if (bonusPoint > 0) {
-    html += '<div class="box" style="border-color:#0f0;text-align:center">' +
+        html += '<div class="box" style="border-color:#0f0;text-align:center">' +
         '<h3 style="color:#0f0">🎁 Du har ' + bonusPoint + ' point at fordele!</h3>' +
         '<p style="margin-top:6px;font-size:13px;color:#ccc">' +
-            'Af dem kommer <span class="hl">' + bonusGC + '</span> fra din samlede placering ' +
-            'og <span class="hl">' + bonusTroeer + '</span> fra trøjerne.' +
+        'Af dem kommer <span class="hl">' + bonusGC + '</span> fra din samlede placering ' +
+        'og <span class="hl">' + bonusTroeer + '</span> fra trøjerne.' +
         '</p>' +
         '<p style="color:#888;font-size:11px">Fordel dem på dine evner før næste Tour.</p>' +
-    '</div>' +
-    '<div class="ctrls"><button class="btn btn-big btn-y" onclick="fordelPoint()">FORDEL POINT →</button></div>';
-}
- else {
+        '</div>' +
+        '<div class="ctrls"><button class="btn btn-big btn-y" onclick="fordelPoint()">FORDEL POINT →</button></div>';
+    } else {
         html += '<div class="ctrls"><button class="btn btn-big btn-y" onclick="nytTour()">NÆSTE TOUR →</button></div>';
     }
-    
+
     R(html);
 }
 
 export function fordelPoint() {
     var r = G.spiller;
     var pt = G.bonusPoint;
-    
+
     // Gem originale værdier til visning af ændringer
     if (!G.origStats) {
         G.origStats = {
@@ -3332,40 +3912,54 @@ export function fordelPoint() {
             re: r.re
         };
     }
-    
+
     var html = '<h2>🎁 Fordel ' + pt + ' point</h2>' +
-    '<div class="box">' +
+        '<div class="box">' +
         '<h3>Dine evner:</h3>' +
-        '<div class="sbar"><span class="lbl">Klatring:</span><div class="bg"><div class="fill" style="width:'+Math.min(99,r.bj)+'%;background:#f44"></div></div><span id="statBj">'+r.bj+'</span> <button class="btn" onclick="addStat(\'bj\')" ' + (pt <= 0 || r.bj >= 99 ? 'disabled' : '') + '>+</button></div>' +
-        '<div class="sbar"><span class="lbl">Sprint:</span><div class="bg"><div class="fill" style="width:'+Math.min(99,r.spr)+'%;background:#4f4"></div></div><span id="statSpr">'+r.spr+'</span> <button class="btn" onclick="addStat(\'spr\')" ' + (pt <= 0 || r.spr >= 99 ? 'disabled' : '') + '>+</button></div>' +
-        '<div class="sbar"><span class="lbl">Tidskørsel:</span><div class="bg"><div class="fill" style="width:'+Math.min(99,r.tt)+'%;background:#44f"></div></div><span id="statTt">'+r.tt+'</span> <button class="btn" onclick="addStat(\'tt\')" ' + (pt <= 0 || r.tt >= 99 ? 'disabled' : '') + '>+</button></div>' +
-        '<div class="sbar"><span class="lbl">Tempo:</span><div class="bg"><div class="fill" style="width:'+Math.min(99,r.fl)+'%;background:#0aa"></div></div><span id="statFl">'+r.fl+'</span> <button class="btn" onclick="addStat(\'fl\')" ' + (pt <= 0 || r.fl >= 99 ? 'disabled' : '') + '>+</button></div>' +
-        '<div class="sbar"><span class="lbl">Udholdenhed:</span><div class="bg"><div class="fill" style="width:'+Math.min(99,r.ud)+'%;background:#f80"></div></div><span id="statUd">'+r.ud+'</span> <button class="btn" onclick="addStat(\'ud\')" ' + (pt <= 0 || r.ud >= 99 ? 'disabled' : '') + '>+</button></div>' +
-        '<div class="sbar"><span class="lbl">Restitution:</span><div class="bg"><div class="fill" style="width:'+Math.min(99,r.re)+'%;background:#a4f"></div></div><span id="statRe">'+r.re+'</span> <button class="btn" onclick="addStat(\'re\')" ' + (pt <= 0 || r.re >= 99 ? 'disabled' : '') + '>+</button></div>' +
-    '</div>' +
-    '<div class="ctrls"><button class="btn btn-big btn-y" onclick="nytTour()" ' + (pt > 0 ? 'disabled title="Fordel alle point først"' : '') + '>START NÆSTE TOUR →</button></div>';
-    
+        '<div class="sbar"><span class="lbl">Klatring:</span><div class="bg"><div class="fill" style="width:' + Math.min(99, r.bj) + '%;background:#f44"></div></div><span id="statBj">' + r.bj + '</span> <button class="btn" onclick="addStat(\'bj\')" ' + (pt <= 0 || r.bj >= 99 ? 'disabled' : '') + '>+</button></div>' +
+        '<div class="sbar"><span class="lbl">Sprint:</span><div class="bg"><div class="fill" style="width:' + Math.min(99, r.spr) + '%;background:#4f4"></div></div><span id="statSpr">' + r.spr + '</span> <button class="btn" onclick="addStat(\'spr\')" ' + (pt <= 0 || r.spr >= 99 ? 'disabled' : '') + '>+</button></div>' +
+        '<div class="sbar"><span class="lbl">Tidskørsel:</span><div class="bg"><div class="fill" style="width:' + Math.min(99, r.tt) + '%;background:#44f"></div></div><span id="statTt">' + r.tt + '</span> <button class="btn" onclick="addStat(\'tt\')" ' + (pt <= 0 || r.tt >= 99 ? 'disabled' : '') + '>+</button></div>' +
+        '<div class="sbar"><span class="lbl">Tempo:</span><div class="bg"><div class="fill" style="width:' + Math.min(99, r.fl) + '%;background:#0aa"></div></div><span id="statFl">' + r.fl + '</span> <button class="btn" onclick="addStat(\'fl\')" ' + (pt <= 0 || r.fl >= 99 ? 'disabled' : '') + '>+</button></div>' +
+        '<div class="sbar"><span class="lbl">Udholdenhed:</span><div class="bg"><div class="fill" style="width:' + Math.min(99, r.ud) + '%;background:#f80"></div></div><span id="statUd">' + r.ud + '</span> <button class="btn" onclick="addStat(\'ud\')" ' + (pt <= 0 || r.ud >= 99 ? 'disabled' : '') + '>+</button></div>' +
+        '<div class="sbar"><span class="lbl">Restitution:</span><div class="bg"><div class="fill" style="width:' + Math.min(99, r.re) + '%;background:#a4f"></div></div><span id="statRe">' + r.re + '</span> <button class="btn" onclick="addStat(\'re\')" ' + (pt <= 0 || r.re >= 99 ? 'disabled' : '') + '>+</button></div>' +
+        '</div>' +
+        '<div class="ctrls"><button class="btn btn-big btn-y" onclick="nytTour()" ' + (pt > 0 ? 'disabled title="Fordel alle point først"' : '') + '>START NÆSTE TOUR →</button></div>';
+
     R(html);
 }
 
 export function addStat(stat) {
-    if (G.bonusPoint <= 0) return;
+    if (G.bonusPoint <= 0)
+        return;
     var r = G.spiller;
-    
-    if (stat === 'bj' && r.bj < 99) { r.bj++; G.bonusPoint--; }
-    else if (stat === 'spr' && r.spr < 99) { r.spr++; G.bonusPoint--; }
-    else if (stat === 'tt' && r.tt < 99) { r.tt++; G.bonusPoint--; }
-    else if (stat === 'fl' && r.fl < 99) { r.fl++; G.bonusPoint--; }
-    else if (stat === 'ud' && r.ud < 99) { r.ud++; G.bonusPoint--; }
-    else if (stat === 're' && r.re < 99) { r.re++; G.bonusPoint--; }
-    
+
+    if (stat === 'bj' && r.bj < 99) {
+        r.bj++;
+        G.bonusPoint--;
+    } else if (stat === 'spr' && r.spr < 99) {
+        r.spr++;
+        G.bonusPoint--;
+    } else if (stat === 'tt' && r.tt < 99) {
+        r.tt++;
+        G.bonusPoint--;
+    } else if (stat === 'fl' && r.fl < 99) {
+        r.fl++;
+        G.bonusPoint--;
+    } else if (stat === 'ud' && r.ud < 99) {
+        r.ud++;
+        G.bonusPoint--;
+    } else if (stat === 're' && r.re < 99) {
+        r.re++;
+        G.bonusPoint--;
+    }
+
     fordelPoint();
 }
 
 export function nytTour() {
     G.tourNr++;
     G.origStats = null;
-    
+
     // Nulstil tider og point
     for (var i = 0; i < G.ryttere.length; i++) {
         var r = G.ryttere[i];
@@ -3380,28 +3974,28 @@ export function nytTour() {
         G.sprPts[G.ryttere[i].navn] = 0;
         G.bjgPts[G.ryttere[i].navn] = 0;
     }
-    
+
     // Generer nye etaper
     G.etaper = genENyt();
     G.enr = 0;
     G.stilTab = "gc";
-    
+
     // Vis tour-start
     var html = '<div style="text-align:center;padding:20px 0">' +
         '<div style="font-size:50px">🚴‍♂️🏔️🚴‍♂️</div>' +
         '<h1>NYT TOUR DE FRANCE!</h1>' +
         '<p style="color:#888">Tour nr. ' + G.tourNr + ' i din karriere</p>' +
-    '</div>' +
-    '<div class="box">' +
+        '</div>' +
+        '<div class="box">' +
         '<h3>' + G.navn + ' - ' + G.spiller.hold + '</h3>' +
-        '<div class="sbar"><span class="lbl">Klatring:</span><div class="bg"><div class="fill" style="width:'+G.spiller.bj+'%;background:#f44"></div></div><span>'+G.spiller.bj+'</span></div>' +
-        '<div class="sbar"><span class="lbl">Sprint:</span><div class="bg"><div class="fill" style="width:'+G.spiller.spr+'%;background:#4f4"></div></div><span>'+G.spiller.spr+'</span></div>' +
-        '<div class="sbar"><span class="lbl">Tidskørsel:</span><div class="bg"><div class="fill" style="width:'+G.spiller.tt+'%;background:#44f"></div></div><span>'+G.spiller.tt+'</span></div>' +
-        '<div class="sbar"><span class="lbl">Tempo:</span><div class="bg"><div class="fill" style="width:'+G.spiller.fl+'%;background:#0aa"></div></div><span>'+G.spiller.fl+'</span></div>' +
-        '<div class="sbar"><span class="lbl">Udholdenhed:</span><div class="bg"><div class="fill" style="width:'+G.spiller.ud+'%;background:#f80"></div></div><span>'+G.spiller.ud+'</span></div>' +
-        '<div class="sbar"><span class="lbl">Restitution:</span><div class="bg"><div class="fill" style="width:'+G.spiller.re+'%;background:#a4f"></div></div><span>'+G.spiller.re+'</span></div>' +
-    '</div>' +
-    '<div class="ctrls"><button class="btn btn-big btn-y" onclick="startEtape()">START ETAPE 1 →</button></div>';
-    
+        '<div class="sbar"><span class="lbl">Klatring:</span><div class="bg"><div class="fill" style="width:' + G.spiller.bj + '%;background:#f44"></div></div><span>' + G.spiller.bj + '</span></div>' +
+        '<div class="sbar"><span class="lbl">Sprint:</span><div class="bg"><div class="fill" style="width:' + G.spiller.spr + '%;background:#4f4"></div></div><span>' + G.spiller.spr + '</span></div>' +
+        '<div class="sbar"><span class="lbl">Tidskørsel:</span><div class="bg"><div class="fill" style="width:' + G.spiller.tt + '%;background:#44f"></div></div><span>' + G.spiller.tt + '</span></div>' +
+        '<div class="sbar"><span class="lbl">Tempo:</span><div class="bg"><div class="fill" style="width:' + G.spiller.fl + '%;background:#0aa"></div></div><span>' + G.spiller.fl + '</span></div>' +
+        '<div class="sbar"><span class="lbl">Udholdenhed:</span><div class="bg"><div class="fill" style="width:' + G.spiller.ud + '%;background:#f80"></div></div><span>' + G.spiller.ud + '</span></div>' +
+        '<div class="sbar"><span class="lbl">Restitution:</span><div class="bg"><div class="fill" style="width:' + G.spiller.re + '%;background:#a4f"></div></div><span>' + G.spiller.re + '</span></div>' +
+        '</div>' +
+        '<div class="ctrls"><button class="btn btn-big btn-y" onclick="startEtape()">START ETAPE 1 →</button></div>';
+
     R(html);
 }

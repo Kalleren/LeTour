@@ -1,6 +1,6 @@
 import * as game from "./game.js";
 
-import {enableStoragePopup, gemSpil, hentSpil, harGemtSpil, indlaesGemtSpil, fortsaetSpil} from "./storage.js";
+import { enableStoragePopup, gemSpil, hentSpil, harGemtSpil, indlaesGemtSpil, fortsaetSpil } from "./storage.js";
 
 enableStoragePopup(false);
 
@@ -17,7 +17,6 @@ window.rerollRytter = rerollRytter;
 window.startEtape = startEtape;
 window.startNorm = startNorm;
 
-
 // ========== WAKE LOCK (hold skærm tændt) ==========
 
 var wakeLock = null;
@@ -28,9 +27,9 @@ async function requestWakeLock() {
         try {
             wakeLock = await navigator.wakeLock.request('screen');
             console.log('Wake Lock aktiv - skærmen slukker ikke');
-            
+
             // Lyt efter release (fx hvis bruger skifter tab)
-            wakeLock.addEventListener('release', function() {
+            wakeLock.addEventListener('release', function () {
                 console.log('Wake Lock frigivet');
             });
         } catch (err) {
@@ -49,30 +48,33 @@ function releaseWakeLock() {
 }
 
 // Genaktiver wake lock når brugeren kommer tilbage til siden
-document.addEventListener('visibilitychange', async function() {
+document.addEventListener('visibilitychange', async function () {
     if (wakeLock !== null && document.visibilityState === 'visible') {
         await requestWakeLock();
     }
 });
 
 // Keyboard
-document.addEventListener("keydown", function(e) {
+document.addEventListener("keydown", function (e) {
     // Ignorer tastetryk hvis man skriver i et input-felt
-    if (e.target.tagName === "INPUT") return;
-    
+    if (e.target.tagName === "INPUT")
+        return;
+
     var k = e.key.toLowerCase();
-    if (k === "a") accel();
-    else if (k === "p") pause();
-    else if (k === "u" && G.vent && G.udata) accUdb();
-    else if (k === "n" && G.vent && G.udata) rejUdb();
+    if (k === "a")
+        accel();
+    else if (k === "p")
+        pause();
+    else if (k === "u" && G.vent && G.udata)
+        accUdb();
+    else if (k === "n" && G.vent && G.udata)
+        rejUdb();
 });
 
 //Indlæser gemt spil hvis det findes
 const saved = harGemtSpil() ? indlaesGemtSpil() : null;
 if (saved) {
-	fortsaetSpil()
+    fortsaetSpil()
 } else {
-  intro();
+    intro();
 }
-
-
