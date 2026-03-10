@@ -1467,10 +1467,37 @@ for (var gi = 0; gi < G.grp.length; gi++) {
         // Feltet kører mere stabilt
         spd += (grpStyrke - 70) * 0.0008;
     } else if (g.type === "udbrud") {
-        // Udbrud får også gruppefordel, men mindre end felt
-        spd += grpSizeBonus * 0.7;
+    // Udbrud får også gruppefordel, men mindre end felt
+    spd += grpSizeBonus * 0.7;
+    
+    // Bagud-grupper med lav energi kører langsommere
+    if (g.lavEnergi) {
+        // Find gennemsnitlig energi i gruppen
+        var gnsEnergi = 0;
+        for (var ri = 0; ri < g.ryt.length; ri++) {
+            gnsEnergi += g.ryt[ri].energi;
+        }
+        gnsEnergi = g.ryt.length > 0 ? gnsEnergi / g.ryt.length : 0;
         
-        var udbBonus = 0.02;
+        // Jo lavere energi, jo MEGET langsommere
+        // Under 30% energi: Op til 45% langsommere ved 0%
+        if (gnsEnergi < 30) {
+            var energiStraf = (30 - gnsEnergi) / 30 * 0.45;
+            spd *= (1 - energiStraf);
+        }
+        
+        // Større grupper får bonus (samarbejde reducerer straffen)
+        if (g.ryt.length >= 8) {
+            spd *= 1.08;
+        } else if (g.ryt.length >= 5) {
+            spd *= 1.05;
+        } else if (g.ryt.length >= 3) {
+            spd *= 1.025;
+        }
+    }
+    
+    var udbBonus = 0.02;
+
         if (e.type === "bjerg") {
             // I bjerge afhænger hastighed MEGET af klatrestyrke
             udbBonus = 0.03 + (grpStyrke - 70) * 0.002;
@@ -1621,103 +1648,147 @@ for (var i = 0; i < G.ryttere.length; i++) {
     r.energi = Math.max(0, r.energi - baseTab);
 }
     
-    // Ryttere falder fra i bjerge - især på stejle stigninger
-    if ((e.type === "bjerg" || e.type === "kuperet") && stig > 12) {
-        var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
-        if (felt && felt.ryt.length > 8) {
-            var basisChance = e.type === "bjerg" ? 0.02 : 0.008;
-            var stejlBonus = Math.min(stig / 30, 1.5);
-            var faldChance = basisChance * (1 + stejlBonus);
-        
+    // Ryttere med lav energi falder fra deres gruppe (felt ELLER udbrud)
+    if ((e.type === "bjerg" || e.type === "kuperet") && stig > 10) {
+        for (var gi = 0; gi < G.grp.length; gi++) {
+            var g = G.grp[gi];
+            if (g.type === "gruppetto") continue;
+            if (g.ryt.length < 2) continue;
+            
             var faldne = [];
-            for (var i = 0; i < felt.ryt.length; i++) {
-                var r = felt.ryt[i];
-                if (r.sp || r.ude) continue;
+            for (var i = 0; i < g.ryt.length; i++) {
+                var r = g.ryt[i];
+                if (r.ude) continue;
                 
-                // TOPKLATRERE (bj >= 85) falder ALDRIG fra tidligt på etapen
+                // TOPKLATRERE (bj >= 85) falder ALDRIG fra tidligt
                 if (r.bj >= 85 && G.km < e.dist * 0.5) continue;
                 
-                // GC-favoritter (gc >= 80) er beskyttede tidligt, MEN kun hvis de også kan klatre
+                // GC-favoritter beskyttet tidligt
                 if (r.gc >= 80 && r.bj >= 70 && G.km < e.dist * 0.3) continue;
                 
                 // Energitærskel baseret på klatreevne
-                // Gode klatrere kan "holde hjulet" længere
-                // Dårlige klatrere (bj < 60) har lavere tærskel og falder nemmere fra
-                var minEnergiForFald = 40 + (r.bj * 0.3);
+                var minEnergiForFald;
+                if (r.bj < 50) {
+                    minEnergiForFald = 75 + (r.bj * 0.2);
+                } else if (r.bj < 70) {
+                    minEnergiForFald = 60 + (r.bj * 0.2);
+                } else {
+                    minEnergiForFald = 40 + (r.bj * 0.3);
+                }
                 if (r.energi > minEnergiForFald) continue;
                 
-                // Risiko baseret på klatreevne, energi og stigningens stejlhed
+                // Risiko beregning
                 var klatreManko = (100 - r.bj) / 100;
                 var energiManko = (100 - r.energi) / 100;
-                var riskFaktor = klatreManko * 0.5 + energiManko * 0.5;
-            
-                // Ekstra risiko ved stejle stigninger for dårlige klatrere
-                if (stig > 20 && r.bj < 70) {
-                    riskFaktor *= 1.5;
-                }
+                var riskFaktor = klatreManko * 0.6 + energiManko * 0.4;
                 
-                // Dårlige klatrere (bj < 60) har EKSTRA risiko
-                if (r.bj < 60) {
-                    riskFaktor *= 1.3;
-                }
-            
+                if (stig > 20 && r.bj < 70) riskFaktor *= 1.8;
+                if (r.bj < 60) riskFaktor *= 1.5;
+                if (r.bj < 40) riskFaktor *= 1.4;
+                
+                var basisChance = e.type === "bjerg" ? 0.025 : 0.012;
+                var stejlBonus = Math.min(stig / 25, 2.0);
+                var faldChance = basisChance * (1 + stejlBonus);
+                
                 if (Math.random() < faldChance * riskFaktor) {
                     faldne.push(r);
                 }
             }
             
             if (faldne.length > 0) {
-                var bagudGrp = findInArr(G.grp, function(g) { 
-                    return g.type === "gruppetto" && g.pos < felt.pos && felt.pos - g.pos < 3; 
-                });
-            
-                if (!bagudGrp && faldne.length >= 1) {
-                    bagudGrp = { type: "gruppetto", navn: "Bagud", ryt: [], pos: felt.pos - 0.2, tf: 0 };
-                    G.grp.push(bagudGrp);
+                // Fjern faldne fra deres gruppe
+                for (var i = 0; i < faldne.length; i++) {
+                    g.ryt = g.ryt.filter(function(x) { return x !== faldne[i]; });
                 }
-            
-                if (bagudGrp) {
+                
+                // Find eksisterende bagud-gruppe MEGET tæt på (inden for 0.2 km)
+                var eksisterendeBagud = findInArr(G.grp, function(gg) { 
+                    return gg.type === "udbrud" && gg.lavEnergi && 
+                           gg.pos < g.pos && g.pos - gg.pos < 0.2; 
+                });
+                
+                if (eksisterendeBagud) {
+                    // Tilslut eksisterende bagud-gruppe (de faldt næsten samtidig)
                     for (var i = 0; i < faldne.length; i++) {
-                        felt.ryt = felt.ryt.filter(function(x) { return x !== faldne[i]; });
-                        bagudGrp.ryt.push(faldne[i]);
+                        eksisterendeBagud.ryt.push(faldne[i]);
                     }
-                    if (faldne.length >= 2) {
-                        G.msg = "🏔️ " + faldne.length + " kan ikke følge tempoet!";
+                    if (eksisterendeBagud.ryt.length === 1) {
+                        eksisterendeBagud.navn = eksisterendeBagud.ryt[0].navn.split(" ").pop();
                     } else {
-                        G.msg = "🏔️ " + faldne[0].navn.split(" ").pop() + " sættes!";
+                        eksisterendeBagud.navn = "Bagud (" + eksisterendeBagud.ryt.length + ")";
                     }
+                } else {
+                    // Opret ny bagud-gruppe
+                    var nyNavn;
+                    if (faldne.length === 1) {
+                        nyNavn = faldne[0].navn.split(" ").pop();
+                    } else {
+                        nyNavn = "Bagud (" + faldne.length + ")";
+                    }
+                    
+                    var nyGrp = { 
+                        type: "udbrud",
+                        navn: nyNavn, 
+                        ryt: faldne, 
+                        pos: g.pos - 0.15,
+                        tf: 0,
+                        lavEnergi: true
+                    };
+                    G.grp.push(nyGrp);
+                }
+                
+                // Besked
+                var spillerFaldt = false;
+                for (var i = 0; i < faldne.length; i++) {
+                    if (faldne[i].sp) spillerFaldt = true;
+                }
+                
+                if (spillerFaldt) {
+                    G.msg = "💀 Du kan ikke holde hjulet og sakker bagud!";
+                } else if (faldne.length >= 3) {
+                    G.msg = "🏔️ " + faldne.length + " ryttere sakker!";
+                } else if (faldne.length === 2) {
+                    G.msg = "🏔️ " + faldne[0].navn.split(" ").pop() + " og " + faldne[1].navn.split(" ").pop() + " sakker!";
+                } else {
+                    G.msg = "🏔️ " + faldne[0].navn.split(" ").pop() + " sakker!";
+                }
+                
+                // Opdater original gruppes navn
+                if (g.ryt.length === 1 && g.type === "udbrud") {
+                    g.navn = g.ryt[0].navn.split(" ").pop();
                 }
             }
         }
     }
 
 
-    
-// AI angreb - baseret på etapetype og energi
-if (e.type === "bjerg" && Math.random() < 0.05) {
-    aiAngrebBjerg();
-} else if (e.type === "kuperet" && Math.random() < 0.05) {
-    aiAngrebKuperet();
-} else if (e.type === "flad" && Math.random() < 0.04) {
-    aiAngrebEnergi();
-} else if (e.type === "kuperet" && Math.random() < 0.03) {
-    aiAngrebEnergi();
-}
 
-// Favoritter angriber fra favoritgruppe (fra halvvejs)
-if ((e.type === "bjerg" || e.type === "kuperet") && G.km > e.dist * 0.5) {
-    favoritAngrebMidtvejs();
-}
     
-// Favoritter angriber hinanden tæt på mål i bjerge
-if (e.type === "bjerg" && G.km > e.dist - 15) {
-    favoritAngrebSlut();
-}
-
-// Favoritter angriber på kuperet i sidste fjerdedel
-if (e.type === "kuperet" && G.km > e.dist * 0.75) {
-    favoritAngrebKuperet();
-}
+    // AI angreb - baseret på etapetype og energi
+    if (e.type === "bjerg" && Math.random() < 0.05) {
+        aiAngrebBjerg();
+    } else if (e.type === "kuperet" && Math.random() < 0.05) {
+        aiAngrebKuperet();
+    } else if (e.type === "flad" && Math.random() < 0.04) {
+        aiAngrebEnergi();
+    } else if (e.type === "kuperet" && Math.random() < 0.03) {
+        aiAngrebEnergi();
+    }
+    
+    // Favoritter angriber fra favoritgruppe (fra halvvejs)
+    if ((e.type === "bjerg" || e.type === "kuperet") && G.km > e.dist * 0.5) {
+        favoritAngrebMidtvejs();
+    }
+        
+    // Favoritter angriber hinanden tæt på mål i bjerge
+    if (e.type === "bjerg" && G.km > e.dist - 15) {
+        favoritAngrebSlut();
+    }
+    
+    // Favoritter angriber på kuperet i sidste fjerdedel
+    if (e.type === "kuperet" && G.km > e.dist * 0.75) {
+        favoritAngrebKuperet();
+    }
 
     
     // Mellempunkter
@@ -1725,12 +1796,12 @@ if (e.type === "kuperet" && G.km > e.dist * 0.75) {
 
     
     // AI udbrud - oftere på flad og kuperet
-var udbCount = 0;
-for (var i = 0; i < G.grp.length; i++) { if (G.grp[i].type === "udbrud") udbCount++; }
-var udbChance = info.uch * 1.5;
-if (e.type === "flad") udbChance = info.uch * 3;
-else if (e.type === "kuperet") udbChance = info.uch * 2.5;
-if (Math.random() < udbChance && udbCount < 5) aiUdb();
+    var udbCount = 0;
+    for (var i = 0; i < G.grp.length; i++) { if (G.grp[i].type === "udbrud") udbCount++; }
+    var udbChance = info.uch * 1.5;
+    if (e.type === "flad") udbChance = info.uch * 3;
+    else if (e.type === "kuperet") udbChance = info.uch * 2.5;
+    if (Math.random() < udbChance && udbCount < 5) aiUdb();
 
     
     // Tilbyd udbrud - oftere i bjerge
@@ -1753,19 +1824,7 @@ if (Math.random() < udbChance && udbCount < 5) aiUdb();
         G.grp[i].tf = (fp - G.grp[i].pos) * info.sek;
     }
     
-    // Udkørte
-    for (var i = 0; i < G.ryttere.length; i++) {
-        var r = G.ryttere[i];
-        if (r.ude) continue;
-        if (r.energi <= 1) {
-            var rg = findInArr(G.grp, function(g) { return g.ryt.indexOf(r) >= 0; });
-            if (rg && rg.type !== "gruppetto") {
-                if (r.sp) G.msg = "💀 Du er udkørt!";
-                flytTilGruppetto(r);
-            }
-        }
-    }
-    
+  
     // Mål?
     if (G.grp[0] && G.grp[0].pos >= e.dist) { afslut(); return; }
     
