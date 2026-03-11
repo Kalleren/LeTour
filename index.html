@@ -2215,7 +2215,7 @@ document.addEventListener('visibilitychange', async function() {
 // Gem spiltilstand til localStorage
 function gemSpil(etapeFærdig) {
     var saveData = {
-        version: 1,
+        version: 2,
         navn: G.navn,
         tourNr: G.tourNr,
         enr: G.enr,
@@ -2288,7 +2288,7 @@ function indlaesGemtSpil() {
     if (!saveData) return false;
     
     // Check version
-    var CURRENT_VERSION = 1;
+    var CURRENT_VERSION = 2;
     if (!saveData.version || saveData.version < CURRENT_VERSION) {
         console.log('Gammelt save format - sletter og starter forfra');
         sletGemtSpil();
