@@ -359,7 +359,24 @@
             align-items: center;
             gap: 2px;
         }
-    }
+
+        .naeste-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .naeste-tekst {
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        .naeste-pil {
+            font-size: 20px;
+        }
+
+	}
 
     /* Forhindre zoom ved dobbeltklik/hurtige tryk */
     button, .btn {
@@ -416,7 +433,50 @@
     .svaerhed-boks.normal.valgt { background: #ff0; box-shadow: 0 0 2px #ff0; color: #000; }
     .svaerhed-boks.svaer { border-color: #f44; color: #f44; }
     .svaerhed-boks.svaer.valgt { background: #f44; box-shadow: 0 0 2px #f44; color: #000; }
-    .svaerhed-boks .navn { font-size: 16px; font-weight: bold; }
+.svaerhed-boks .navn { font-size: 16px; font-weight: bold; }
+
+    /* Skjul/vis tekst baseret på skærm */
+    .mobil-txt {
+        display: none;
+    }
+    
+    @media (max-width: 768px) {
+        .desktop-txt {
+            display: none;
+        }
+        
+        .mobil-txt {
+            display: inline;
+        }
+        
+        .svaerhed-valg {
+            gap: 5px;
+        }
+        
+        .svaerhed-boks {
+            padding: 8px 10px;
+            min-width: 90px;
+        }
+        
+        .svaerhed-boks .navn {
+            font-size: 12px;
+        }
+        
+        .rytter-ctrls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .rytter-ctrls .btn-big {
+            padding: 10px 14px;
+            font-size: 14px;
+            flex: 1;
+            max-width: 160px;
+        }
+    }
+
+</style>
 
     /* Statistik-canvas responsiv */
     @media (max-width: 768px) {
@@ -1225,7 +1285,7 @@ function genererResume(res, erTT) {
         if (spiPlads <= 10) {
             spiTekst = spiEfternavn + " sluttede som nr. " + spiPlads + " og tabte " + Math.round(gcGabAendring) + " sekunder i klassementet.";
         } else {
-            spiTekst = spiEfternavn + " tabte " + Math.round(gcGabAendring) + " sekunder til favoritterne.";
+            spiTekst = spiEfternavn + " satte " + Math.round(gcGabAendring) + " til ift. den gule trøje.";
         }
     } else {
         // Status quo i klassementet (±10 sekunder)
@@ -2693,29 +2753,30 @@ function rytterInfo(hold, orig) {
         : pot >= 72 ? '<div class="box" style="border-color:#0f0"><span class="ok">👍 Solid rytter!</span></div>'
         : '<div class="box" style="border-color:#f80"><span class="warn">😓 Hjælperytter</span></div>';
 
-var svaerhedHtml = '<div class="box">' +
-    '<h3>Sværhedsgrad:</h3>' +
-    '<div class="svaerhed-valg">' +
-        '<div class="svaerhed-boks let ' + (G.svaerhed === "let" ? "valgt" : "") + '" onclick="vaelgSvaerhed(\'let\')">' +
-            '<div class="navn">🚲 Den trehjulede</div>' +
+    var svaerhedHtml = '<div class="box">' +
+        '<h3>Sværhedsgrad:</h3>' +
+        '<div class="svaerhed-valg">' +
+            '<div class="svaerhed-boks let ' + (G.svaerhed === "let" ? "valgt" : "") + '" onclick="vaelgSvaerhed(\'let\')">' +
+                '<div class="navn"><span class="desktop-txt">🚲 </span>Den trehjulede</div>' +
+            '</div>' +
+            '<div class="svaerhed-boks normal ' + (G.svaerhed === "normal" ? "valgt" : "") + '" onclick="vaelgSvaerhed(\'normal\')">' +
+                '<div class="navn"><span class="desktop-txt">🚴 </span>Havelågen</div>' +
+            '</div>' +
+            '<div class="svaerhed-boks svaer ' + (G.svaerhed === "svaer" ? "valgt" : "") + '" onclick="vaelgSvaerhed(\'svaer\')">' +
+                '<div class="navn"><span class="desktop-txt">🏎️ </span>Raceren</div>' +
+            '</div>' +
         '</div>' +
-        '<div class="svaerhed-boks normal ' + (G.svaerhed === "normal" ? "valgt" : "") + '" onclick="vaelgSvaerhed(\'normal\')">' +
-            '<div class="navn">🚴 Havelågen</div>' +
-        '</div>' +
-        '<div class="svaerhed-boks svaer ' + (G.svaerhed === "svaer" ? "valgt" : "") + '" onclick="vaelgSvaerhed(\'svaer\')">' +
-            '<div class="navn">🏎️ Raceren</div>' +
-        '</div>' +
-    '</div>' +
-'</div>';
+    '</div>';
     
-var rerollBtn = '';
-if (G.rerollsLeft > 0) {
-    rerollBtn = '<button class="btn btn-big" onclick="rerollRytter()">Prøv igen (' + G.rerollsLeft + ' tilbage)</button> ';
-} else {
-    rerollBtn = '<button class="btn btn-big" disabled>Ingen forsøg tilbage</button> ';
-}
+    var rerollBtn = '';
+    if (G.rerollsLeft > 0) {
+        rerollBtn = '<button class="btn btn-big reroll-btn" onclick="rerollRytter()"><span class="desktop-txt">Prøv igen (' + G.rerollsLeft + ' tilbage)</span><span class="mobil-txt">Prøv igen (' + G.rerollsLeft + ')</span></button> ';
+    } else {
+        rerollBtn = '<button class="btn btn-big reroll-btn" disabled><span class="desktop-txt">Ingen forsøg tilbage</span><span class="mobil-txt">Ingen forsøg</span></button> ';
+    }
     
-    R('<h2>🚴 Velkommen ' + G.navn + '!</h2>' +
+    R('<h2>Velkommen ' + G.navn + '!</h2>' +
+    svaerhedHtml +
     '<div class="box">' +
         '<p><strong>Hold: ' + hold + '</strong> (' + TEAMS[hold].abbr + ')</p>' +
         '<p style="color:#666;font-size:11px">Erstatter: ' + orig.n + '</p>' +
@@ -2728,8 +2789,8 @@ if (G.rerollsLeft > 0) {
         '<div class="sbar"><span class="lbl">Tempo:</span><div class="bg"><div class="fill" style="width:'+r.fl+'%;background:#0aa"></div></div><span>'+r.fl+'</span></div>' +
         '<div class="sbar"><span class="lbl">Udholdenhed:</span><div class="bg"><div class="fill" style="width:'+r.ud+'%;background:#f80"></div></div><span>'+r.ud+'</span></div>' +
         '<div class="sbar"><span class="lbl">Restitution:</span><div class="bg"><div class="fill" style="width:'+r.re+'%;background:#a4f"></div></div><span>'+r.re+'</span></div>' +
-    '</div>' + msg + svaerhedHtml +
-    '<div class="ctrls">' + rerollBtn + '<button class="btn btn-big btn-y" onclick="startEtape()">🏁 START TOUREN 🏁</button></div>');
+    '</div>' + msg +
+    '<div class="ctrls rytter-ctrls">' + rerollBtn + '<button class="btn btn-big btn-y start-btn" onclick="startEtape()"><span class="desktop-txt">🏁 START TOUREN 🏁</span><span class="mobil-txt">START TOUREN</span></button></div>');
 }
 
 function rerollRytter() {
@@ -3119,7 +3180,10 @@ for (var gi = 0; gi < G.grp.length; gi++) {
     }
     
     var sg = findInArr(G.grp, function(g) { return g.ryt.indexOf(G.spiller) >= 0; });
-    if (sg) G.km = Math.floor(sg.pos);
+    
+    // Km viser altid den forreste gruppes position
+    G.grp.sort(function(a, b) { return b.pos - a.pos; });
+    if (G.grp[0]) G.km = Math.floor(G.grp[0].pos);
     
     // Ryttere falder fra i bjerge - især på stejle stigninger
     if ((e.type === "bjerg" || e.type === "kuperet") && stig > 12) {
@@ -5466,8 +5530,12 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGraense) {
             '</div>';
     }
     
+    // Check om vi er på mobil
+    var erMobil = window.innerWidth <= 768;
+    var maxVis = erMobil ? 10 : 15;
+    
     html += '<div class="box"><h3>Resultat:</h3>';
-    for (var i = 0; i < Math.min(15, res.length); i++) {
+    for (var i = 0; i < Math.min(maxVis, res.length); i++) {
         var x = res[i];
         if (x.r.ude) continue;
         var pos = i + 1;
@@ -5485,7 +5553,7 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGraense) {
         '<span>' + tidTxt + bn + '</span></div>';
     }
 
-    if (spi >= 15 && !res[spi].r.ude) {
+    if (spi >= maxVis && !res[spi].r.ude) {
         var x = res[spi];
         var diff = x.tid - vTid;
         var tidTxt = diff === 0 ? "s.t." : '+' + ft(diff);
@@ -5613,17 +5681,17 @@ var html = '<h2>STILLING - Etape ' + (G.enr + 1) + '</h2>' +
     }
     html += '</div>';
     
-if (G.enr < 20) {
-    html += '<div class="ctrls ctrls-2">' +
-        '<button class="btn btn-big btn-y" onclick="visAlleGC()">🟡 ALLE</button>' +
-        '<button class="btn btn-big" onclick="naeste()">NÆSTE ETAPE →</button>' +
-        '</div>';
-} else {
-    html += '<div class="ctrls ctrls-2">' +
-        '<button class="btn btn-big btn-y" onclick="visAlleGC()">🟡 ALLE</button>' +
-        '<button class="btn btn-big" onclick="slut()">SLUTRESULTAT 🏆</button>' +
-        '</div>';
-}
+	if (G.enr < 20) {
+	    html += '<div class="ctrls ctrls-2">' +
+	        '<button class="btn btn-big btn-y" onclick="visAlleGC()">🟡 ALLE</button>' +
+	        '<button class="btn btn-big naeste-btn" onclick="naeste()"><span class="desktop-txt">NÆSTE ETAPE →</span><span class="mobil-txt"><span class="naeste-tekst">NÆSTE<br>ETAPE</span> <span class="naeste-pil">→</span></span></button>' +
+	        '</div>';
+	} else {
+	    html += '<div class="ctrls ctrls-2">' +
+	        '<button class="btn btn-big btn-y" onclick="visAlleGC()">🟡 ALLE</button>' +
+	        '<button class="btn btn-big" onclick="slut()"><span class="desktop-txt">SLUTRESULTAT 🏆</span><span class="mobil-txt">SLUT 🏆</span></button>' +
+	        '</div>';
+	}
 
     R(html);
 }
