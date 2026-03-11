@@ -474,12 +474,8 @@
             flex: 1;
             max-width: 160px;
         }
-    }
 
-</style>
-
-    /* Statistik-canvas responsiv */
-    @media (max-width: 768px) {
+        /* Statistik-canvas responsiv */
         #plotCanvas {
             height: 250px !important;
         }
@@ -5684,8 +5680,9 @@ var html = '<h2>STILLING - Etape ' + (G.enr + 1) + '</h2>' +
 	if (G.enr < 20) {
 	    html += '<div class="ctrls ctrls-2">' +
 	        '<button class="btn btn-big btn-y" onclick="visAlleGC()">🟡 ALLE</button>' +
-	        '<button class="btn btn-big naeste-btn" onclick="naeste()"><span class="desktop-txt">NÆSTE ETAPE →</span><span class="mobil-txt"><span class="naeste-tekst">NÆSTE<br>ETAPE</span> <span class="naeste-pil">→</span></span></button>' +
+	        '<button class="btn btn-big" onclick="naeste()"><span class="desktop-txt">NÆSTE ETAPE →</span><span class="mobil-txt">NÆSTE ETAPE</span></button>' +
 	        '</div>';
+
 	} else {
 	    html += '<div class="ctrls ctrls-2">' +
 	        '<button class="btn btn-big btn-y" onclick="visAlleGC()">🟡 ALLE</button>' +
