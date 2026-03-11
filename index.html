@@ -1005,36 +1005,49 @@ function genererResume(res, erTT) {
     // UDBRUD OG ANGREB
     if (e.type === "flad" && udbrud.length > 0 && indhentninger.length > 0) {
         // Flad etape med udbrud der blev hentet
-        var stoersteUdbrud = 0;
-        for (var i = 0; i < udbrud.length; i++) {
-            if (udbrud[i].data.antal > stoersteUdbrud) stoersteUdbrud = udbrud[i].data.antal;
-        }
-        if (stoersteUdbrud >= 3) {
-            afsnit.push("Et udbrud på " + stoersteUdbrud + " mand slap væk tidligt, men blev som forventet hentet hurtigt af feltet igen.");
-        }
+        var udbrudTekster = [
+            "Et udbrud slap væk tidligt, men blev som forventet hentet inden mål.",
+            "Dagens udbrud kæmpede bravt, men feltet lod dem aldrig få for stort forspring.",
+            "Lykkeridderne fik lov at drømme, men sprinterholdene hentede dem tilbage."
+        ];
+        afsnit.push(udbrudTekster[ri(0, udbrudTekster.length - 1)]);
     } else if (e.type !== "flad" && angreb.length > 0) {
-        // Bjerg/kuperet med angreb
-        if (angreb.length === 1) {
-            var angrebet = angreb[0];
-            afsnit.push(angrebet.data.rytter.split(" ").pop() + " lancerede det afgørende angreb " + 
-                       Math.round(e.dist - angrebet.km) + " km fra mål.");
-        } else if (angreb.length <= 4) {
-            var sidsteAngreb = angreb[angreb.length - 1];
-            afsnit.push("Etapen bød på " + angreb.length + " angrebsforsøg. " + 
-                       sidsteAngreb.data.rytter.split(" ").pop() + " stod for det afgørende fremstød.");
-        } else {
-            var sidsteAngreb = angreb[angreb.length - 1];
-            afsnit.push("Ikke færre end " + angreb.length + " angreb blev affyret. " + 
-                       sidsteAngreb.data.rytter.split(" ").pop() + " stod for det afgørende fremstød.");
+        // Bjerg/kuperet med angreb - find kun det afgørende (sidste ikke-spiller angreb eller sidste i alt)
+        var sidsteAngreb = null;
+        for (var i = angreb.length - 1; i >= 0; i--) {
+            if (angreb[i].data.rytter !== G.spiller.navn) {
+                sidsteAngreb = angreb[i];
+                break;
+            }
+        }
+        if (!sidsteAngreb && angreb.length > 0) {
+            sidsteAngreb = angreb[angreb.length - 1];
+        }
+        
+        if (sidsteAngreb) {
+            var kmFraMaal = Math.round(e.dist - sidsteAngreb.km);
+            var angrebTekster = [];
+            
+            if (kmFraMaal <= 5) {
+                angrebTekster.push(sidsteAngreb.data.rytter.split(" ").pop() + " satte det afgørende angreb ind på de sidste kilometer.");
+                angrebTekster.push("Det afgørende angreb kom fra " + sidsteAngreb.data.rytter.split(" ").pop() + " tæt på mål.");
+            } else if (kmFraMaal <= 15) {
+                angrebTekster.push(sidsteAngreb.data.rytter.split(" ").pop() + " angreb " + kmFraMaal + " km fra mål.");
+                angrebTekster.push("Med " + kmFraMaal + " km tilbage satte " + sidsteAngreb.data.rytter.split(" ").pop() + " sit stød ind.");
+            } else {
+                angrebTekster.push(sidsteAngreb.data.rytter.split(" ").pop() + " var aktiv på etapen med et langt angreb.");
+                angrebTekster.push("Der blev angrebet fra lang afstand, med " + sidsteAngreb.data.rytter.split(" ").pop() + " som den mest offensive.");
+            }
+            
+            afsnit.push(angrebTekster[ri(0, angrebTekster.length - 1)]);
         }
     } else if (udbrud.length > 0 && e.type !== "flad") {
-        var stoersteUdbrud = 0;
-        for (var i = 0; i < udbrud.length; i++) {
-            if (udbrud[i].data.antal > stoersteUdbrud) stoersteUdbrud = udbrud[i].data.antal;
-        }
-        if (stoersteUdbrud >= 4) {
-            afsnit.push("Et stort udbrud på " + stoersteUdbrud + " mand fik lov at køre afsted tidligt på etapen.");
-        }
+        var bjergUdbrudTekster = [
+            "Et udbrud fik lov at køre afsted tidligt på etapen.",
+            "Flere ryttere forsøgte lykken i et tidligt udbrud.",
+            "Dagen startede med et udbrud, men favoritterne holdt øje."
+        ];
+        afsnit.push(bjergUdbrudTekster[ri(0, bjergUdbrudTekster.length - 1)]);
     }
     
         // GC-KOLLAPS (kun nævn hvis det er en top 10 rytter eller spilleren)
