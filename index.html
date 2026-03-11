@@ -1056,7 +1056,14 @@ function genererResume(res, erTT) {
             
             var angrebTekster = [];
             
-            if (rigtigeAngreb >= 5) {
+            // Tjek om intro'en allerede nævnte angreb
+            var introNaevnteAngreb = intro.indexOf("angreb") >= 0 || intro.indexOf("Angreb") >= 0;
+            
+            if (introNaevnteAngreb) {
+                // Intro nævnte allerede angreb - nævn kun det afgørende
+                angrebTekster.push(sidsteAngreb.data.rytter.split(" ").pop() + " stod for det afgørende fremstød " + kmFraMaal + " km fra mål.");
+                angrebTekster.push("Det var " + sidsteAngreb.data.rytter.split(" ").pop() + " der satte det afgørende stød ind.");
+            } else if (rigtigeAngreb >= 5) {
                 angrebTekster.push("Etapen bød på angreb fra flere sider. " + sidsteAngreb.data.rytter.split(" ").pop() + " stod for det afgørende fremstød.");
                 angrebTekster.push("Det regnede med angreb på dagens etape. " + sidsteAngreb.data.rytter.split(" ").pop() + " satte det afgørende ind.");
             } else if (rigtigeAngreb >= 3) {
