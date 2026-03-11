@@ -855,11 +855,12 @@ function genererResume(res, erTT) {
     var bjLeder = bjS[0];
     
     // Find forrige etapes trøjebærere (til at afgøre om trøjen er "erobret" eller "beholdt")
+    // NB: Den nuværende etape er IKKE gemt endnu når genererResume() kaldes
     var tidligereGcLeder = null;
     var tidligereSpLeder = null;
     var tidligereBjLeder = null;
-    if (ETAPE_HISTORIK.length > 1) {
-        var forrige = ETAPE_HISTORIK[ETAPE_HISTORIK.length - 2];
+    if (ETAPE_HISTORIK.length > 0) {
+        var forrige = ETAPE_HISTORIK[ETAPE_HISTORIK.length - 1];
         tidligereGcLeder = forrige.gcLeder;
         tidligereSpLeder = forrige.spLeder;
         tidligereBjLeder = forrige.bjLeder;
