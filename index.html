@@ -1025,10 +1025,23 @@ function genererResume(res, erTT) {
         // Ellers brug det sidste angreb generelt
         var sidsteAngreb = null;
         
-        if (vinder && vinder.sp) {
+        // Tjek om spilleren kollapsede (tabte mere end 8 minutter)
+        var spillerKollapsede = gcGabAendring >= 480;
+        
+        if (vinder && vinder.sp && !spillerKollapsede) {
             // Spilleren vandt - find spillerens afgørende angreb
             for (var i = angreb.length - 1; i >= 0; i--) {
                 if (angreb[i].data.rytter === G.spiller.navn) {
+                    sidsteAngreb = angreb[i];
+                    break;
+                }
+            }
+        }
+        
+        // Hvis spilleren kollapsede, find en anden angribers afgørende angreb
+        if (spillerKollapsede && !sidsteAngreb) {
+            for (var i = angreb.length - 1; i >= 0; i--) {
+                if (angreb[i].data.rytter !== G.spiller.navn) {
                     sidsteAngreb = angreb[i];
                     break;
                 }
@@ -1098,26 +1111,58 @@ function genererResume(res, erTT) {
         }
     }
 
-        // GC-KOLLAPS (kun nævn hvis det er en top 10 rytter eller spilleren)
+    // GC-KOLLAPS (nævn alle vigtige kollaps - spilleren og top 10 ryttere)
     if (gcKollaps.length > 0) {
-        var kollaps = gcKollaps[0].data;
-        var kollapsNavn = kollaps.rytter.split(" ").pop();
-        var erSpiller = kollaps.rytter === G.spiller.navn;
+        // Find alle vigtige kollaps (spilleren eller top 10 GC)
+        var vigtigeKollaps = [];
+        var spillerKollaps = null;
         
-        // Tjek om rytteren er i top 10 GC
-        var kollapsErVigtig = erSpiller;
-        if (!erSpiller) {
-            for (var i = 0; i < gcS.length; i++) {
-                if (gcS[i].navn === kollaps.rytter && i < 10) {
-                    kollapsErVigtig = true;
+        for (var i = 0; i < gcKollaps.length; i++) {
+            var kollaps = gcKollaps[i].data;
+            var kollapsNavn = kollaps.rytter;
+            var erSpiller = kollapsNavn === G.spiller.navn;
+            
+            if (erSpiller) {
+                spillerKollaps = kollaps;
+                continue; // Spilleren nævnes separat i SPILLERENS PRÆSTATION
+            }
+            
+            // Tjek om rytteren er i top 10 GC
+            for (var j = 0; j < gcS.length; j++) {
+                if (gcS[j].navn === kollapsNavn && j < 10) {
+                    // Undgå dubletter
+                    var alleredeTilføjet = false;
+                    for (var k = 0; k < vigtigeKollaps.length; k++) {
+                        if (vigtigeKollaps[k].rytter === kollapsNavn) {
+                            alleredeTilføjet = true;
+                            break;
+                        }
+                    }
+                    if (!alleredeTilføjet) {
+                        vigtigeKollaps.push(kollaps);
+                    }
                     break;
                 }
             }
         }
         
-        if (kollapsErVigtig) {
-            afsnit.push("Det store samtaleemne er " + (erSpiller ? spiEfternavn + "s" : kollapsNavn + "s") + " kollaps ved km " + Math.round(kollaps.km) + 
-                       ". " + (erSpiller ? spiEfternavn : kollapsNavn) + " løb tør for kræfter og tabte kostbar tid til konkurrenterne.");
+        // Skriv om kollaps
+        if (vigtigeKollaps.length === 1) {
+            var k = vigtigeKollaps[0];
+            var kNavn = k.rytter.split(" ").pop();
+            afsnit.push("Det store samtaleemne er " + kNavn + "s kollaps ved km " + Math.round(k.km) + 
+                       ". " + kNavn + " løb tør for kræfter og tabte kostbar tid til konkurrenterne.");
+        } else if (vigtigeKollaps.length === 2) {
+            var k1 = vigtigeKollaps[0].rytter.split(" ").pop();
+            var k2 = vigtigeKollaps[1].rytter.split(" ").pop();
+            afsnit.push("Flere favoritter knækkede på dagens etape. Både " + k1 + " og " + k2 + " løb tør for kræfter og tabte kostbar tid.");
+        } else if (vigtigeKollaps.length >= 3) {
+            var navne = [];
+            for (var i = 0; i < vigtigeKollaps.length; i++) {
+                navne.push(vigtigeKollaps[i].rytter.split(" ").pop());
+            }
+            var sidsteNavn = navne.pop();
+            afsnit.push("Det var en blodig dag for favoritterne. " + navne.join(", ") + " og " + sidsteNavn + " kollapsede alle og tabte store bidder af tid.");
         }
     }
     
