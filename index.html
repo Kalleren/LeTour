@@ -962,20 +962,44 @@ function genererResume(res, erTT) {
                 introVarianter.push("Dagens " + e.dist + " km lange kuperede etape fra " + e.start + " til " + e.slut + " bød på hård kamp på de mange bakker.");
                 introVarianter.push("De " + e.dist + " kilometer fra " + e.start + " til " + e.slut + " viste sig at være hårdere end højdemetrene antydede.");
             }
-        } else {
-            // Flad etape
-            if (indhentninger.length > 0 && udbrud.length > 0) {
-                introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fulgte det velkendte mønster: udbrud, jagt og massespurt.");
-            } else if (udbrud.length > 0) {
-                introVarianter.push("På de " + e.dist + " flade kilometer fra " + e.start + " til " + e.slut + " forsøgte flere ryttere at slippe væk fra feltet.");
-            } else {
-                introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " var kontrolleret fra start til slut.");
-                introVarianter.push("Sprinterholdene holdt sammen på feltet gennem de " + e.dist + " kilometer fra " + e.start + " til " + e.slut + ".");
-            }
-        }
-        
-        intro = introVarianter[ri(0, introVarianter.length - 1)];
-    }
+		} else {
+		    // Flad etape
+		    
+		    // Tjek om der skete noget spændende mod slutningen
+		    var seneAngreb = [];
+		    for (var ai = 0; ai < angreb.length; ai++) {
+		        if (angreb[ai].km > e.dist - 5) {
+		            seneAngreb.push(angreb[ai]);
+		        }
+		    }
+		    
+		    // Tjek om vinderen er en sprinter (spr > 85) eller ej
+		    var vinderErSprinter = vinder && vinder.spr > 85;
+		    var vinderErOverraskelse = vinder && vinder.spr < 75 && vinder.gc < 80;
+		    
+		    if (seneAngreb.length > 0 && !vinderErSprinter) {
+		        // Kaotisk finale med angreb
+		        introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fik en overraskende finale da angrebene kom på de sidste kilometer.");
+		        introVarianter.push("Det så ud til massespurt, men kaos på de sidste kilometer ændrede alt på etapen til " + e.slut + ".");
+		        introVarianter.push("Sprinterholdene mistede kontrollen på de sidste kilometer, og etapen fik en uventet afgørelse.");
+		    } else if (vinderErOverraskelse) {
+		        // Uventet vinder
+		        introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " bød på en overraskende vinder.");
+		        introVarianter.push("En atypisk afslutning på den flade etape til " + e.slut + " gav en uventet sejrherre.");
+		    } else if (indhentninger.length > 0 && udbrud.length > 0) {
+		        // Klassisk mønster
+		        introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fulgte det velkendte mønster: udbrud, jagt og massespurt.");
+		        introVarianter.push("Et udbrud fik lov at køre det meste af etapen, men blev hentet inden mål i " + e.slut + ".");
+		        introVarianter.push("Sprinterholdene kontrollerede etapen og sørgede for massespurt i " + e.slut + ".");
+		    } else if (udbrud.length > 0) {
+		        introVarianter.push("På de " + e.dist + " flade kilometer fra " + e.start + " til " + e.slut + " forsøgte flere ryttere at slippe væk fra feltet.");
+		    } else {
+		        introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " var kontrolleret fra start til slut.");
+		        introVarianter.push("Sprinterholdene holdt sammen på feltet gennem de " + e.dist + " kilometer fra " + e.start + " til " + e.slut + ".");
+		    }
+		    
+		    intro = introVarianter[ri(0, introVarianter.length - 1)];
+		}
     afsnit.push(intro);
     
     // UDBRUD OG ANGREB
