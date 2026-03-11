@@ -989,7 +989,7 @@ function genererResume(res, erTT) {
             } else if (indhentninger.length > 0 && udbrud.length > 0) {
                 // Klassisk mønster
                 introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fulgte det velkendte mønster: udbrud, jagt og massespurt.");
-                introVarianter.push("Et udbrud fik lov at køre det meste af etapen, men blev hentet inden mål i " + e.slut + ".");
+                introVarianter.push("Udbrud fik ingen snor på hele etapen, og blev alle hentet på vej mod " + e.slut + ".");
                 introVarianter.push("Sprinterholdene kontrollerede etapen og sørgede for massespurt i " + e.slut + ".");
             } else if (udbrud.length > 0) {
                 introVarianter.push("På de " + e.dist + " flade kilometer fra " + e.start + " til " + e.slut + " forsøgte flere ryttere at slippe væk fra feltet.");
@@ -1013,9 +1013,9 @@ function genererResume(res, erTT) {
         }
         if (stoersteUdbrud >= 3) {
             var udbrudTekster = [
-                "Et udbrud slap væk tidligt, men blev som forventet hentet inden mål.",
-                "Dagens udbrud kæmpede bravt, men feltet lod dem aldrig få for stort forspring.",
-                "Lykkeridderne fik lov at drømme, men sprinterholdene hentede dem tilbage."
+                "Et udbrud forsøgte sig tidligt, men blev hentet hurtigt igen.",
+                "Dagens udbrud kæmpede, men feltet lod dem aldrig få noget forspring.",
+                "Lykkeridderne fik knap nok lov at drømme, da sprinterholdene hurtigt hentede dem tilbage."
             ];
             afsnit.push(udbrudTekster[ri(0, udbrudTekster.length - 1)]);
         }
