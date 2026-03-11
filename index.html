@@ -1427,9 +1427,17 @@ function genererResume(res, erTT) {
         afsnit.push(fremTekst);
     }
     
+    // Fjern tomme afsnit
+    var rensetAfsnit = [];
+    for (var i = 0; i < afsnit.length; i++) {
+        if (afsnit[i] && afsnit[i].trim() !== "") {
+            rensetAfsnit.push(afsnit[i]);
+        }
+    }
+    
     return {
         overskrift: overskrift,
-        tekst: afsnit.join("\n\n")
+        tekst: rensetAfsnit.join("\n\n")
     };
 }
 
