@@ -519,6 +519,19 @@
             line-height: 1.4;
             padding: 8px;
         }
+
+		.plot-tabs {
+		    flex-wrap: wrap;
+		}
+		
+		.plot-tabs .tab:first-child {
+		    flex: 0 0 100%;
+		    margin-bottom: 4px;
+		}
+		
+		.plot-tabs .tab:not(:first-child) {
+		    flex: 1 1 30%;
+		}
     }
 
 </style>
@@ -729,7 +742,7 @@ var TEAMS = {
         { n: "Daniel Oss", gc: 48, bj: 46, sp: 66, tt: 76, ud: 90, re: 88, fl: 88 }
     ]},
     "Uno-X Mobility": { abbr: "UXT", clr: "#f9b000", r: [
-        { n: "Tobias Halland Johannessen", gc: 76, bj: 84, sp: 50, tt: 78, ud: 86, re: 82, fl: 74 },
+        { n: "Tobias H. Johannessen", gc: 76, bj: 84, sp: 50, tt: 78, ud: 86, re: 82, fl: 74 },
         { n: "Alexander Kristoff", gc: 44, bj: 38, sp: 89, tt: 74, ud: 80, re: 76, fl: 82 },
         { n: "Søren Wærenskjold", gc: 48, bj: 44, sp: 72, tt: 86, ud: 88, re: 86, fl: 90 },
         { n: "Rasmus Tiller", gc: 58, bj: 66, sp: 68, tt: 76, ud: 88, re: 84, fl: 82 },
@@ -829,7 +842,7 @@ function gemEtapeHistorik(res, erTT) {
     });
 }
 
-function genererResume(res, erTT) {
+function genererResume(res, erTT, udeRyttere) {
     var e = G.etaper[G.enr];
     var vinder = res[0] ? res[0].r : null;
     var spiEfternavn = G.navn.split(" ").pop();
@@ -943,18 +956,36 @@ function genererResume(res, erTT) {
         // Varierede intro-sætninger baseret på hvad der skete
         var introVarianter = [];
         
-        if (e.type === "bjerg") {
-            if (angreb.length >= 10) {
-                introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " udviklede sig til en regulær angrebsfest.");
-            } else if (angreb.length >= 4) {
-                introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " bød på mange angreb mellem favoritterne.");
-                introVarianter.push("Der blev angrebet fra flere sider på den " + e.dist + " km lange bjergetape til " + e.slut + ".");
-            } else if (gcKollaps.length > 0) {
-                introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev skæbnesvanger for flere favoritter.");
-            } else {
-                introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " bød på kontrolleret kørsel blandt favoritterne.");
-                introVarianter.push("Feltet tog fat på dagens " + e.dist + " km lange bjergetape med respekt for de ventende stigninger, men uden de helt vilde angreb.");
-            }
+		if (e.type === "bjerg") {
+		    if (angreb.length >= 10) {
+		        introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " udviklede sig til en regulær angrebsfest.");
+		    } else if (angreb.length >= 4) {
+		        introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " bød på mange angreb mellem favoritterne.");
+		        introVarianter.push("Der blev angrebet fra flere sider på den " + e.dist + " km lange bjergetape til " + e.slut + ".");
+		    } else if (gcKollaps.length > 0) {
+		        // Byg en mere detaljeret intro med navne på kollapsede ryttere
+		        var kollapsNavne = [];
+		        for (var i = 0; i < gcKollaps.length; i++) {
+		            var kNavn = gcKollaps[i].data.rytter.split(" ").pop();
+		            if (kollapsNavne.indexOf(kNavn) < 0) {
+		                kollapsNavne.push(kNavn);
+		            }
+		        }
+		        
+		        if (kollapsNavne.length >= 3) {
+		            introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev en katastrofe for favoritterne. " + kollapsNavne.slice(0, -1).join(", ") + " og " + kollapsNavne[kollapsNavne.length - 1] + " knækkede alle på bjergene og tabte store bidder af tid.");
+		        } else if (kollapsNavne.length === 2) {
+		            introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev skæbnesvanger. Både " + kollapsNavne[0] + " og " + kollapsNavne[1] + " kollapsede og tabte kostbar tid i klassementet.");
+		        } else if (kollapsNavne.length === 1) {
+		            introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev en sort dag for " + kollapsNavne[0] + ", der løb tør for kræfter og tabte dyrebare minutter.");
+		        } else {
+		            introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev skæbnesvanger for flere favoritter.");
+		        }
+		    } else {
+		        introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " bød på kontrolleret kørsel blandt favoritterne.");
+		        introVarianter.push("Feltet tog fat på dagens " + e.dist + " km lange bjergetape med respekt for de ventende stigninger, men uden de helt vilde angreb.");
+		    }
+		}
         } else if (e.type === "kuperet") {
             if (angreb.length > 3) {
                 introVarianter.push("Dagens " + e.dist + " km lange kuperede etape fra " + e.start + " til " + e.slut + " var præget af konstante angreb.");
@@ -986,17 +1017,19 @@ function genererResume(res, erTT) {
                 // Uventet vinder
                 introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " bød på en overraskende vinder.");
                 introVarianter.push("En atypisk afslutning på den flade etape til " + e.slut + " gav en uventet sejrherre.");
-            } else if (indhentninger.length > 0 && udbrud.length > 0) {
-                // Klassisk mønster
-                introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fulgte det velkendte mønster: udbrud, jagt og massespurt.");
-                introVarianter.push("Udbrud fik ingen snor på hele etapen, og blev alle hentet på vej mod " + e.slut + ".");
-                introVarianter.push("Sprinterholdene kontrollerede etapen og sørgede for massespurt i " + e.slut + ".");
-            } else if (udbrud.length > 0) {
-                introVarianter.push("På de " + e.dist + " flade kilometer fra " + e.start + " til " + e.slut + " forsøgte flere ryttere at slippe væk fra feltet.");
-            } else {
-                introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " var kontrolleret fra start til slut.");
-                introVarianter.push("Sprinterholdene holdt sammen på feltet gennem de " + e.dist + " kilometer fra " + e.start + " til " + e.slut + ".");
-            }
+			} else if (indhentninger.length > 0 && udbrud.length > 0) {
+			    // Klassisk mønster
+			    introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fulgte det velkendte mønster: udbrud, jagt og massespurt.");
+			    introVarianter.push("På dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fik udbruddet ingen snor, og blev hentet på vej mod mål.");
+			    introVarianter.push("De " + e.dist + " kilometer fra " + e.start + " til " + e.slut + " blev kontrolleret af sprinterholdene, der sørgede for massespurt.");
+			} else if (udbrud.length > 0) {
+			    introVarianter.push("På de " + e.dist + " flade kilometer fra " + e.start + " til " + e.slut + " forsøgte flere ryttere at slippe væk fra feltet.");
+			    introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " bød på udbrudsforsøg fra eventyrlyste ryttere.");
+			} else {
+			    introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " var kontrolleret fra start til slut.");
+			    introVarianter.push("Sprinterholdene holdt sammen på feltet gennem de " + e.dist + " kilometer fra " + e.start + " til " + e.slut + ".");
+			    introVarianter.push("De " + e.dist + " flade kilometer fra " + e.start + " til " + e.slut + " forløb uden de store dramaer.");
+			}
         }
         
         // Vælg en tilfældig intro - DENNE LINJE MANGLEDE FOR BJERG OG KUPERET!
@@ -1234,15 +1267,18 @@ function genererResume(res, erTT) {
         var gcGap = gcNr2 ? Math.round(gcNr2.stid - gcLeder.stid) : 0;
         var gcLederNavn = gcLeder.navn.split(" ").pop();
         
-        // Afgør om trøjen er erobret eller beholdt
-        var gcVerb = "har";
-        if (G.enr === 0) {
-            gcVerb = "tager";
-        } else if (tidligereGcLeder && tidligereGcLeder !== gcLeder.navn) {
-            gcVerb = "erobrer";
-        } else {
-            gcVerb = "beholder";
-        }
+	// Afgør om trøjen er erobret eller beholdt
+	var gcVerb = "har";
+	if (G.enr === 0) {
+	    gcVerb = "tager";
+	} else if (!tidligereGcLeder) {
+	    // Ingen tidligere data - antag erobring hvis det er tidligt i touren
+	    gcVerb = "tager";
+	} else if (tidligereGcLeder !== gcLeder.navn) {
+	    gcVerb = "erobrer";
+	} else {
+	    gcVerb = "beholder";
+	}
         
         var troejeTekst = gcLederNavn + " " + gcVerb + " den gule trøje";
         if (gcGap < 60 && gcNr2) {
@@ -1286,7 +1322,7 @@ function genererResume(res, erTT) {
         afsnit.push(troejeTekst);
     }
     
-       // SPILLERENS PRÆSTATION
+   // SPILLERENS PRÆSTATION
     var spiTekst = "";
 
     // Beregn tidstab til vinder
@@ -1369,8 +1405,7 @@ function genererResume(res, erTT) {
         } else {
             spiTekst = "★ Det var en drømmedag for " + spiEfternavn + " der kørte først over stregen.";
         }
-    }
- else if (spiPlads === 2) {
+    } else if (spiPlads === 2) {
         if (spiTidstab < 10) {
             spiTekst = spiEfternavn + " måtte se sig slået på stregen, men andenpladsen er et flot resultat.";
         } else {
@@ -1388,6 +1423,8 @@ function genererResume(res, erTT) {
             spiTekst = spiEfternavn + " havde endnu en stærk dag og sluttede som nr. " + spiPlads + ".";
         } else if (spiPlads <= 15) {
             spiTekst = spiEfternavn + " havde kontrol og sluttede som nr. " + spiPlads + ".";
+        } else if (erTT) {
+            spiTekst = spiEfternavn + " kørte en kontrolleret enkeltstart og sluttede som nr. " + spiPlads + ".";
         } else {
             spiTekst = spiEfternavn + " sparede kræfter i feltet.";
         }
@@ -1395,6 +1432,8 @@ function genererResume(res, erTT) {
         // Spilleren EROBREDE føringen
         if (spiPlads <= 5) {
             spiTekst = "Derudover leverede " + spiEfternavn + " en fantastisk præstation og sluttede som nr. " + spiPlads + ".";
+        } else if (erTT) {
+            spiTekst = spiEfternavn + " kørte en solid enkeltstart.";
         } else {
             spiTekst = spiEfternavn + " kørte klogt og lod andre tage sig af etapen.";
         }
@@ -1425,9 +1464,9 @@ function genererResume(res, erTT) {
         }
     } else if (gcGabAendring <= -10) {
         // Vandt 10-60 sekunder i klassementet
-        var tidVundet = Math.abs(gcGabAendring);
-        spiTekst = "Det var en god dag for " + spiEfternavn + " der hentede " + tidVundet + " sekunder i klassementet.";
-    } else if (gcGabAendring > 10) {
+        var tidVundet = Math.round(Math.abs(gcGabAendring));
+        spiTekst = "Det var en god dag for " + spiEfternavn + " der hentede " + tidVundet + " sekunder i klassementet.";    
+	} else if (gcGabAendring > 10) {
         // Tabte 10-60 sekunder i klassementet
         if (spiPlads <= 10) {
             spiTekst = spiEfternavn + " sluttede som nr. " + spiPlads + " og tabte " + Math.round(gcGabAendring) + " sekunder i klassementet.";
@@ -1439,11 +1478,23 @@ function genererResume(res, erTT) {
         if (spiPlads <= 5) {
             spiTekst = spiEfternavn + " var med helt fremme og sluttede på en flot " + spiPlads + ". plads.";
         } else if (spiPlads <= 10) {
-            spiTekst = "Det var en solid dag for " + spiEfternavn + " med en " + spiPlads + ". plads blandt favoritterne.";
+            if (erTT) {
+                spiTekst = "Det var en solid enkeltstart for " + spiEfternavn + " med en " + spiPlads + ". plads.";
+            } else {
+                spiTekst = "Det var en solid dag for " + spiEfternavn + " med en " + spiPlads + ". plads blandt favoritterne.";
+            }
         } else if (spiPlads <= 30) {
-            spiTekst = spiEfternavn + " fulgte favoritterne sikkert i mål som nr. " + spiPlads + ".";
+            if (erTT) {
+                spiTekst = spiEfternavn + " kørte en jævn enkeltstart og sluttede som nr. " + spiPlads + ".";
+            } else {
+                spiTekst = spiEfternavn + " fulgte favoritterne sikkert i mål som nr. " + spiPlads + ".";
+            }
         } else {
-            spiTekst = spiEfternavn + " kom i mål med hovedfeltet.";
+            if (erTT) {
+                spiTekst = spiEfternavn + " sluttede som nr. " + spiPlads + " på dagens enkeltstart.";
+            } else {
+                spiTekst = spiEfternavn + " kom i mål med hovedfeltet.";
+            }
         }
     }
 
@@ -1454,6 +1505,18 @@ function genererResume(res, erTT) {
 
     afsnit.push(spiTekst);
 
+	    // UDGÅEDE RYTTERE (hvis mange udgik)
+    if (udeRyttere && udeRyttere.length >= 5) {
+        var udgaaetTekst = "";
+        if (udeRyttere.length >= 20) {
+            udgaaetTekst = "Dagens etape vil blive husket som en af de mest brutale i Tour-historien. Hele " + udeRyttere.length + " ryttere nåede ikke inden for tidsgrænsen og må forlade løbet. Feltet er fuldstændig decimeret.";
+        } else if (udeRyttere.length >= 10) {
+            udgaaetTekst = "Det var en blodig dag for feltet. " + udeRyttere.length + " ryttere udgik efter ikke at nå inden for tidsgrænsen - et vidnesbyrd om etapens ekstreme hårdhed.";
+        } else {
+            udgaaetTekst = "Etapens hårdhed ses tydeligt i statistikken: " + udeRyttere.length + " ryttere nåede ikke inden for tidsgrænsen og må forlade Touren.";
+        }
+        afsnit.push(udgaaetTekst);
+    }
     
     // FREMADSKUENDE (kun hvis ikke sidste etape)
     if (G.enr < 20) {
@@ -1467,7 +1530,7 @@ function genererResume(res, erTT) {
             ];
             fremTekst = bjergFrem[ri(0, bjergFrem.length - 1)];
         } else if (nesteE.type === "tt") {
-            fremTekst = "Næste etape er enkeltstart – sandhedens time for klassementrytterne.";
+            fremTekst = "Næste etape er en enkeltstart – sandhedens time for klassementrytterne.";
         } else if (nesteE.type === "kuperet") {
             fremTekst = "I morgen fortsætter Touren med en kuperet etape til " + nesteE.slut + ".";
         } else {
@@ -1813,7 +1876,7 @@ function visPlots() {
     G.plotTab = G.plotTab || "etaper";
     
     var html = '<h2>📊 Tour-statistik for ' + G.navn + '</h2>' +
-        '<div class="tabs">' +
+        '<div class="plot-tabs">' +
             '<div class="tab ' + (G.plotTab === "etaper" ? "active" : "") + '" onclick="G.plotTab=\'etaper\';visPlots()">📊 Etaper</div>' +
             '<div class="tab tab-gc ' + (G.plotTab === "gc" ? "active" : "") + '" onclick="G.plotTab=\'gc\';visPlots()">🟡 Gul</div>' +
             '<div class="tab tab-sp ' + (G.plotTab === "groen" ? "active" : "") + '" onclick="G.plotTab=\'groen\';visPlots()">🟢 Grøn</div>' +
@@ -1845,7 +1908,7 @@ function tegnPlot(type) {
     
     var l = 50;      // Venstre margin
     var r = 20;      // Højre margin
-    var t = 40;      // Top margin
+    var t = 50;      // Top margin
     var b = 50;      // Bund margin
     var w = c.width - l - r;
     var h = c.height - t - b;
@@ -2863,6 +2926,8 @@ function startGame() {
     G.ryttere = []; 
     G.sprPts = {}; 
     G.bjgPts = {};
+	ETAPE_HISTORIK = [];
+	HOEJDEPUNKTER = [];
     
     for (var hi = 0; hi < hn.length; hi++) {
         var h = hn[hi];
@@ -3052,18 +3117,25 @@ function startEtape() {
     
     for (var i = 0; i < G.ryttere.length; i++) { G.ryttere[i].gi = 0; }
     
-    // === DÅRLIGE DAGE ===
-// 12% chance for dårlig dag (kun spilleren)
-if (Math.random() < 0.12) {
-    var maxE = getMaxEnergi();        // 150 / 100 / 67
-    var pctTab = ri(10, 15);          // 10–15% af max, det vi viser i teksten
-    var raTab = maxE * (pctTab / 100); // reelt tab i energi-enheder
+	// === DÅRLIGE DAGE ===
+	// 12% chance for dårlig dag (kun spilleren)
+	if (Math.random() < 0.12) {
+	    var maxE = getMaxEnergi();
+	    var pctTab = ri(10, 15);
+	    var raTab = maxE * (pctTab / 100);
+	    
+	    var energiFoer = G.spiller.energi;
+	    G.spiller.energi = Math.max(maxE * 0.6, G.spiller.energi - raTab);
+	    var faktiskTab = energiFoer - G.spiller.energi;
+	    
+	    // Vis kun besked hvis du faktisk tabte energi
+	    if (faktiskTab > 0) {
+	        var faktiskPct = Math.round((faktiskTab / maxE) * 100);
+	        G.msg = "😓 Du føler dig ikke helt frisk i dag... (-" + faktiskPct + "% energi)";
+	    }
+	}
 
-    G.spiller.energi = Math.max(maxE * 0.5, G.spiller.energi - raTab);
-    G.msg = "😓 Du føler dig ikke helt frisk i dag... (-" + pctTab + "% energi)";
-}
-
-            
+           
         if (e.type === "tt") startTT();
         else startNorm();
     }
@@ -3198,7 +3270,7 @@ function loop() {
             if (rg && rg.type !== "gruppetto") {
                 if (r.sp) G.msg = "💀 Du er udkørt!";
                             // Log GC-kollaps for favoritter
-            if (r.gc > 80) {
+            if (r.gc > 85) {
                 logHoejdepunkt("gc_kollaps", { rytter: r.navn, km: G.km, gc: r.gc });
             }
 	    flytTilGruppetto(r);
@@ -5667,7 +5739,7 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGraense) {
     gemEtapeHistorik(res, erTT);
     
     // Generer resumé
-    G.gemtResume = genererResume(res, erTT);
+    G.gemtResume = genererResume(res, erTT, udeRyttere);
     
     var e = G.etaper[G.enr];
     var vTid = res[0] ? res[0].tid : 0;
@@ -5970,11 +6042,11 @@ function slut() {
             '<p style="color:#888">Tillykke med en flot karriere, ' + G.navn + '!</p>' +
         '</div>' +
         '<div class="ctrls">' +
-    '<button class="btn btn-big btn-y" onclick="visAlleSlut()">📋 ALLE</button>' +
-    '<button class="btn btn-big" style="border-color:#3399ff;color:#3399ff" onclick="visTourResume()">📰 TOUR-REFERAT</button>' +
-    '<button class="btn btn-big" onclick="visPlots()">📊 STATISTIK</button>' +
-    '<button class="btn btn-big btn-y" onclick="location.reload()">NY KARRIERE</button>' +
-'</div>';
+            '<button class="btn btn-big btn-y" onclick="visAlleSlut()"><span class="desktop-txt">📋 </span>ALLE</button>' +
+            '<button class="btn btn-big" style="border-color:#3399ff;color:#3399ff" onclick="visTourResume()"><span class="desktop-txt">📰 </span>REFERAT</button>' +
+            '<button class="btn btn-big" onclick="visPlots()"><span class="desktop-txt">📊 </span>STATISTIK</button>' +
+            '<button class="btn btn-big btn-y" onclick="location.reload()">NY KARRIERE</button>' +
+        '</div>';
     } else if (bonusPoint > 0) {
         html += '<div class="box" style="border-color:#0f0;text-align:center">' +
             '<h3 style="color:#0f0">🎁 Du har ' + bonusPoint + ' point at fordele!</h3>' +
@@ -5989,18 +6061,17 @@ function slut() {
             '<p style="color:#888;font-size:11px">Fordel dem på dine evner før næste Tour.</p>' +
         '</div>' +
         '<div class="ctrls">' +
-    '<button class="btn btn-big btn-y" onclick="visAlleSlut()">📋 ALLE</button>' +
-    '<button class="btn btn-big" style="border-color:#3399ff;color:#3399ff" onclick="visTourResume()">📰 TOUR-REFERAT</button>' +
-    '<button class="btn btn-big" onclick="visPlots()">📊 STATISTIK</button>' +
-    '<button class="btn btn-big btn-y" onclick="fordelPoint()">FORDEL POINT →</button>' +
-'</div>';
-
+            '<button class="btn btn-big btn-y" onclick="visAlleSlut()"><span class="desktop-txt">📋 </span>ALLE</button>' +
+            '<button class="btn btn-big" style="border-color:#3399ff;color:#3399ff" onclick="visTourResume()"><span class="desktop-txt">📰 </span>REFERAT</button>' +
+            '<button class="btn btn-big" onclick="visPlots()"><span class="desktop-txt">📊 </span>STATISTIK</button>' +
+            '<button class="btn btn-big btn-y" onclick="fordelPoint()">FORDEL POINT<span class="desktop-txt"> →</span></button>' +
+        '</div>';
     } else {
         html += '<div class="ctrls">' +
-            '<button class="btn btn-big btn-y" onclick="visAlleSlut()">📋 ALLE</button>' +
-            '<button class="btn btn-big" style="border-color:#3399ff;color:#3399ff" onclick="visTourResume()">📰 TOUR-REFERAT</button>' +
-            '<button class="btn btn-big" onclick="visPlots()">📊 STATISTIK</button>' +
-            '<button class="btn btn-big btn-y" onclick="nytTour()">NÆSTE TOUR →</button>' +
+            '<button class="btn btn-big btn-y" onclick="visAlleSlut()"><span class="desktop-txt">📋 </span>ALLE</button>' +
+            '<button class="btn btn-big" style="border-color:#3399ff;color:#3399ff" onclick="visTourResume()"><span class="desktop-txt">📰 </span>REFERAT</button>' +
+            '<button class="btn btn-big" onclick="visPlots()"><span class="desktop-txt">📊 </span>STATISTIK</button>' +
+            '<button class="btn btn-big btn-y" onclick="nytTour()">NÆSTE TOUR<span class="desktop-txt"> →</span></button>' +
         '</div>';
     }
     
