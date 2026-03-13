@@ -5874,13 +5874,31 @@ function afslut() {
 
 	// Log GC-kollaps for favoritter der tabte meget tid på DENNE etape
 	var vinderTidEtape = res[0] ? res[0].tid : 0;
+	
+	// Find gennemsnitstiden for top 10 GC-ryttere på denne etape
+	var gcFavoritter = [];
+	for (var i = 0; i < res.length; i++) {
+	    if (res[i].r.gc > 82 && !res[i].r.ude) {
+	        gcFavoritter.push(res[i]);
+	    }
+	}
+	gcFavoritter.sort(function(a, b) { return a.tid - b.tid; });
+	
+	// Brug den hurtigste favorits tid som reference
+	var favoritReferenceTid = gcFavoritter.length > 0 ? gcFavoritter[0].tid : vinderTidEtape;
+	
 	for (var i = 0; i < res.length; i++) {
 	    var r = res[i].r;
 	    if (r.ude) continue;
-	    var tidstab = res[i].tid - vinderTidEtape;
 	    
-	    // Hvis en GC-favorit (gc > 82) tabte mere end 5 minutter
-	    if (r.gc > 82 && tidstab > 300) {
+	    // Kun tjek GC-favoritter
+	    if (r.gc <= 82) continue;
+	    
+	    // Tidstab i forhold til den hurtigste favorit
+	    var tidstabTilFavoritter = res[i].tid - favoritReferenceTid;
+	    
+	    // Hvis en favorit tabte mere end 4 minutter til de andre favoritter
+	    if (tidstabTilFavoritter > 240) {
 	        // Check om vi allerede har logget denne rytter
 	        var alleredeLogget = false;
 	        for (var hi = 0; hi < HOEJDEPUNKTER.length; hi++) {
@@ -5890,10 +5908,11 @@ function afslut() {
 	            }
 	        }
 	        if (!alleredeLogget) {
-	            logHoejdepunkt("gc_kollaps", { rytter: r.navn, km: G.km, gc: r.gc, tidstab: tidstab });
+	            logHoejdepunkt("gc_kollaps", { rytter: r.navn, km: G.km, gc: r.gc, tidstab: tidstabTilFavoritter });
 	        }
 	    }
 	}
+
 
 	
     // Samlet tid - kun for aktive
