@@ -5912,12 +5912,12 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGraense) {
     G.gemtUdeRyttere = udeRyttere;
     G.gemtVinderTid = vinderTid;
     G.gemtTidsGraense = tidsGraense;
-    
+
+	// Generer resumé
+    G.gemtResume = genererResume(res, erTT, udeRyttere);
+	
     // Gem etape-historik til plots
     gemEtapeHistorik(res, erTT);
-    
-    // Generer resumé
-    G.gemtResume = genererResume(res, erTT, udeRyttere);
     
     var e = G.etaper[G.enr];
     var vTid = res[0] ? res[0].tid : 0;
