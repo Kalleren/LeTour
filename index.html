@@ -1407,6 +1407,21 @@ function genererResume(res, erTT, udeRyttere) {
         spiTidstab = Math.round(spiRes.tid - res[0].tid);
     }
 
+	// Beregn tidstab til den nye GC-leder på DENNE etape
+	var tidstabTilGcLeder = 0;
+	if (spiRes && gcS[0]) {
+	    // Find GC-lederens etapetid
+	    var gcLederEtapeTid = 0;
+	    for (var i = 0; i < res.length; i++) {
+	        if (res[i].r === gcS[0]) {
+	            gcLederEtapeTid = res[i].tid;
+	            break;
+	        }
+	    }
+	    tidstabTilGcLeder = Math.round(spiRes.tid - gcLederEtapeTid);
+	}
+
+	
     // Har spilleren selv haft et GC‑kollaps (energi = 0) på denne etape?
     var spillerKollapsEvent = null;
     for (var i = 0; i < gcKollaps.length; i++) {
@@ -1500,23 +1515,34 @@ function genererResume(res, erTT, udeRyttere) {
         spiTekst = spiEfternavn + " havde en dag til glemmebogen og må nu jage tabte minutter.";
     }
 
-    // 7) Store tidstab i GC (uden registreret kollaps)
-    else if (gcGabAendring >= 480) {
-        // Tabte 8+ minutter i klassementet
-        spiTekst = "Det var en katastrofedag for " + spiEfternavn + "! Han tabte " + ft(gcGabAendring) + " i klassementet.";
-        if (placeringAendring < -5) {
-            spiTekst += " Han styrtdykkede fra " + spiGCFoer + ". til " + (spiGC + 1) + ". plads.";
-        }
-    } else if (gcGabAendring >= 180) {
-        // Tabte 3-8 minutter i klassementet
-        spiTekst = "Det var en hård dag for " + spiEfternavn + " der tabte " + ft(gcGabAendring) + " i klassementet.";
-        if (placeringAendring < -3) {
-            spiTekst += " Han faldt fra " + spiGCFoer + ". til " + (spiGC + 1) + ". plads.";
-        }
-    } else if (gcGabAendring >= 60) {
-        // Tabte 1-3 minutter i klassementet
-        spiTekst = spiEfternavn + " tabte " + ft(gcGabAendring) + " i klassementet og ligger nr. " + (spiGC + 1) + ".";
-    }
+	    // 7) Store tidstab i GC (uden registreret kollaps)
+	else if (tidstabTilGcLeder >= 480) {
+	    // Tabte 8+ minutter til GC-leder på etapen
+	    spiTekst = "Det var en katastrofedag for " + spiEfternavn + "! Han tabte " + ft(tidstabTilGcLeder) + " til " + gcS[0].navn.split(" ").pop() + ".";
+	    if (varGcLeder && !erGcLeder) {
+	        spiTekst += " Den gule trøje er tabt.";
+	    }
+	    if (placeringAendring < -5) {
+	        spiTekst += " Han styrtdykkede fra " + spiGCFoer + ". til " + (spiGC + 1) + ". plads.";
+	    }
+	} else if (tidstabTilGcLeder >= 180) {
+	    // Tabte 3-8 minutter til GC-leder på etapen
+	    spiTekst = "Det var en hård dag for " + spiEfternavn + " der tabte " + ft(tidstabTilGcLeder) + " til " + gcS[0].navn.split(" ").pop() + ".";
+	    if (varGcLeder && !erGcLeder) {
+	        spiTekst += " Den gule trøje er tabt.";
+	    }
+	    if (placeringAendring < -3) {
+	        spiTekst += " Han faldt fra " + spiGCFoer + ". til " + (spiGC + 1) + ". plads.";
+	    }
+	} else if (tidstabTilGcLeder >= 60) {
+	    // Tabte 1-3 minutter til GC-leder på etapen
+	    if (varGcLeder && !erGcLeder) {
+	        spiTekst = spiEfternavn + " tabte " + ft(tidstabTilGcLeder) + " til " + gcS[0].navn.split(" ").pop() + " og mistede den gule trøje.";
+	    } else {
+	        spiTekst = spiEfternavn + " tabte " + ft(tidstabTilGcLeder) + " til " + gcS[0].navn.split(" ").pop() + " og ligger nu nr. " + (spiGC + 1) + ".";
+	    }
+	}
+
 
     // 8) Store gevinster i GC
     else if (gcGabAendring <= -60) {
@@ -1855,8 +1881,8 @@ function visEtapeOversigt() {
     
     for (var i = 0; i < G.etaper.length; i++) {
         var e = G.etaper[i];
-        var erKommende = (i === G.enr);
-        var erKoert = (i < G.enr);
+        var erKommende = (i === G.enr + 1);
+        var erKoert = (i <= G.enr);
         
         // Farve baseret på etapetype
         var typeClr = e.type === 'bjerg' ? '#f44' : e.type === 'kuperet' ? '#f80' : e.type === 'tt' ? '#3399ff' : '#0f0';
@@ -5834,7 +5860,31 @@ function afslut() {
             }
         }
     }
-    
+
+	// Log GC-kollaps for favoritter der tabte meget tid på DENNE etape
+	var vinderTidEtape = res[0] ? res[0].tid : 0;
+	for (var i = 0; i < res.length; i++) {
+	    var r = res[i].r;
+	    if (r.ude) continue;
+	    var tidstab = res[i].tid - vinderTidEtape;
+	    
+	    // Hvis en GC-favorit (gc > 82) tabte mere end 5 minutter
+	    if (r.gc > 82 && tidstab > 300) {
+	        // Check om vi allerede har logget denne rytter
+	        var alleredeLogget = false;
+	        for (var hi = 0; hi < HOEJDEPUNKTER.length; hi++) {
+	            if (HOEJDEPUNKTER[hi].type === "gc_kollaps" && HOEJDEPUNKTER[hi].data.rytter === r.navn) {
+	                alleredeLogget = true;
+	                break;
+	            }
+	        }
+	        if (!alleredeLogget) {
+	            logHoejdepunkt("gc_kollaps", { rytter: r.navn, km: G.km, gc: r.gc, tidstab: tidstab });
+	        }
+	    }
+	}
+
+	
     // Samlet tid - kun for aktive
     for (var i = 0; i < res.length; i++) {
         if (!res[i].r.ude) {
