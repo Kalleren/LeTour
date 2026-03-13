@@ -796,6 +796,14 @@ function logHoejdepunkt(type, data) {
 }
 
 function gemEtapeHistorik(res, erTT) {
+    // Undgå dubletter - tjek om denne etape allerede er gemt
+    var etapeNr = G.enr + 1;
+    for (var i = 0; i < ETAPE_HISTORIK.length; i++) {
+        if (ETAPE_HISTORIK[i].etape === etapeNr) {
+            return; // Allerede gemt
+        }
+    }
+    
     var e = G.etaper[G.enr];
     var aktive = G.ryttere.filter(function(r) { return !r.ude; });
     var gcS = aktive.slice().sort(function(a,b) { return a.stid - b.stid; });
@@ -827,7 +835,7 @@ function gemEtapeHistorik(res, erTT) {
     }
     
     ETAPE_HISTORIK.push({
-        etape: G.enr + 1,
+        etape: etapeNr,
         type: e.type,
         spiEtapePlads: spiEtapePlads,
         spiGCPlads: spiGCPlads,
@@ -841,6 +849,7 @@ function gemEtapeHistorik(res, erTT) {
         hoejdepunkter: HOEJDEPUNKTER.slice() // Kopi af højdepunkter
     });
 }
+
 
 function genererResume(res, erTT, udeRyttere) {
     var e = G.etaper[G.enr];
@@ -5769,6 +5778,8 @@ function afslutTT() {
 	G.ryttere[i].energi = Math.min(getMaxEnergi(), G.ryttere[i].energi + rest);
 
     }
+	// Gem etape-historik til plots (kun én gang per etape)
+	gemEtapeHistorik(G.enkRes, true);
 
     visRes(G.enkRes, true);
 }
@@ -5899,7 +5910,10 @@ function afslut() {
 	G.ryttere[i].energi = Math.min(getMaxEnergi(), G.ryttere[i].energi + rest);
 
     }
-    
+
+	// Gem etape-historik til plots (kun én gang per etape)
+	gemEtapeHistorik(res, false);
+
     visRes(res, false, udeRyttere, vinderTid, tidsGrænse);
 }
 
@@ -5915,9 +5929,6 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGraense) {
 
 	// Generer resumé
     G.gemtResume = genererResume(res, erTT, udeRyttere);
-	
-    // Gem etape-historik til plots
-    gemEtapeHistorik(res, erTT);
     
     var e = G.etaper[G.enr];
     var vTid = res[0] ? res[0].tid : 0;
