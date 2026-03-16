@@ -1172,7 +1172,7 @@ function genererResume(res, erTT, udeRyttere) {
     afsnit.push(intro);
     
     // ===== UDBRUD OG ANGREB =====
-    if (e.type === "flad" && udbrud.length > 0 && indhentninger.length > 0 && !vinderVandtSolo) {
+    if (e.type === "flad" && udbrud.length > 0 && indhentninger.length > 0 && !vinderVandtSolo && !varLilleGruppe) {
         // Kun nævn udbrud der blev hentet hvis det faktisk endte i massespurt
         var stoersteUdbrud = 0;
         for (var i = 0; i < udbrud.length; i++) {
@@ -1487,44 +1487,47 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
         }
     }
 
-    // 2) Etapesejr
+	// 2) Etapesejr
     else if (spiPlads === 1) {
-        // Solo-finish: nævn hvornår spilleren stak af
-        var soloInfo = "";
-        if (vinderVandtSolo && spillerAngrebKm >= 0) {
-            var soloKm = Math.round(e.dist - spillerAngrebKm);
-            if (soloKm > 0) soloInfo = " efter at have angrebet " + soloKm + " km fra mål";
-        }
+        // Etaperesultat og trøjesituation er allerede beskrevet ovenfor.
+        // Hold spillerens afsnit kort og tilføj kun ny information.
         
         if (erGcLeder && varGcLeder && totalGuleDage > 2) {
-            // Har haft gult i mere end 2 dage allerede - kort og præcist
-            spiTekst = "★ Endnu en etapesejr til " + spiEfternavn + soloInfo + ". Det er hans " + totaleSejre + ". i denne Tour.";
+            spiTekst = "Det er " + spiEfternavn + "s " + totaleSejre + ". etapesejr i denne Tour.";
         } else if (erGcLeder && !varGcLeder) {
-            spiTekst = "★ " + spiEfternavn + " vinder etapen" + soloInfo + " og erobrer den gule trøje!";
+            // Trøje-erobring er allerede nævnt - tilføj kun stemning
+            if (totaleSejre === 1) {
+                spiTekst = "En drømmedag for " + spiEfternavn + ", der vinder sin første etapesejr i dette års Tour!";
+            } else {
+                spiTekst = "Det er " + spiEfternavn + "s " + totaleSejre + ". etapesejr i denne Tour. En drømmedag!";
+            }
         } else if (totaleSejre > 1) {
-            spiTekst = "★ Det er " + spiEfternavn + "s " + totaleSejre + ". etapesejr i denne Tour" + soloInfo + "!";
+            spiTekst = "Det er " + spiEfternavn + "s " + totaleSejre + ". etapesejr i denne Tour!";
         } else if (gcGabAendring <= -60) {
-            spiTekst = "★ " + spiEfternavn + " hentede vigtig tid med dagens sejr" + soloInfo + ".";
+            spiTekst = "En vigtig dag for " + spiEfternavn + " der hentede " + fmtTidstab(gcGabAendring) + " i klassementet.";
         } else {
-            spiTekst = "★ Det var en drømmedag for " + spiEfternavn + " der kørte først over stregen" + soloInfo + ".";
+            spiTekst = "En drømmedag for " + spiEfternavn + "!";
         }
     }
 
-    // 3) 2. og 3. plads
+	// 3) 2. og 3. plads
     else if (spiPlads === 2) {
-        if (spiTidstab < 10) {
-            spiTekst = spiEfternavn + " måtte se sig slået på stregen, men andenpladsen er et flot resultat.";
+        if (gcGabAendring <= -60) {
+            spiTekst = "Andenpladsen er et flot resultat for " + spiEfternavn + ", der hentede " + fmtTidstab(gcGabAendring) + " i klassementet.";
+        } else if (gcGabAendring >= 60) {
+            spiTekst = spiEfternavn + " måtte nøjes med andenpladsen og tabte " + fmtTidstab(gcGabAendring) + " i klassementet.";
         } else {
-            spiTekst = spiEfternavn + " sluttede på andenpladsen, " + fmtTidstab(spiTidstab) + " efter vinderen.";
+            spiTekst = spiEfternavn + " måtte se sig slået på stregen, men andenpladsen er et flot resultat.";
         }
     } else if (spiPlads === 3) {
-        if (spiTidstab < 30) {
-            spiTekst = "Tredjepladsen gik til " + spiEfternavn + ".";
+        if (gcGabAendring <= -60) {
+            spiTekst = "Tredjepladsen gik til " + spiEfternavn + ", der hentede " + fmtTidstab(gcGabAendring) + " i klassementet.";
+        } else if (gcGabAendring >= 60) {
+            spiTekst = spiEfternavn + " sluttede på tredjepladsen, men tabte " + fmtTidstab(gcGabAendring) + " i klassementet.";
         } else {
-            spiTekst = spiEfternavn + " sluttede på tredjepladsen, " + fmtTidstab(spiTidstab) + " efter vinderen.";
+            spiTekst = "Tredjepladsen gik til " + spiEfternavn + ".";
         }
     }
-
     // 4) GC-leder der beholder trøjen
     else if (erGcLeder && varGcLeder) {
         if (Math.round(gcGabAendring) >= 60) {
@@ -1542,17 +1545,17 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
         }
     }
 
-    // 5) Erobrede GC-føringen (uden etapesejr)
+// 5) Erobrede GC-føringen (uden etapesejr)
     else if (erGcLeder && !varGcLeder) {
         if (spiPlads <= 5) {
-            spiTekst = spiEfternavn + " leverede en fantastisk præstation som nr. " + spiPlads + " og overtager den gule trøje!";
+            spiTekst = "Ud over at erobre den gule trøje leverede " + spiEfternavn + " en fantastisk præstation med en " + spiPlads + ". plads!";
         } else if (erTT) {
-            spiTekst = spiEfternavn + " kørte en solid enkeltstart og overtog den gule trøje.";
+            spiTekst = "Ud over at erobre den gule trøje kørte " + spiEfternavn + " en solid enkeltstart som nr. " + spiPlads + ".";
         } else {
-            spiTekst = spiEfternavn + " kørte klogt og kunne trække i gult efter dagens etape.";
+            spiTekst = "Ud over at overtage den gule trøje kørte " + spiEfternavn + " klogt og sluttede som nr. " + spiPlads + ".";
         }
     }
-
+	
     // 6) Mistede den gule trøje
     else if (varGcLeder && !erGcLeder) {
         var nyLederNavn = gcS[0] ? gcS[0].navn.split(" ").pop() : "rivalen";
@@ -3003,7 +3006,9 @@ function genP(e) {
 }
 
 function getStigningVis() {
-    if (!G.profil || G.profil.length < 2) return '<span style="display:inline-block;width:100%;padding:3px 8px;border:1px solid #666;color:#666;border-radius:8px;font-size:11px;text-align:center">—</span>';
+    var baseStyle = 'display:inline-block;width:100%;padding:3px 8px;border-radius:8px;font-size:11px;text-align:center;height:24px;line-height:18px;overflow:hidden';
+    
+    if (!G.profil || G.profil.length < 2) return '<span style="' + baseStyle + ';border:1px solid #666;color:#666">—</span>';
     
     var ki = Math.min(Math.floor(G.km), G.profil.length - 2);
     var stig = G.profil[ki + 1] - G.profil[ki];
@@ -3027,7 +3032,7 @@ function getStigningVis() {
         ikon = "➡️"; farve = "#aaa"; tekst = "Fladt";
     }
     
-    return '<span style="display:inline-block;width:100%;padding:3px 8px;border:1px solid ' + farve + ';color:' + farve + ';border-radius:8px;font-size:11px;text-align:center">' + ikon + ' ' + tekst + '</span>';
+    return '<span style="' + baseStyle + ';border:1px solid ' + farve + ';color:' + farve + '">' + ikon + ' ' + tekst + '</span>';
 }
 
 function genMP(e) {
