@@ -6056,37 +6056,47 @@ function afslut() {
 	var favoritReferenceTid = gcFavoritter.length > 0 ? gcFavoritter[0].tid : vinderTidEtape;
 	
 	for (var i = 0; i < res.length; i++) {
-	    var r = res[i].r;
-	    if (r.ude) continue;
-	    
-	    // Kun tjek GC-favoritter
-	    if (r.gc <= 82) continue;
-	    
-	    // Tidstab i forhold til den hurtigste favorit
-	    var tidstabTilFavoritter = res[i].tid - favoritReferenceTid;
-	    
-	    // Hvis en favorit tabte mere end 4 minutter til de andre favoritter
-	    if (tidstabTilFavoritter > 240) {
-	        // Check om vi allerede har logget denne rytter som ægte kollaps
-	        var alleredeLogget = false;
-	        for (var hi = 0; hi < HOEJDEPUNKTER.length; hi++) {
-	            if (HOEJDEPUNKTER[hi].type === "gc_kollaps" && HOEJDEPUNKTER[hi].data.rytter === r.navn) {
-	                alleredeLogget = true;
-	                break;
-	            }
-	        }
-	        if (!alleredeLogget) {
-	            // Log som "dårlig_dag", IKKE "gc_kollaps"
-	            logHoejdepunkt("daarlig_dag", { 
-	                rytter: r.navn, 
-	                km: G.km, 
-	                gc: r.gc, 
-	                tidstab: tidstabTilFavoritter,
-	                energiKollaps: false
-	            });
-	        }
-	    }
-	}
+		    var r = res[i].r;
+		    if (r.ude) continue;
+		    if (r.sp) continue; // Spring spilleren over (nævnes separat)
+		    
+		    // Kun tjek GC-favoritter
+		    if (r.gc <= 82) continue;
+		    
+		    // Tidstab i forhold til den hurtigste favorit
+		    var tidstabTilFavoritter = res[i].tid - favoritReferenceTid;
+		    
+		    // Check om vi allerede har logget denne rytter som ægte kollaps
+		    var alleredeLogget = false;
+		    for (var hi = 0; hi < HOEJDEPUNKTER.length; hi++) {
+		        if ((HOEJDEPUNKTER[hi].type === "gc_kollaps" || HOEJDEPUNKTER[hi].type === "daarlig_dag") && HOEJDEPUNKTER[hi].data.rytter === r.navn) {
+		            alleredeLogget = true;
+		            break;
+		        }
+		    }
+		    if (alleredeLogget) continue;
+		    
+		    // Over 10 minutter = kollaps (lige så dramatisk som energi=0)
+		    if (tidstabTilFavoritter > 600) {
+		        logHoejdepunkt("gc_kollaps", { 
+		            rytter: r.navn, 
+		            km: G.km, 
+		            gc: r.gc, 
+		            tidstab: tidstabTilFavoritter,
+		            energiKollaps: false
+		        });
+		    }
+		    // Over 4 minutter = dårlig dag
+		    else if (tidstabTilFavoritter > 240) {
+		        logHoejdepunkt("daarlig_dag", { 
+		            rytter: r.navn, 
+		            km: G.km, 
+		            gc: r.gc, 
+		            tidstab: tidstabTilFavoritter,
+		            energiKollaps: false
+		        });
+		    }
+		}
 
 
 	
