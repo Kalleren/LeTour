@@ -1084,25 +1084,33 @@ function genererResume(res, erTT, udeRyttere) {
             } else if (angreb.length >= 4) {
                 introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " bød på mange angreb mellem favoritterne.");
                 introVarianter.push("Der blev angrebet fra flere sider på den " + e.dist + " km lange bjergetape til " + e.slut + ".");
-            } else if (gcKollaps.length > 0) {
-                var kollapsNavne = [];
-                for (var i = 0; i < gcKollaps.length; i++) {
-                    var kNavn = gcKollaps[i].data.rytter.split(" ").pop();
-                    if (kollapsNavne.indexOf(kNavn) < 0) kollapsNavne.push(kNavn);
-                }
-                if (kollapsNavne.length >= 3) {
-                    introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev en katastrofe for favoritterne. " + kollapsNavne.slice(0, -1).join(", ") + " og " + kollapsNavne[kollapsNavne.length - 1] + " knækkede alle på bjergene og tabte store bidder af tid.");
-                } else if (kollapsNavne.length === 2) {
-                    introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev skæbnesvanger. Både " + kollapsNavne[0] + " og " + kollapsNavne[1] + " kollapsede og tabte kostbar tid.");
-                } else if (kollapsNavne.length === 1) {
-                    introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev en sort dag for " + kollapsNavne[0] + ", der løb tør for kræfter.");
-                } else {
-                    introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev skæbnesvanger for flere favoritter.");
-                }
-            } else {
-                introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " bød på kontrolleret kørsel blandt favoritterne.");
-                introVarianter.push("Feltet tog fat på dagens " + e.dist + " km lange bjergetape med respekt for de ventende stigninger, men uden de helt vilde angreb.");
-            }
+			} else if (gcKollaps.length > 0) {
+			                var kollapsNavne = [];
+			                for (var i = 0; i < gcKollaps.length; i++) {
+			                    var kRytter = gcKollaps[i].data.rytter;
+			                    var kRytterObj = null;
+			                    for (var j = 0; j < G.ryttere.length; j++) {
+			                        if (G.ryttere[j].navn === kRytter) { kRytterObj = G.ryttere[j]; break; }
+			                    }
+			                    if (kRytterObj && kRytterObj.gc > 81) {
+			                        var kNavn = kRytter.split(" ").pop();
+			                        if (kollapsNavne.indexOf(kNavn) < 0) kollapsNavne.push(kNavn);
+			                    }
+			                }
+			                if (kollapsNavne.length >= 3) {
+			                    introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev en katastrofe for favoritterne. " + kollapsNavne.slice(0, -1).join(", ") + " og " + kollapsNavne[kollapsNavne.length - 1] + " knækkede alle på bjergene og tabte store bidder af tid.");
+			                } else if (kollapsNavne.length === 2) {
+			                    introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev skæbnesvanger. Både " + kollapsNavne[0] + " og " + kollapsNavne[1] + " kollapsede og tabte kostbar tid.");
+			                } else if (kollapsNavne.length === 1) {
+			                    introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " blev en sort dag for " + kollapsNavne[0] + ", der løb tør for kræfter.");
+			                } else {
+			                    introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " bød på kontrolleret kørsel blandt favoritterne.");
+			                    introVarianter.push("Feltet tog fat på dagens " + e.dist + " km lange bjergetape med respekt for de ventende stigninger, men uden de helt vilde angreb.");
+			                }
+			            } else {
+			                introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " bød på kontrolleret kørsel blandt favoritterne.");
+			                introVarianter.push("Feltet tog fat på dagens " + e.dist + " km lange bjergetape med respekt for de ventende stigninger, men uden de helt vilde angreb.");
+			            }
         } else if (e.type === "kuperet") {
             if (angreb.length > 3) {
                 introVarianter.push("Dagens " + e.dist + " km lange kuperede etape fra " + e.start + " til " + e.slut + " var præget af konstante angreb.");
