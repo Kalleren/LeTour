@@ -945,12 +945,31 @@ function genererResume(res, erTT, udeRyttere) {
     var erGcLeder = (spiGC === 0);
     var varGcLeder = (spiGCFoer === 1);
 
-    // ===== BEREGN VINDERENS SITUATION =====
-    // Vandt vinderen solo eller i spurt?
+// ===== BEREGN VINDERENS SITUATION =====
+    // Vandt vinderen solo, i lille gruppe, eller i massespurt?
     var vinderDiff = (res.length >= 2) ? Math.round(res[1].tid - res[0].tid) : 0;
     var vinderVandtSolo = vinderDiff >= 5; // 5+ sekunder = solo
     var vinderErSprinter = vinder && vinder.spr > 85;
     var vinderErOverraskelse = vinder && vinder.spr < 75 && vinder.gc < 80;
+    
+    // Tæl hvor mange der kom ind på vinderens tid (inden for 3 sekunder)
+    var vinderGruppeStr = 0;
+    for (var i = 0; i < res.length; i++) {
+        if (Math.round(res[i].tid - res[0].tid) <= 3) {
+            vinderGruppeStr++;
+        } else {
+            break;
+        }
+    }
+    // Find gap til næste gruppe (første rytter med > 3 sek forskel)
+    var gapTilFelt = 0;
+    if (vinderGruppeStr < res.length) {
+        gapTilFelt = Math.round(res[vinderGruppeStr].tid - res[0].tid);
+    }
+    // Massespurt = stor gruppe (30+) kom ind sammen
+    // Lille gruppe = under 30 ryttere med stort gap til resten
+    var varMasseSpurt = vinderGruppeStr >= 30;
+    var varLilleGruppe = !vinderVandtSolo && vinderGruppeStr < 30 && gapTilFelt >= 30;
     
     // Find hvornår vinderen stak af (sidste angreb fra vinderen)
     var vinderAngrebKm = -1;
@@ -1120,29 +1139,28 @@ function genererResume(res, erTT, udeRyttere) {
             }
         } else {
             // ===== FLAD ETAPE INTRO - TILPAS TIL FAKTISK RESULTAT =====
-            if (vinderVandtSolo && !vinderErSprinter) {
-                // Vinderen vandt SOLO på en flad etape - det er overraskende
+			if (vinderVandtSolo && !vinderErSprinter) {
                 introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fik en overraskende finale. Det forventede massespurt udeblev.");
                 introVarianter.push("Sprinterholdene mistede kontrollen på den " + e.dist + " km lange flade etape til " + e.slut + ", og det endte aldrig i massespurt.");
                 introVarianter.push("Det så ud til en rolig dag for sprinterne, men den " + e.dist + " km lange etape til " + e.slut + " fik en helt anderledes afslutning.");
             } else if (vinderVandtSolo && vinderErSprinter) {
-                // En sprinter vandt solo - usædvanligt
                 introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " endte med en uventet solo-sejr fra en sprinter.");
                 introVarianter.push("De " + e.dist + " kilometer fra " + e.start + " til " + e.slut + " bød på en utraditionel afslutning.");
+            } else if (varLilleGruppe) {
+                introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " endte med en reduceret spurt efter at en lille gruppe slap væk.");
+                introVarianter.push("Sprinterholdene mistede kontrollen på den " + e.dist + " km lange flade etape til " + e.slut + ", og kun en lille gruppe kæmpede om sejren.");
+                introVarianter.push("En lille gruppe slog hul på de " + e.dist + " kilometer fra " + e.start + " til " + e.slut + ", og feltet nåede aldrig op.");
             } else if (indhentninger.length > 0 && udbrud.length > 0) {
-                // Klassisk mønster: udbrud hentet, massespurt
                 introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fulgte det velkendte mønster: udbrud, jagt og massespurt.");
                 introVarianter.push("På dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fik udbruddene ingen snor, og blev hentet på vej mod mål.");
                 introVarianter.push("De " + e.dist + " kilometer fra " + e.start + " til " + e.slut + " blev kontrolleret af sprinterholdene, der sørgede for massespurt.");
             } else if (udbrud.length > 0 && indhentninger.length === 0 && vinderVandtSolo) {
-                // Udbrud der holdt hjem
                 introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " blev præget af et udbrud der holdt helt til mål.");
                 introVarianter.push("Sprinterholdene fik aldrig lukket hullet på den " + e.dist + " km lange etape til " + e.slut + ".");
             } else if (udbrud.length > 0) {
                 introVarianter.push("På de " + e.dist + " flade kilometer fra " + e.start + " til " + e.slut + " forsøgte flere ryttere at slippe væk fra feltet.");
                 introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " bød på udbrudsforsøg fra eventyrlyste ryttere.");
             } else {
-                // Ingen udbrud, ren spurt
                 introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " var kontrolleret fra start til slut.");
                 introVarianter.push("Sprinterholdene holdt sammen på feltet gennem de " + e.dist + " kilometer fra " + e.start + " til " + e.slut + ".");
                 introVarianter.push("De " + e.dist + " flade kilometer fra " + e.start + " til " + e.slut + " forløb uden de store dramaer.");
@@ -1353,9 +1371,11 @@ function genererResume(res, erTT, udeRyttere) {
     if (vinder && !erTT) {
         var vinderNavn = vinder.navn.split(" ").pop();
         
-        if (vinderDiff === 0) {
-            afsnit.push(vinderNavn + " tog sejren i en tæt spurt foran " + 
-                       (res[1] ? res[1].r.navn.split(" ").pop() : "feltet") + ".");
+	if (vinderDiff === 0 && varLilleGruppe) {
+	            afsnit.push(vinderNavn + " vandt spurten i en lille gruppe på " + vinderGruppeStr + " ryttere, " + fmtTidstab(gapTilFelt) + " foran hovedfeltet.");
+	        } else if (vinderDiff === 0) {
+	            afsnit.push(vinderNavn + " tog sejren i en tæt spurt foran " + 
+	                       (res[1] ? res[1].r.navn.split(" ").pop() : "feltet") + ".");
         } else if (vinderDiff < 5) {
             afsnit.push(vinderNavn + " kastede cyklen over stregen og vandt med blot " + vinderDiff + " sekunder.");
         } else {
