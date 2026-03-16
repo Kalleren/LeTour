@@ -3450,7 +3450,7 @@ function startEtape() {
 	    var raTab = maxE * (pctTab / 100);
 	    
 	    var energiFoer = G.spiller.energi;
-	    G.spiller.energi = Math.max(maxE * 0.6, G.spiller.energi - raTab);
+	    G.spiller.energi = Math.max(maxE * 0.5, G.spiller.energi - raTab);
 	    var faktiskTab = energiFoer - G.spiller.energi;
 	    
 	    // Vis kun besked hvis du faktisk tabte energi
