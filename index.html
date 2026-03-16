@@ -5793,6 +5793,7 @@ function loopTT() {
 }
 
 function accTT() {
+    if (G.etapeSlut) return;
     if (G.spiller.energi < 3) { G.msg = "❌ Ingen energi!"; rendTT(); return; }
     G.spiller.energi -= 3;
     G.sTid -= 8;
