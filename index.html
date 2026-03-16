@@ -1092,7 +1092,7 @@ function genererResume(res, erTT, udeRyttere) {
 			                    for (var j = 0; j < G.ryttere.length; j++) {
 			                        if (G.ryttere[j].navn === kRytter) { kRytterObj = G.ryttere[j]; break; }
 			                    }
-			                    if (kRytterObj && kRytterObj.gc > 81) {
+			                    if (kRytterObj && kRytterObj.gc > 84) {
 			                        var kNavn = kRytter.split(" ").pop();
 			                        if (kollapsNavne.indexOf(kNavn) < 0) kollapsNavne.push(kNavn);
 			                    }
@@ -1881,7 +1881,7 @@ function visEtapeOversigt() {
         var erKoert = (i <= G.enr);
         
         var typeClr = e.type === 'bjerg' ? '#f44' : e.type === 'kuperet' ? '#f80' : e.type === 'tt' ? '#3399ff' : '#0f0';
-        var typeTxt = e.type === 'bjerg' ? '⛰️ Bjerg' : e.type === 'kuperet' ? '🏔️ Kuperet' : e.type === 'tt' ? '⏱️ Enkeltstart' : '➡️ Flad';
+        var typeTxt = e.type === 'bjerg' ? '⛰️ Bjerg' : e.type === 'kuperet' ? '🏞️ Kuperet' : e.type === 'tt' ? '⏱️ Enkeltstart' : '🛣️ Flad';
         
         var rowStyle = '';
         var marker = '';
@@ -1920,10 +1920,10 @@ function visEtapeOversigt() {
     }
     
     html += '<div style="display:flex;justify-content:center;gap:15px;margin-top:10px;font-size:11px;flex-wrap:wrap">' +
-        '<span style="color:#0f0">➡️ ' + antalFlad + ' flad</span>' +
-        '<span style="color:#f80">🏔️ ' + antalKuperet + ' kuperet</span>' +
+        '<span style="color:#0f0">🛣️ ' + antalFlad + ' flade</span>' +
+        '<span style="color:#f80">🏞️ ' + antalKuperet + ' kuperede</span>' +
         '<span style="color:#f44">⛰️ ' + antalBjerg + ' bjerg</span>' +
-        '<span style="color:#3399ff">⏱️ ' + antalTT + ' enkeltstart</span>' +
+        '<span style="color:#3399ff">⏱️ ' + antalTT + ' enkeltstarter</span>' +
     '</div>';
     
     // Tilbage-knap: gå til samlet eller slut afhængigt af om touren er færdig
