@@ -1144,7 +1144,7 @@ function genererResume(res, erTT, udeRyttere) {
                 introVarianter.push("Sprinterholdene mistede kontrollen på den " + e.dist + " km lange flade etape til " + e.slut + ", og det endte aldrig i massespurt.");
                 introVarianter.push("Det så ud til en rolig dag for sprinterne, men den " + e.dist + " km lange etape til " + e.slut + " fik en helt anderledes afslutning.");
             } else if (vinderVandtSolo && vinderErSprinter) {
-                introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " endte med en uventet solo-sejr fra en sprinter.");
+                introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " endte med en uventet solo-sejr.");
                 introVarianter.push("De " + e.dist + " kilometer fra " + e.start + " til " + e.slut + " bød på en utraditionel afslutning.");
             } else if (varLilleGruppe) {
                 introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " endte med en reduceret spurt efter at en lille gruppe slap væk.");
@@ -1224,23 +1224,9 @@ function genererResume(res, erTT, udeRyttere) {
         if (angrebTekster.length > 0) {
             afsnit.push(angrebTekster[ri(0, angrebTekster.length - 1)]);
         }
-    } else if (e.type === "flad" && vinderVandtSolo && angreb.length > 0) {
-        // Flad etape med solo-vinder: beskriv det afgørende angreb
-        // Find vinderens angreb (eller det sidste angreb generelt)
-        var relevanteAngreb = null;
-        for (var i = angreb.length - 1; i >= 0; i--) {
-            if (angreb[i].data.rytter === vinder.navn) {
-                relevanteAngreb = angreb[i];
-                break;
-            }
-        }
-        if (!relevanteAngreb) relevanteAngreb = angreb[angreb.length - 1];
-        
-        var kmFraMaal = Math.round(e.dist - relevanteAngreb.km);
-        var angNavn = relevanteAngreb.data.rytter.split(" ").pop();
-        if (kmFraMaal > 0) {
-            afsnit.push(angNavn + " stak af " + kmFraMaal + " km fra mål og fik aldrig selskab.");
-        }
+	} else if (e.type === "flad" && vinderVandtSolo && angreb.length > 0) {
+        // Solo-finish på flad beskrives allerede i etaperesultat-sektionen
+        // Ingen ekstra tekst her
     } else if (udbrud.length > 0 && e.type !== "flad") {
         var stoersteUdbrud = 0;
         for (var i = 0; i < udbrud.length; i++) {
@@ -1378,20 +1364,44 @@ function genererResume(res, erTT, udeRyttere) {
 	                       (res[1] ? res[1].r.navn.split(" ").pop() : "feltet") + ".");
         } else if (vinderDiff < 5) {
             afsnit.push(vinderNavn + " kastede cyklen over stregen og vandt med blot " + vinderDiff + " sekunder.");
-        } else {
+		} else {
             // Solo-sejr: nævn hvor langt fra mål angrebet kom
+            // Find hvad nr. 2 var - gruppe eller enkeltperson
+            var nr2Navn = res[1] ? res[1].r.navn.split(" ").pop() : "forfølgerne";
+            // Tæl hvor mange der kom ind på nr. 2's tid (inden for 3 sek)
+            var nr2GruppeStr = 0;
+            if (res[1]) {
+                for (var i = 1; i < res.length; i++) {
+                    if (Math.round(res[i].tid - res[1].tid) <= 3) {
+                        nr2GruppeStr++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            var forfølgerTekst;
+            if (nr2GruppeStr >= 30) {
+                forfølgerTekst = "foran feltet";
+            } else if (nr2GruppeStr >= 5) {
+                forfølgerTekst = "foran forfølgergruppen";
+            } else if (nr2GruppeStr >= 2) {
+                forfølgerTekst = "foran forfølgerne";
+            } else {
+                forfølgerTekst = "foran " + nr2Navn;
+            }
+            
             var soloTekst = "";
             if (vinderAngrebKm >= 0) {
                 var soloKm = Math.round(e.dist - vinderAngrebKm);
                 if (soloKm > 0) {
-                    soloTekst = vinderNavn + " stak af " + soloKm + " km fra mål og krydsede målstregen " + fmtTidstab(vinderDiff) + " foran nærmeste forfølger.";
+                    soloTekst = vinderNavn + " stak af " + soloKm + " km fra mål og krydsede målstregen " + fmtTidstab(vinderDiff) + " " + forfølgerTekst + ".";
                 } else {
-                    soloTekst = vinderNavn + " kørte solo over stregen med " + fmtTidstab(vinderDiff) + " forspring.";
+                    soloTekst = vinderNavn + " kørte solo over stregen med " + fmtTidstab(vinderDiff) + " " + forfølgerTekst + ".";
                 }
             } else if (vinderDiff < 30) {
-                soloTekst = vinderNavn + " kørte solo over stregen med " + vinderDiff + " sekunders forspring.";
+                soloTekst = vinderNavn + " kørte solo over stregen med " + vinderDiff + " sekunder " + forfølgerTekst + ".";
             } else {
-                soloTekst = vinderNavn + " krydsede målstregen " + fmtTidstab(vinderDiff) + " foran nærmeste forfølger.";
+                soloTekst = vinderNavn + " krydsede målstregen " + fmtTidstab(vinderDiff) + " " + forfølgerTekst + ".";
             }
             afsnit.push(soloTekst);
         }
