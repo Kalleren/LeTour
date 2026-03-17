@@ -1271,6 +1271,11 @@ function genererResume(res, erTT, udeRyttere) {
             }
         }
         
+        // Fjern spilleren hvis han er den eneste i listen
+        if (vigtigeKollaps.length === 1 && vigtigeKollaps[0].rytter === G.spiller.navn) {
+            vigtigeKollaps = [];
+        }
+        
         if (vigtigeKollaps.length === 1) {
             var k = vigtigeKollaps[0];
             afsnit.push(k.rytter.split(" ").pop() + " løb helt tør for kræfter og tabte store mængder tid til konkurrenterne.");
