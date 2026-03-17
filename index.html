@@ -1355,10 +1355,32 @@ function genererResume(res, erTT, udeRyttere) {
     
     // ===== ETAPERESULTAT =====
     if (vinder && !erTT) {
-        var vinderNavn = vinder.navn.split(" ").pop();
-        
-	if (vinderDiff === 0 && varLilleGruppe) {
-	            afsnit.push(vinderNavn + " vandt spurten i en lille gruppe på " + vinderGruppeStr + " ryttere, " + fmtTidstab(gapTilFelt) + " foran hovedfeltet.");
+        var vinderNavn = vinder.navn.split(" ").pop();    
+		if (vinderDiff === 0 && varLilleGruppe) {
+	            // Find størrelsen på gruppen bag vindergruppen
+	            var bagvedGruppeStr = 0;
+	            var bagvedStart = vinderGruppeStr;
+	            if (bagvedStart < res.length) {
+	                var bagvedTid = res[bagvedStart].tid;
+	                for (var i = bagvedStart; i < res.length; i++) {
+	                    if (Math.round(res[i].tid - bagvedTid) <= 3) {
+	                        bagvedGruppeStr++;
+	                    } else {
+	                        break;
+	                    }
+	                }
+	            }
+	            var bagvedTekst;
+	            if (bagvedGruppeStr >= 30) {
+	                bagvedTekst = "foran feltet";
+	            } else if (bagvedGruppeStr >= 5) {
+	                bagvedTekst = "foran forfølgergruppen";
+	            } else if (bagvedGruppeStr >= 2) {
+	                bagvedTekst = "foran forfølgerne";
+	            } else {
+	                bagvedTekst = "foran resten";
+	            }
+	            afsnit.push(vinderNavn + " vandt spurten i en lille gruppe på " + vinderGruppeStr + " ryttere, " + fmtTidstab(gapTilFelt) + " " + bagvedTekst + ".");
 	        } else if (vinderDiff === 0) {
 	            afsnit.push(vinderNavn + " tog sejren i en tæt spurt foran " + 
 	                       (res[1] ? res[1].r.navn.split(" ").pop() : "feltet") + ".");
