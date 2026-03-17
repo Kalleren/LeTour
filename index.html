@@ -1243,19 +1243,22 @@ function genererResume(res, erTT, udeRyttere) {
     }
 
     // ===== ÆGTE KOLLAPS (energi=0) =====
-    if (gcKollaps.length > 0) {
+	if (gcKollaps.length > 0) {
         var vigtigeKollaps = [];
         
         for (var i = 0; i < gcKollaps.length; i++) {
             var kollaps = gcKollaps[i].data;
             var kollapsNavn = kollaps.rytter;
-            if (kollapsNavn === G.spiller.navn) continue;
             
             var erVigtig = false;
-            for (var j = 0; j < gcS.length; j++) {
-                if (gcS[j].navn === kollapsNavn && (j < 15 || gcS[j].gc > 78)) {
-                    erVigtig = true;
-                    break;
+            if (kollapsNavn === G.spiller.navn) {
+                erVigtig = true;
+            } else {
+                for (var j = 0; j < gcS.length; j++) {
+                    if (gcS[j].navn === kollapsNavn && (j < 15 || gcS[j].gc > 78)) {
+                        erVigtig = true;
+                        break;
+                    }
                 }
             }
             
