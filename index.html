@@ -1140,7 +1140,7 @@ function genererResume(res, erTT, udeRyttere) {
         } else {
             // ===== FLAD ETAPE INTRO - TILPAS TIL FAKTISK RESULTAT =====
 			if (vinderVandtSolo && !vinderErSprinter) {
-                introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fik en overraskende finale. Det forventede massespurt udeblev.");
+                introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fik en overraskende finale. Den forventede massespurt udeblev.");
                 introVarianter.push("Sprinterholdene mistede kontrollen på den " + e.dist + " km lange flade etape til " + e.slut + ", og det endte aldrig i massespurt.");
                 introVarianter.push("Det så ud til en rolig dag for sprinterne, men den " + e.dist + " km lange etape til " + e.slut + " fik en helt anderledes afslutning.");
             } else if (vinderVandtSolo && vinderErSprinter) {
@@ -1517,13 +1517,19 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
         if (ETAPE_HISTORIK[i].gcLeder === G.spiller.navn) totalGuleDage++;
     }
 
-    // 1) Ægte kollaps
+// 1) Ægte kollaps
     if (spillerKollapsEvent) {
         var kollapsKm = Math.round(spillerKollapsEvent.data.km || spillerKollapsEvent.km || 0);
-        var tidTabTekst = Math.round(Math.abs(gcGabAendring)) >= 60 ? " og tabte " + fmtTidstab(gcGabAendring) + " i klassementet" : "";
-        spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + tidTabTekst + ". Energien var fuldstændig opbrugt.";
-        if (erGcLeder) {
-            spiTekst += " Alligevel lykkedes det at beholde den gule trøje.";
+        
+        // Hvis spilleren stadig vandt etapen, så var kollapset ikke en katastrofe
+        if (spiPlads === 1) {
+            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ", men havde heldigvis så stort et forspring at etapesejren aldrig kom i fare.";
+        } else {
+            var tidTabTekst = Math.round(Math.abs(gcGabAendring)) >= 60 ? " og tabte " + fmtTidstab(gcGabAendring) + " i klassementet" : "";
+            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + tidTabTekst + ". Energien var fuldstændig opbrugt.";
+            if (erGcLeder) {
+                spiTekst += " Alligevel lykkedes det at beholde den gule trøje.";
+            }
         }
     }
 
@@ -1635,7 +1641,7 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
             } else if (spiPlads <= 10) {
                 spiTekst = erTT 
                     ? "Solid enkeltstart for " + spiEfternavn + " med en " + spiPlads + ". plads."
-                    : "Solid dag for " + spiEfternavn + " med en " + spiPlads + ". plads.";
+                    : "Det var en solid dag for " + spiEfternavn + " med en " + spiPlads + ". plads.";
             } else if (spiPlads <= 30) {
                 spiTekst = erTT
                     ? spiEfternavn + " kørte en jævn enkeltstart som nr. " + spiPlads + "."
@@ -2728,13 +2734,11 @@ function indlaesGemtSpil() {
     }
 
     // Normalisér energi ift. nuværende sværhedsgrad (sikrer at vi ikke ser >100% / for lave procenter efter load)
-    var maxE = getMaxEnergi();
-    for (var i = 0; i < G.ryttere.length; i++) {
+	for (var i = 0; i < G.ryttere.length; i++) {
         var r = G.ryttere[i];
         if (typeof r.energi !== "number") continue;
-        // Begræns til maxE, så vi aldrig ligger over 100% i visning
+        var maxE = getMaxEnergi(r);
         if (r.energi > maxE) r.energi = maxE;
-        // Undgå negative værdier (bare sikkerhed)
         if (r.energi < 0) r.energi = 0;
     }
 
@@ -3458,12 +3462,13 @@ function getSvaerhedMultiplier() {
     return 1.0;
 }
 
-function getMaxEnergi() {
-    return 100 * getSvaerhedMultiplier();
+function getMaxEnergi(rytter) {
+    if (rytter && rytter.sp) return 100 * getSvaerhedMultiplier();
+    return 100;
 }
 
 function getVisEnergi(rytter) {
-    var max = getMaxEnergi();
+    var max = getMaxEnergi(rytter);
     return Math.round((rytter.energi / max) * 100);
 }
 
@@ -3482,8 +3487,8 @@ function startEtape() {
     G.profil = genP(e);
     G.mps = genMP(e);
     // Før allerførste etape i en ny Tour: sæt spillerens energi til maks ift. valgt sværhedsgrad
-    if (G.enr === 0 && G.tourNr === 1) {
-        G.spiller.energi = getMaxEnergi();  // 150 / 100 / 67 → vises som 100%
+	if (G.enr === 0 && G.tourNr === 1) {
+        G.spiller.energi = getMaxEnergi(G.spiller);
     }
     
     // For kuperede etaper, find det højeste punkt til bjergspurt
@@ -3510,7 +3515,7 @@ function startEtape() {
 	// === DÅRLIGE DAGE ===
 	// 12% chance for dårlig dag (kun spilleren)
 	if (Math.random() < 0.12) {
-	    var maxE = getMaxEnergi();
+	    var maxE = getMaxEnergi(G.spiller);
 	    var pctTab = ri(10, 15);
 	    var raTab = maxE * (pctTab / 100);
 	    
@@ -6006,10 +6011,11 @@ function afslutTT() {
     for (var i = 0; i < G.enkRes.length; i++) {
         G.enkRes[i].r.stid += G.enkRes[i].tid;
     }
-    for (var i = 0; i < G.ryttere.length; i++) {
-	var rest = (G.ryttere[i].re / 100 * 30 + 15) * getSvaerhedMultiplier();
-	G.ryttere[i].energi = Math.min(getMaxEnergi(), G.ryttere[i].energi + rest);
-
+	for (var i = 0; i < G.ryttere.length; i++) {
+        var r = G.ryttere[i];
+        var mult = r.sp ? getSvaerhedMultiplier() : 1.0;
+        var rest = (r.re / 100 * 30 + 15) * mult;
+        r.energi = Math.min(getMaxEnergi(r), r.energi + rest);
     }
 	// Gem etape-historik til plots (kun én gang per etape)
 	gemEtapeHistorik(G.enkRes, true);
@@ -6173,12 +6179,13 @@ function afslut() {
         }
     }
     
-    // Restitution (kun for aktive ryttere)
+	// Restitution (kun for aktive ryttere)
     for (var i = 0; i < G.ryttere.length; i++) {
         if (G.ryttere[i].ude) continue;
-	var rest = (G.ryttere[i].re / 100 * 28 + 12) * getSvaerhedMultiplier();
-	G.ryttere[i].energi = Math.min(getMaxEnergi(), G.ryttere[i].energi + rest);
-
+        var r = G.ryttere[i];
+        var mult = r.sp ? getSvaerhedMultiplier() : 1.0;
+        var rest = (r.re / 100 * 28 + 12) * mult;
+        r.energi = Math.min(getMaxEnergi(r), r.energi + rest);
     }
 
 	// Gem etape-historik til plots (kun én gang per etape)
@@ -6608,7 +6615,7 @@ function nytTour() {
     for (var i = 0; i < G.ryttere.length; i++) {
         var r = G.ryttere[i];
         r.stid = 0;
-        r.energi = getMaxEnergi();
+        r.energi = getMaxEnergi(r);
         r.ude = false;
         r.gi = 0;
     }
