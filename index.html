@@ -1521,9 +1521,10 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
     if (spillerKollapsEvent) {
         var kollapsKm = Math.round(spillerKollapsEvent.data.km || spillerKollapsEvent.km || 0);
         
-        // Hvis spilleren stadig vandt etapen, så var kollapset ikke en katastrofe
         if (spiPlads === 1) {
             spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ", men havde heldigvis så stort et forspring at etapesejren aldrig kom i fare.";
+        } else if (G.spiller.ude) {
+            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + " og nåede ikke inden for tidsgrænsen. Touren er slut.";
         } else {
             var tidTabTekst = Math.round(Math.abs(gcGabAendring)) >= 60 ? " og tabte " + fmtTidstab(gcGabAendring) + " i klassementet" : "";
             spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + tidTabTekst + ". Energien var fuldstændig opbrugt.";
