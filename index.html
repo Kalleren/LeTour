@@ -3561,9 +3561,12 @@ function startEtape() {
 	    var faktiskTab = energiFoer - G.spiller.energi;
 	    
 	    // Vis kun besked hvis du faktisk tabte energi
-	    if (faktiskTab > 0) {
+		if (faktiskTab > 0) {
 	        var faktiskPct = Math.round((faktiskTab / maxE) * 100);
 	        G.msg = "😓 Du føler dig ikke helt frisk i dag... (-" + faktiskPct + "% energi)";
+	    } else if (faktiskTab < 0) {
+	        var boostPct = Math.round((Math.abs(faktiskTab) / maxE) * 100);
+	        G.msg = "🙂 Kroppen reagerer bedre end frygtet i dag... (+" + boostPct + "% energi)";
 	    }
 	}
 
