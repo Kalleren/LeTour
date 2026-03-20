@@ -3329,8 +3329,9 @@ function visInstruktioner() {
         '<h3>Karriere og bonuspoint</h3>' +
         '<p>Du kan køre <strong>op til 15 Tours</strong> i din karriere. Efter hver Tour får du bonuspoint, som du kan fordele på dine evner:</p>' +
         '<ul style="margin-left:18px;list-style:disc;font-size:13px;line-height:1.4;margin-top:8px">' +
-            '<li><strong>GC top 10:</strong> 10, 8, 6, 4, 3, 2, 1, 1, 1, 1 point</li>' +
-            '<li><strong>Grøn/prikket trøje:</strong> 5 point</li>' +
+			'<li><strong>GC top 10:</strong> 10, 7, 5, 3, 2, 1, 1, 1, 1, 1 point</li>' +
+            '<li><strong>Grøn/prikket trøje:</strong> 3 point</li>' +
+            '<li><strong>Etapesejr:</strong> 1 point per sejr</li>' +
             '<li><strong>Gennemføre:</strong> 2 point</li>' +
         '</ul>' +
     '</div>' +
@@ -6485,19 +6486,26 @@ function slut() {
     var bonusGennemfoer = 2;
     
     // GC-bonus baseret på placering
-    var gcPointTabel = [10, 8, 6, 4, 3, 2, 1, 1, 1, 1];
+    var gcPointTabel = [10, 7, 5, 3, 2, 1, 1, 1, 1, 1];
     var bonusGC = 0;
     if (spiGC < 10) {
         bonusGC = gcPointTabel[spiGC];
     }
     
-    var bonusSp = troejeBonus(spS); // grøn trøje 
-    var bonusBj = troejeBonus(bjS); // prikket trøje 
+	var bonusSp = troejeBonus(spS);
+    var bonusBj = troejeBonus(bjS);
     
     var bonusTroeer = bonusSp + bonusBj;
     
+    // Tæl etapesejre
+    var etapeSejre = 0;
+    for (var i = 0; i < ETAPE_HISTORIK.length; i++) {
+        if (ETAPE_HISTORIK[i].spiEtapePlads === 1) etapeSejre++;
+    }
+    var bonusSejre = etapeSejre;
+    
     // Samlet bonus
-    var bonusPoint = bonusGennemfoer + bonusGC + bonusTroeer;
+    var bonusPoint = bonusGennemfoer + bonusGC + bonusTroeer + bonusSejre;
 
     var html = '<div style="text-align:center"><div style="font-size:50px">🏆</div><h1>TOUR DE FRANCE SLUT!</h1></div>' +
     '<div class="box" style="text-align:center;border-color:#ff0"><h2>' + msg + '</h2>' + (troeje.length > 0 ? '<div class="hl" style="margin-top:10px">' + troeje.join('<br>') + '</div>' : '') + '</div>' +
@@ -6573,12 +6581,15 @@ function slut() {
         html += '<div class="box" style="border-color:#0f0;text-align:center">' +
             '<h3 style="color:#0f0">🎁 Du har ' + bonusPoint + ' point at fordele!</h3>' +
             '<p style="margin-top:6px;font-size:13px;color:#ccc">' +
-            (bonusGC > 0 || bonusTroeer > 0 ? 
-                (bonusGC > 0 ? '<span class="hl">' + bonusGC + '</span> for GC placering' : '') +
-                (bonusGC > 0 && bonusTroeer > 0 ? ', ' : '') +
-                (bonusTroeer > 0 ? '<span class="hl">' + bonusTroeer + '</span> for trøjer' : '') +
-                ', <span class="hl">' + bonusGennemfoer + '</span> for at gennemføre'
-            : '<span class="hl">' + bonusGennemfoer + '</span> for at gennemføre') +
+			(function() {
+                var dele = [];
+                if (bonusGC > 0) dele.push('<span class="hl">' + bonusGC + '</span> for GC placering');
+                if (bonusSp > 0) dele.push('<span class="hl">' + bonusSp + '</span> for den grønne trøje');
+                if (bonusBj > 0) dele.push('<span class="hl">' + bonusBj + '</span> for den prikkede trøje');
+                if (bonusSejre > 0) dele.push('<span class="hl">' + bonusSejre + '</span> for etapesejr' + (etapeSejre > 1 ? 'e' : ''));
+                dele.push('<span class="hl">' + bonusGennemfoer + '</span> for at gennemføre');
+                return dele.join(', ');
+            })() +
             '</p>' +
             '<p style="color:#888;font-size:11px">Fordel dem på dine evner før næste Tour.</p>' +
         '</div>' +
@@ -6603,7 +6614,7 @@ function slut() {
 function troejeBonus(liste, maxPlads) {
     // Kun nr. 1 får point
     if (liste.length > 0 && liste[0].sp) {
-        return 5;
+        return 3;
     }
     return 0;
 }
