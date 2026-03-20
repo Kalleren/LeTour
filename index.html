@@ -2192,6 +2192,7 @@ function spillerUdgaaet() {
     G.bonusGC = 0;
     G.bonusTroeer = 0;
     G.slutPlacering = 0;
+    sletGemtSpil();
     
     if (G.tourNr >= 15) {
         R('<div style="text-align:center;padding:20px">' +
@@ -2201,7 +2202,7 @@ function spillerUdgaaet() {
                 '<p>' + G.navn + ' udgik af sit sidste Tour de France.</p>' +
                 '<p style="color:#888">En skuffende afslutning på karrieren.</p>' +
             '</div>' +
-            '<div class="ctrls">' +
+			'<div class="ctrls ctrls-2">' +
                 '<button class="btn btn-big" onclick="visPlots()">📊 STATISTIK</button>' +
                 '<button class="btn btn-big btn-y" onclick="location.reload()">NY KARRIERE</button>' +
             '</div>' +
@@ -2214,7 +2215,7 @@ function spillerUdgaaet() {
                 '<p>' + G.navn + ' nåede ikke inden for tidsgrænsen og må forlade Tour de France.</p>' +
                 '<p style="color:#888">Tour nr. ' + G.tourNr + ' er slut. Bedre held næste år!</p>' +
             '</div>' +
-            '<div class="ctrls">' +
+			'<div class="ctrls ctrls-2">' +
                 '<button class="btn btn-big btn-y" onclick="nytTour()">NÆSTE TOUR →</button>' +
                 '<button class="btn btn-big btn-r" onclick="location.reload()">NY KARRIERE</button>' +
             '</div>' +
