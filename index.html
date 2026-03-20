@@ -3457,8 +3457,8 @@ function rerollRytter() {
 }
 
 function getSvaerhedMultiplier() {
-    if (G.svaerhed === "let") return 1.25;
-    if (G.svaerhed === "svaer") return 0.10;
+    if (G.svaerhed === "let") return 1.3;
+    if (G.svaerhed === "svaer") return 0.75;
     return 1.0;
 }
 
@@ -5427,10 +5427,10 @@ function rend() {
         var d = G.udata;
         var medTxt = d.med.length > 0 ? d.med.length + " vil med!" : "Solo?";
         var dis = r.energi < d.cost ? " disabled" : "";
-        mod = '<div class="modal"><div class="mbox">' +
+		mod = '<div class="modal"><div class="mbox">' +
             '<h2 style="color:#ff0">⚡ UDBRUD?</h2>' +
-            '<p>' + medTxt + '</p><p class="warn">Koster: ' + d.cost + '%</p>' +
-            '<p>Din energi: ' + Math.round(r.energi) + '%</p>' +
+            '<p>' + medTxt + '</p><p class="warn">Koster: ' + Math.round(d.cost / getMaxEnergi(r) * 100) + '%</p>' +
+            '<p>Din energi: ' + getVisEnergi(r) + '%</p>' +
             '<div style="margin-top:12px">' +
             '<button class="btn btn-big btn-y" onclick="accUdb()"' + dis + '>[U] HOP MED!</button>' +
             '<button class="btn btn-big btn-r" onclick="rejUdb()">[N] NEJ</button>' +
