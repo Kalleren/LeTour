@@ -5773,20 +5773,21 @@ function tegnP() {
     var rng = maxH - minH;
     if (rng < 1000) { maxH = 1000; rng = 1000; }
 
-    var l = 8, b = 28, r = 12, w = c.width - l - r, h = c.height - b - 15;
+    var l = 8, b = 28, r = 12, t = 22;
+    var w = c.width - l - r, h = c.height - b - t;
     
     // Profil
     ctx.beginPath();
     for (var i = 0; i < p.length; i++) {
         var x = l + (i / (p.length-1)) * w;
-        var y = 12 + h - ((p[i] - minH) / rng) * h;
+        var y = t + h - ((p[i] - minH) / rng) * h;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.strokeStyle = "#ff0";
     ctx.lineWidth = 3;
     ctx.stroke();
-    ctx.lineTo(l + w, 12 + h);
-    ctx.lineTo(l, 12 + h);
+    ctx.lineTo(l + w, t + h);
+    ctx.lineTo(l, t + h);
     ctx.fillStyle = "rgba(100,100,0,0.3)";
     ctx.fill();
     
@@ -5799,14 +5800,14 @@ function tegnP() {
             ctx.lineWidth = 2;
             ctx.setLineDash([6, 4]);
             ctx.beginPath();
-            ctx.moveTo(mx, 12);
-            ctx.lineTo(mx, 12 + h);
+            ctx.moveTo(mx, t);
+            ctx.lineTo(mx, t + h);
             ctx.stroke();
             ctx.setLineDash([]);
             ctx.fillStyle = mp.done ? "#666" : (mp.type === "sprint" ? "#0f0" : "#f44");
             ctx.font = "16px sans-serif";
             ctx.textAlign = "center";
-            ctx.fillText(mp.type === "sprint" ? "🟢" : "🔴", mx, 26);
+            ctx.fillText(mp.type === "sprint" ? "🟢" : "🔴", mx, t + 14);
         }
     }
     
@@ -5814,14 +5815,14 @@ function tegnP() {
     var aktiveRyttere = G.ryttere.filter(function(r) { return !r.ude; });
     var gcLeder = aktiveRyttere.slice().sort(function(a,b) { return a.stid - b.stid; })[0];
     var spLeder = aktiveRyttere.slice().sort(function(a,b) { return (G.sprPts[b.navn]||0) - (G.sprPts[a.navn]||0); })[0];
-    var bjLeder = aktiveRyttere.slice().sort(function(a,b) { return (G.bjgPts[b.navn]||0) - (G.bjgPts[a.navn]||0); })[0];
+    var bjLeder = aktiveRyttere.slice().sort(function(a,b) { return (G.bjgPts[b.navn]||0) - (G.bjgPts[a.namn]||0); })[0];
     
     for (var i = 0; i < G.grp.length; i++) {
         var g = G.grp[i];
         var km = Math.min(g.pos, e.dist);
         var gx = l + (km / e.dist) * w;
         var idx = Math.min(Math.floor(km), p.length - 1);
-        var gy = 12 + h - ((p[idx] - minH) / rng) * h;
+        var gy = t + h - ((p[idx] - minH) / rng) * h;
         
         var farve = getGruppeFarve(g, G.spiller, gcLeder, spLeder, bjLeder);
         var col = farve.border;
@@ -5849,40 +5850,28 @@ function tegnP() {
     ctx.strokeStyle = "#fff";
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
-    ctx.moveTo(l + w, 12);
-    ctx.lineTo(l + w, 12 + h);
+    ctx.moveTo(l + w, t);
+    ctx.lineTo(l + w, t + h);
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = "#fff";
     ctx.font = "20px sans-serif";
-    ctx.fillText("🏁", l + w, 28);
+    ctx.fillText("🏁", l + w, t + 16);
     
-// Y-labels OVEN PÅ grafen (med baggrund fra venstre kant)
-    ctx.font = "10px monospace";
-    ctx.textAlign = "left";
-    
-    // Top label
-    var topTxt = Math.round(maxH) + "m";
-    var topW = ctx.measureText(topTxt).width + 8;
-    ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(0, 12, topW, 14);
-    ctx.fillStyle = "#888";
-    ctx.fillText(topTxt, 3, 23);
-    
-    // Bund label
-    var bundTxt = Math.round(minH) + "m";
-    var bundW = ctx.measureText(bundTxt).width + 8;
-    ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(0, h - 2, bundW, 14);
-    ctx.fillStyle = "#888";
-    ctx.fillText(bundTxt, 3, h + 9);    
     // X-labels
-    ctx.textAlign = "center";
     ctx.fillStyle = "#666";
-    ctx.fillText("0", l, 12 + h + 18);
-    ctx.fillText(e.dist + " km", l + w, 12 + h + 18);
+    ctx.font = "11px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("0", l, t + h + 14);
+    ctx.fillText(e.dist + " km", l + w, t + h + 14);
+    
+    // Y-labels - tegnes SIDST så de er oven på alt
+    ctx.font = "bold 10px monospace";
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "left";
+    ctx.fillText(Math.round(maxH) + "m", 2, t - 5);
+    ctx.fillText(Math.round(minH) + "m", 2, t + h + 14);
 }
-
 
 // === ENKELTSTART ===
 function startTT() {
@@ -6021,22 +6010,25 @@ function tegnTTP() {
     var rng = maxH - minH;
     if (rng < 750) { maxH = 750; rng = 750; }
 
-    var l = 8, bm = 18, r = 8, w = c.width - l - r, h = c.height - bm - 8;
+    var l = 8, bm = 18, r = 8, t = 18;
+    var w = c.width - l - r, h = c.height - bm - t;
     
+    // Profil
     ctx.beginPath();
     for (var i = 0; i < p.length; i++) {
         var x = l + (i / (p.length-1)) * w;
-        var y = 8 + h - ((p[i] - minH) / rng) * h;
+        var y = t + h - ((p[i] - minH) / rng) * h;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.strokeStyle = "#088";
     ctx.lineWidth = 3;
     ctx.stroke();
     
+    // Rytter
     var km = Math.min(G.km, e.dist);
     var px = l + (km / e.dist) * w;
     var idx = Math.min(Math.floor(km), p.length - 1);
-    var py = 8 + h - ((p[idx] - minH) / rng) * h;
+    var py = t + h - ((p[idx] - minH) / rng) * h;
     
     ctx.beginPath();
     ctx.arc(px, py - 12, 10, 0, Math.PI * 2);
@@ -6054,34 +6046,25 @@ function tegnTTP() {
     ctx.fillText("🚴", 0, 5);
     ctx.restore();
     
+    // Mål
     ctx.strokeStyle = "#fff";
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
-    ctx.moveTo(l + w, 8);
-    ctx.lineTo(l + w, 8 + h);
+    ctx.moveTo(l + w, t);
+    ctx.lineTo(l + w, t + h);
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.font = "16px sans-serif";
-    ctx.fillText("🏁", l + w, 18);
+    ctx.fillText("🏁", l + w, t + 12);
     
-// Y-labels oven på grafen (fra venstre kant)
-    ctx.font = "10px monospace";
+    // Y-labels - tegnes SIDST så de er oven på alt
+    ctx.font = "bold 10px monospace";
+    ctx.fillStyle = "#fff";
     ctx.textAlign = "left";
-    
-    var topTxt = Math.round(maxH) + "m";
-    var topW = ctx.measureText(topTxt).width + 8;
-    ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(0, 8, topW, 14);
-    ctx.fillStyle = "#888";
-    ctx.fillText(topTxt, 3, 19);
-    
-    var bundTxt = Math.round(minH) + "m";
-    var bundW = ctx.measureText(bundTxt).width + 8;
-    ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(0, h - 6, bundW, 14);
-    ctx.fillStyle = "#888";
-    ctx.fillText(bundTxt, 3, h + 5);}
-
+    ctx.fillText(Math.round(maxH) + "m", 2, t - 4);
+    ctx.fillText(Math.round(minH) + "m", 2, t + h + 14);
+}
+	
 function afslutTT() {
     releaseWakeLock();  // <-- Tilføj denne linje
     clearInterval(G.iv);
