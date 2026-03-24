@@ -906,34 +906,13 @@ function genererResume(res, erTT, udeRyttere) {
     }
     var erFoersteEtape = (ETAPE_HISTORIK.length <= 1);
 
-    // ===== BEREGN GC-FØR / EFTER =====
+// ===== BEREGN GC-FØR / EFTER =====
     var spiGC = -1;
     for (var i = 0; i < gcS.length; i++) {
         if (gcS[i].sp) { spiGC = i; break; }
     }
 
-    var spiEtapeTid = spiRes ? spiRes.tid : 0;
-    var spiStidFoer = G.spiller.stid - spiEtapeTid;
-    
-    var gcLederStidFoer = 999999;
-    for (var i = 0; i < gcS.length; i++) {
-        var rytterEtapeTid = 0;
-        for (var j = 0; j < res.length; j++) {
-            if (res[j].r === gcS[i]) {
-                rytterEtapeTid = res[j].tid;
-                break;
-            }
-        }
-        var rytterStidFoer = gcS[i].stid - rytterEtapeTid;
-        if (rytterStidFoer < gcLederStidFoer) {
-            gcLederStidFoer = rytterStidFoer;
-        }
-    }
-    
-    var gcGabFoer = erFoersteEtape ? 0 : (spiStidFoer - gcLederStidFoer);
-    var gcGabNu = (spiGC > 0) ? (G.spiller.stid - gcS[0].stid) : 0;
-    var gcGabAendring = gcGabNu - gcGabFoer;
-
+    // Hent forrige etapes GC-placering fra historik
     var spiGCFoer = -1;
     if (ETAPE_HISTORIK.length >= 2) {
         spiGCFoer = ETAPE_HISTORIK[ETAPE_HISTORIK.length - 2].spiGCPlads;
@@ -944,6 +923,47 @@ function genererResume(res, erTT, udeRyttere) {
     var placeringAendring = spiGCFoer - (spiGC + 1);
     var erGcLeder = (spiGC === 0);
     var varGcLeder = (spiGCFoer === 1);
+
+    // Beregn GC-gab ændring robust via historik
+    // gcGabNu = spillerens tid til GC-leder NU (positiv = bagud)
+    var gcGabNu = (spiGC > 0) ? (G.spiller.stid - gcS[0].stid) : 0;
+    
+    // gcGabFoer = spillerens tid til GC-leder FØR denne etape
+    var gcGabFoer = 0;
+    if (!erFoersteEtape && ETAPE_HISTORIK.length >= 2) {
+        var forrigeHistorik = ETAPE_HISTORIK[ETAPE_HISTORIK.length - 2];
+        // Find spillerens og lederens tider fra forrige etape
+        if (forrigeHistorik.gcTop3 && forrigeHistorik.gcTop3.length > 0) {
+            var lederTidFoer = forrigeHistorik.gcTop3[0].tid;
+            // Find spillerens samlede tid FØR denne etape
+            var spiEtapeTid = spiRes ? spiRes.tid : 0;
+            var spiStidFoer = G.spiller.stid - spiEtapeTid;
+            // Find hvem der var GC-leder før og deres tid før
+            var forrigeLeder = forrigeHistorik.gcLeder;
+            var forrigeLederStidFoer = lederTidFoer;
+            
+            if (forrigeHistorik.spiGCPlads === 1) {
+                // Spilleren VAR leder - gabet var 0
+                gcGabFoer = 0;
+            } else {
+                gcGabFoer = spiStidFoer - forrigeLederStidFoer;
+            }
+        }
+    }
+    
+    var gcGabAendring = gcGabNu - gcGabFoer;
+    
+    // Sikkerhedscheck: Hvis spilleren rykkede OP i klassementet, 
+    // men gcGabAendring siger han tabte tid, er beregningen forkert
+    var gcGabPaalidelig = true;
+    if (placeringAendring > 0 && gcGabAendring > 60) {
+        // Spilleren rykkede op men beregningen siger tidstab - upålidelig
+        gcGabPaalidelig = false;
+    }
+    if (placeringAendring < -3 && gcGabAendring < -60) {
+        // Spilleren faldt mange pladser men beregningen siger tidsgevinst - upålidelig
+        gcGabPaalidelig = false;
+    }
 
 // ===== BEREGN VINDERENS SITUATION =====
     // Vandt vinderen solo, i lille gruppe, eller i massespurt?
@@ -1010,7 +1030,7 @@ function genererResume(res, erTT, udeRyttere) {
     }
     
     // ===== FIND VIGTIGSTE KOLLAPS TIL OVERSKRIFT =====
-    var vigtigsteKollaps = null;
+var vigtigsteKollaps = null;
     var vigtigsteKollapsNavn = "";
     
     var gulTroejeBaerer = tidligereGcLeder || (gcS[0] ? gcS[0].navn : null);
@@ -1020,10 +1040,17 @@ function genererResume(res, erTT, udeRyttere) {
     for (var si = 0; si < superStjerner.length; si++) {
         if (prioritetsNavne.indexOf(superStjerner[si]) < 0) prioritetsNavne.push(superStjerner[si]);
     }
-    if (prioritetsNavne.indexOf(G.spiller.navn) < 0) prioritetsNavne.push(G.spiller.navn);
+    // Inkluder IKKE spilleren her - spillerens kollaps håndteres separat
     
     for (var pi = 0; pi < prioritetsNavne.length; pi++) {
         var pNavn = prioritetsNavne[pi];
+        // Check at rytteren er i top 10 i GC
+        var erITop10 = false;
+        for (var gi = 0; gi < Math.min(10, gcS.length); gi++) {
+            if (gcS[gi].navn === pNavn) { erITop10 = true; break; }
+        }
+        if (!erITop10) continue;
+        
         for (var ki = 0; ki < gcKollaps.length; ki++) {
             if (gcKollaps[ki].data.rytter === pNavn) {
                 vigtigsteKollaps = gcKollaps[ki];
@@ -1033,15 +1060,106 @@ function genererResume(res, erTT, udeRyttere) {
         }
         if (vigtigsteKollaps) break;
     }
-    
+	
     // ===== GENERER OVERSKRIFT =====
-    var overskrift = "";
+var overskrift = "";
+    
+    // Beregn om spillerens kollaps er dramatisk
+    var spillerKollapsErDramatisk = false;
+    if (spillerKollapsEvent) {
+        // Dramatisk hvis: i top 10, OG under 30 min bagud, OG ikke stadig GC-leder eller podium
+        var varITop10 = spiGCFoer <= 10;
+        var underHalvTimeBagud = gcGabFoer < 1800;
+        var falderFraPodium = spiGCFoer <= 3 && (spiGC + 1) > 3;
+        var misterGult = varGcLeder && !erGcLeder;
+        
+        if ((varITop10 && underHalvTimeBagud && !erGcLeder && (spiGC + 1) > 3) || falderFraPodium || misterGult) {
+            spillerKollapsErDramatisk = true;
+        }
+    }
+    
+    // Beregn om andres kollaps er dramatisk (skal være i top 10 i stillingen)
+    var vigtigsteKollapsErDramatisk = false;
+    if (vigtigsteKollaps) {
+        var kollapsRytterNavn = vigtigsteKollaps.data.rytter;
+        for (var ki = 0; ki < gcS.length; ki++) {
+            if (gcS[ki].navn === kollapsRytterNavn && ki < 10) {
+                // Var de i top 10 FØR denne etape?
+                if (ETAPE_HISTORIK.length >= 2) {
+                    var forrigeTop = ETAPE_HISTORIK[ETAPE_HISTORIK.length - 2].gcTop3;
+                    // Check om de var i top 10 (vi har kun top3 gemt, men check GC)
+                    var rObj = null;
+                    for (var ri = 0; ri < G.ryttere.length; ri++) {
+                        if (G.ryttere[ri].navn === kollapsRytterNavn) { rObj = G.ryttere[ri]; break; }
+                    }
+                    if (rObj && rObj.gc > 82) {
+                        vigtigsteKollapsErDramatisk = true;
+                    }
+                } else {
+                    vigtigsteKollapsErDramatisk = true;
+                }
+                break;
+            }
+        }
+    }
     
     if (vinder && vinder.sp) {
-        overskrift = "TRIUMF! " + spiEfternavn.toUpperCase() + " VINDER ETAPEN!";
-    } else if (spillerKollapsEvent) {
+        // Spilleren vinder - varierede overskrifter
+        var vinderDiffSpi = (res.length >= 2) ? Math.round(res[1].tid - res[0].tid) : 0;
+        
+        if (vinderDiffSpi >= 180) {
+            // Over 3 minutter foran
+            var magtOvk = [
+                "MAGTDEMONSTRATION! " + spiEfternavn.toUpperCase() + " SMADRER KONKURRENTERNE!",
+                spiEfternavn.toUpperCase() + " KNUSER ALT OG ALLE!",
+                "TOTALT OVERLEGEN! " + spiEfternavn.toUpperCase() + " VINDER MED " + fmtTidstab(vinderDiffSpi) + "!",
+                spiEfternavn.toUpperCase() + " DEMOLERER FELTET!"
+            ];
+            overskrift = magtOvk[ri(0, magtOvk.length - 1)];
+        } else if (vinderDiffSpi >= 60) {
+            // Over 1 minut foran
+            var stærkOvk = [
+                "SUVERÆN! " + spiEfternavn.toUpperCase() + " VINDER STORT!",
+                spiEfternavn.toUpperCase() + " KØRER ALLE AF HJULET!",
+                "OVERLEGEN SEJR TIL " + spiEfternavn.toUpperCase() + "!",
+                spiEfternavn.toUpperCase() + " ER I EN KLASSE FOR SIG!"
+            ];
+            overskrift = stærkOvk[ri(0, stærkOvk.length - 1)];
+        } else if (vinderDiffSpi <= 3 && !erTT) {
+            // Tæt spurt
+            var spurtOvk = [
+                "FOTOFINISH! " + spiEfternavn.toUpperCase() + " VINDER PÅ STREGEN!",
+                spiEfternavn.toUpperCase() + " SNUPPER SEJREN I SPURTEN!",
+                "TÆT KAMP! " + spiEfternavn.toUpperCase() + " ER HURTIGST!",
+                "DRAMA PÅ STREGEN! " + spiEfternavn.toUpperCase() + " VINDER!"
+            ];
+            overskrift = spurtOvk[ri(0, spurtOvk.length - 1)];
+        } else if (erTT) {
+            var ttOvk = [
+                spiEfternavn.toUpperCase() + " VINDER ENKELTSTARTEN!",
+                "TIDSKØRSEL I VERDENSKLASSE! " + spiEfternavn.toUpperCase() + " SEJRER!",
+                spiEfternavn.toUpperCase() + " SÆTTER BEDSTE TID!"
+            ];
+            overskrift = ttOvk[ri(0, ttOvk.length - 1)];
+        } else if (totaleSejre >= 3) {
+            var serieOvk = [
+                spiEfternavn.toUpperCase() + " GØR DET IGEN! SEJR NR. " + totaleSejre + "!",
+                "USTOPPELIG! " + spiEfternavn.toUpperCase() + " TAGER " + totaleSejre + ". ETAPESEJR!",
+                spiEfternavn.toUpperCase() + " SAMLER PÅ ETAPESEJRE!"
+            ];
+            overskrift = serieOvk[ri(0, serieOvk.length - 1)];
+        } else {
+            var normalOvk = [
+                "TRIUMF! " + spiEfternavn.toUpperCase() + " VINDER ETAPEN!",
+                spiEfternavn.toUpperCase() + " TAGER ETAPESEJREN!",
+                "SEJR TIL " + spiEfternavn.toUpperCase() + " I " + e.slut.toUpperCase() + "!",
+                spiEfternavn.toUpperCase() + " PÅ TOPPEN AF PODIET!"
+            ];
+            overskrift = normalOvk[ri(0, normalOvk.length - 1)];
+        }
+    } else if (spillerKollapsErDramatisk) {
         overskrift = "KATASTROFE! " + spiEfternavn.toUpperCase() + " GÅR HELT KOLD!";
-    } else if (vigtigsteKollaps) {
+    } else if (vigtigsteKollapsErDramatisk) {
         overskrift = "DRAMA! " + vigtigsteKollapsNavn.toUpperCase() + " KRAKELERER!";
     } else if (spiPlads === 2) {
         overskrift = spiEfternavn + " tæt på sejren i " + e.slut;
@@ -1066,7 +1184,6 @@ function genererResume(res, erTT, udeRyttere) {
             ];
             overskrift = kupOvk[ri(0, kupOvk.length - 1)];
         } else {
-            // FLAD: Tilpas overskrift til om det var spurt eller solo
             if (vinderVandtSolo) {
                 var fladSoloOvk = [
                     "Overraskelse: " + vinderEfternavn + " vinder solo i " + e.slut,
@@ -1085,9 +1202,9 @@ function genererResume(res, erTT, udeRyttere) {
         }
     } else {
         overskrift = "Etape " + e.nr + " er i hus";
-    }
+    }    
     
-    // ===== GENERER BRØDTEKST =====
+// ===== GENERER BRØDTEKST =====
     var afsnit = [];
     
     // ===== INTRO =====
@@ -1242,7 +1359,7 @@ function genererResume(res, erTT, udeRyttere) {
         }
     }
 
-    // ===== ÆGTE KOLLAPS (energi=0) =====
+// ===== ÆGTE KOLLAPS (energi=0) =====
 	if (gcKollaps.length > 0) {
         var vigtigeKollaps = [];
         
@@ -1250,15 +1367,15 @@ function genererResume(res, erTT, udeRyttere) {
             var kollaps = gcKollaps[i].data;
             var kollapsNavn = kollaps.rytter;
             
+            // Spring spilleren over her - nævnes separat i spillerafsnittet
+            if (kollapsNavn === G.spiller.navn) continue;
+            
             var erVigtig = false;
-            if (kollapsNavn === G.spiller.navn) {
-                erVigtig = true;
-            } else {
-                for (var j = 0; j < gcS.length; j++) {
-                    if (gcS[j].navn === kollapsNavn && (j < 15 || gcS[j].gc > 78)) {
-                        erVigtig = true;
-                        break;
-                    }
+            // Kun vigtig hvis rytteren er i top 10 i GC
+            for (var j = 0; j < gcS.length; j++) {
+                if (gcS[j].navn === kollapsNavn && j < 10) {
+                    erVigtig = true;
+                    break;
                 }
             }
             
@@ -1269,11 +1386,6 @@ function genererResume(res, erTT, udeRyttere) {
                 }
                 if (!alleredeTilføjet) vigtigeKollaps.push(kollaps);
             }
-        }
-        
-        // Fjern spilleren hvis han er den eneste i listen
-        if (vigtigeKollaps.length === 1 && vigtigeKollaps[0].rytter === G.spiller.navn) {
-            vigtigeKollaps = [];
         }
         
         if (vigtigeKollaps.length === 1) {
@@ -1288,21 +1400,23 @@ function genererResume(res, erTT, udeRyttere) {
             afsnit.push("Det var en massakre! " + navne.join(", ") + " og " + sidsteNavn + " løb alle tør for kræfter og gik helt kold.");
         }
     }
-    
-    // ===== DÅRLIGE DAGE =====
+	
+// ===== DÅRLIGE DAGE =====
     if (daarligeDage.length > 0) {
         var vigtigeDaarlige = [];
         for (var i = 0; i < daarligeDage.length; i++) {
             var dd = daarligeDage[i].data;
+            // Spring altid spilleren over - nævnes separat
             if (dd.rytter === G.spiller.navn) continue;
             var alleredeKollaps = false;
             for (var ki = 0; ki < gcKollaps.length; ki++) {
                 if (gcKollaps[ki].data.rytter === dd.rytter) { alleredeKollaps = true; break; }
             }
             if (alleredeKollaps) continue;
+            // Kun vigtig hvis i top 10 i GC
             var erVigtig = false;
             for (var j = 0; j < gcS.length; j++) {
-                if (gcS[j].navn === dd.rytter && j < 15) { erVigtig = true; break; }
+                if (gcS[j].navn === dd.rytter && j < 10) { erVigtig = true; break; }
             }
             if (erVigtig) {
                 var alleredeTilføjet = false;
@@ -1324,7 +1438,7 @@ function genererResume(res, erTT, udeRyttere) {
             afsnit.push("Flere favoritter havde en hård dag. " + navne.join(", ") + " og " + sidsteNavn + " tabte alle tid til de bedste.");
         }
     }
-    
+	
     // BJERGSPURTER
     if (bjerge.length > 0 && (e.type === "bjerg" || e.type === "kuperet")) {
         var bjergVindere = [];
@@ -1351,13 +1465,13 @@ function genererResume(res, erTT, udeRyttere) {
             if (sprintVindere.indexOf(svn) < 0) sprintVindere.push(svn);
         }
         if (sprints.length === 1) {
-            afsnit.push("I dagens mellemspurt var " + sprintVindere[0] + " hurtigst.");
+            afsnit.push("I dagens indlagte spurt var " + sprintVindere[0] + " hurtigst.");
         } else if (sprintVindere.length === 1) {
-            afsnit.push(sprintVindere[0] + " vandt begge dagens mellemspurter og scorede vigtige point til den grønne trøje.");
+            afsnit.push(sprintVindere[0] + " vandt begge dagens indlagte spurter og scorede vigtige point til den grønne trøje.");
         } else if (sprintVindere.length === 2) {
-            afsnit.push("Dagens to mellemspurter blev vundet af " + sprintVindere[0] + " og " + sprintVindere[1] + ".");
+            afsnit.push("Dagens to indlagte spurter blev vundet af " + sprintVindere[0] + " og " + sprintVindere[1] + ".");
         } else {
-            afsnit.push("Mellemspurterne blev fordelt mellem " + sprintVindere.slice(0, -1).join(", ") + " og " + sprintVindere[sprintVindere.length - 1] + ".");
+            afsnit.push("De indlagte spurter blev fordelt mellem " + sprintVindere.slice(0, -1).join(", ") + " og " + sprintVindere[sprintVindere.length - 1] + ".");
         }
     }
     
@@ -1525,24 +1639,29 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
             spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ", men havde heldigvis så stort et forspring at etapesejren aldrig kom i fare.";
         } else if (G.spiller.ude) {
             spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + " og nåede ikke inden for tidsgrænsen. Touren er slut.";
+        } else if (erGcLeder) {
+            // Beholdt gult trods kollaps
+            spiTekst = spiEfternavn + " gik kold ved km " + kollapsKm + ", men beholder den gule trøje.";
+        } else if ((spiGC + 1) <= 3) {
+            // Stadig på podiet trods kollaps
+            spiTekst = spiEfternavn + " gik kold ved km " + kollapsKm + ", men holder sig på " + (spiGC + 1) + ". pladsen i klassementet.";
+        } else if (!spillerKollapsErDramatisk) {
+            // Langt bagud allerede - ikke dramatisk
+            spiTekst = spiEfternavn + " gik kold ved km " + kollapsKm + " og ligger nr. " + (spiGC + 1) + " i klassementet.";
+        } else if (gcGabPaalidelig && placeringAendring > 0) {
+            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ", men havde opbygget et stort nok forspring til at rykke op til " + (spiGC + 1) + ". plads i klassementet.";
+        } else if (gcGabPaalidelig && gcGabAendring > 120) {
+            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + " og tabte " + fmtTidstab(gcGabAendring) + " i klassementet. Han falder til " + (spiGC + 1) + ". plads.";
         } else {
-            var tidTabTekst = Math.round(Math.abs(gcGabAendring)) >= 60 ? " og tabte " + fmtTidstab(gcGabAendring) + " i klassementet" : "";
-            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + tidTabTekst + ". Energien var fuldstændig opbrugt.";
-            if (erGcLeder) {
-                spiTekst += " Alligevel lykkedes det at beholde den gule trøje.";
-            }
+            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ". Energien var fuldstændig opbrugt. Han ligger nu nr. " + (spiGC + 1) + " i klassementet.";
         }
     }
-
+		
 	// 2) Etapesejr
     else if (spiPlads === 1) {
-        // Etaperesultat og trøjesituation er allerede beskrevet ovenfor.
-        // Hold spillerens afsnit kort og tilføj kun ny information.
-        
         if (erGcLeder && varGcLeder && totalGuleDage > 2) {
             spiTekst = "Det er " + spiEfternavn + "s " + totaleSejre + ". etapesejr i denne Tour.";
         } else if (erGcLeder && !varGcLeder) {
-            // Trøje-erobring er allerede nævnt - tilføj kun stemning
             if (totaleSejre === 1) {
                 spiTekst = "En drømmedag for " + spiEfternavn + ", der vinder sin første etapesejr i dette års Tour!";
             } else {
@@ -1550,7 +1669,7 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
             }
         } else if (totaleSejre > 1) {
             spiTekst = "Det er " + spiEfternavn + "s " + totaleSejre + ". etapesejr i denne Tour!";
-        } else if (gcGabAendring <= -60) {
+        } else if (gcGabPaalidelig && gcGabAendring <= -60) {
             spiTekst = "En vigtig dag for " + spiEfternavn + " der hentede " + fmtTidstab(gcGabAendring) + " i klassementet.";
         } else {
             spiTekst = "En drømmedag for " + spiEfternavn + "!";
@@ -1559,17 +1678,17 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
 
 	// 3) 2. og 3. plads
     else if (spiPlads === 2) {
-        if (gcGabAendring <= -60) {
+        if (gcGabPaalidelig && gcGabAendring <= -60) {
             spiTekst = "Andenpladsen er et flot resultat for " + spiEfternavn + ", der hentede " + fmtTidstab(gcGabAendring) + " i klassementet.";
-        } else if (gcGabAendring >= 60) {
+        } else if (gcGabPaalidelig && gcGabAendring >= 60) {
             spiTekst = spiEfternavn + " måtte nøjes med andenpladsen og tabte " + fmtTidstab(gcGabAendring) + " i klassementet.";
         } else {
             spiTekst = spiEfternavn + " måtte se sig slået på stregen, men andenpladsen er et flot resultat.";
         }
     } else if (spiPlads === 3) {
-        if (gcGabAendring <= -60) {
+        if (gcGabPaalidelig && gcGabAendring <= -60) {
             spiTekst = "Tredjepladsen gik til " + spiEfternavn + ", der hentede " + fmtTidstab(gcGabAendring) + " i klassementet.";
-        } else if (gcGabAendring >= 60) {
+        } else if (gcGabPaalidelig && gcGabAendring >= 60) {
             spiTekst = spiEfternavn + " sluttede på tredjepladsen, men tabte " + fmtTidstab(gcGabAendring) + " i klassementet.";
         } else {
             spiTekst = "Tredjepladsen gik til " + spiEfternavn + ".";
@@ -1577,7 +1696,7 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
     }
     // 4) GC-leder der beholder trøjen
     else if (erGcLeder && varGcLeder) {
-        if (Math.round(gcGabAendring) >= 60) {
+        if (gcGabPaalidelig && Math.round(gcGabAendring) >= 60) {
             spiTekst = spiEfternavn + " havde en tung dag i gult og tabte " + fmtTidstab(gcGabAendring) + " til nærmeste rival, men beholdt føringen.";
         } else if (spiPlads <= 5) {
             spiTekst = spiEfternavn + " havde en stærk dag og sluttede som nr. " + spiPlads + ".";
@@ -1592,7 +1711,7 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
         }
     }
 
-// 5) Erobrede GC-føringen (uden etapesejr)
+    // 5) Erobrede GC-føringen (uden etapesejr)
     else if (erGcLeder && !varGcLeder) {
         if (spiPlads <= 5) {
             spiTekst = "Ud over at erobre den gule trøje leverede " + spiEfternavn + " en fantastisk præstation med en " + spiPlads + ". plads!";
@@ -1606,59 +1725,78 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
     // 6) Mistede den gule trøje
     else if (varGcLeder && !erGcLeder) {
         var nyLederNavn = gcS[0] ? gcS[0].navn.split(" ").pop() : "rivalen";
-        spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu nr. " + (spiGC + 1) + " i klassementet.";
+        if (gcGabPaalidelig && gcGabAendring > 60) {
+            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " efter at have tabt " + fmtTidstab(gcGabAendring) + ". Han ligger nu nr. " + (spiGC + 1) + " i klassementet.";
+        } else {
+            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu nr. " + (spiGC + 1) + " i klassementet.";
+        }
     }
 
     // 7-9) Tidstab/gevinster
     else {
-        var absGabAendring = Math.round(Math.abs(gcGabAendring));
-
-        if (gcGabAendring >= 480) {
-            spiTekst = "Det var en katastrofedag for " + spiEfternavn + "! Han tabte " + fmtTidstab(gcGabAendring) + " i klassementet og falder til " + (spiGC + 1) + ". plads.";
-        } else if (gcGabAendring >= 180) {
-            spiTekst = "Det var en hård dag for " + spiEfternavn + " der tabte " + fmtTidstab(gcGabAendring) + " i klassementet.";
-            if (placeringAendring < -3) {
-                spiTekst += " Han faldt fra en " + spiGCFoer + ". til " + (spiGC + 1) + ". plads.";
-            } else {
-                spiTekst += " Han ligger nu nr. " + (spiGC + 1) + ".";
-            }
-        } else if (gcGabAendring >= 60) {
-            spiTekst = spiEfternavn + " tabte " + fmtTidstab(gcGabAendring) + " i klassementet og ligger nu nr. " + (spiGC + 1) + ".";
-        } else if (gcGabAendring <= -60) {
-            spiTekst = "Det var en fremragende dag for " + spiEfternavn + " der hentede " + fmtTidstab(gcGabAendring) + " i klassementet!";
-            if (placeringAendring >= 3) {
-                spiTekst += " Han rykker op fra " + spiGCFoer + ". til " + (spiGC + 1) + ". plads.";
-            } else {
-                spiTekst += " Han ligger nu nr. " + (spiGC + 1) + ".";
-            }
-        } else if (gcGabAendring <= -10) {
-            spiTekst = spiEfternavn + " hentede " + fmtTidstab(gcGabAendring) + " i klassementet og ligger nr. " + (spiGC + 1) + ".";
-        } else if (gcGabAendring > 10) {
-            spiTekst = spiEfternavn + " tabte " + fmtTidstab(gcGabAendring) + " i klassementet og ligger nr. " + (spiGC + 1) + ".";
-        } else {
-            // Ingen væsentlig ændring i klassementet
+        if (!gcGabPaalidelig) {
+            // Upålidelig beregning - brug kun placering
             if (spiPlads <= 5) {
-                spiTekst = spiEfternavn + " var med helt fremme og sluttede på en flot " + spiPlads + ". plads.";
+                spiTekst = spiEfternavn + " var med helt fremme og sluttede på en flot " + spiPlads + ". plads. Han ligger nr. " + (spiGC + 1) + " i klassementet.";
             } else if (spiPlads <= 10) {
                 spiTekst = erTT 
-                    ? "Solid enkeltstart for " + spiEfternavn + " med en " + spiPlads + ". plads."
-                    : "Det var en solid dag for " + spiEfternavn + " med en " + spiPlads + ". plads.";
-            } else if (spiPlads <= 30) {
-                spiTekst = erTT
-                    ? spiEfternavn + " kørte en jævn enkeltstart som nr. " + spiPlads + "."
-                    : spiEfternavn + " fulgte favoritterne sikkert i mål som nr. " + spiPlads + ".";
+                    ? "Solid enkeltstart for " + spiEfternavn + " med en " + spiPlads + ". plads. Han ligger nr. " + (spiGC + 1) + " i klassementet."
+                    : "Det var en solid dag for " + spiEfternavn + " med en " + spiPlads + ". plads. Han ligger nr. " + (spiGC + 1) + " i klassementet.";
+            } else if (placeringAendring > 3) {
+                spiTekst = spiEfternavn + " rykker op fra " + spiGCFoer + ". til " + (spiGC + 1) + ". plads i klassementet.";
+            } else if (placeringAendring < -3) {
+                spiTekst = spiEfternavn + " faldt fra " + spiGCFoer + ". til " + (spiGC + 1) + ". plads i klassementet.";
             } else {
-                spiTekst = erTT
-                    ? spiEfternavn + " sluttede som nr. " + spiPlads + " på enkeltstart."
-                    : spiEfternavn + " kom i mål med hovedfeltet.";
+                spiTekst = spiEfternavn + " sluttede som nr. " + spiPlads + " og ligger nr. " + (spiGC + 1) + " i klassementet.";
             }
-            // Tilføj GC-placering kun hvis relevant og ikke allerede nævnt
-            if (spiGC < 10 && !erFoersteEtape) {
-                spiTekst += " Han ligger nr. " + (spiGC + 1) + " i klassementet.";
+        } else {
+            var absGabAendring = Math.round(Math.abs(gcGabAendring));
+
+            if (gcGabAendring >= 480) {
+                spiTekst = "Det var en katastrofedag for " + spiEfternavn + "! Han tabte " + fmtTidstab(gcGabAendring) + " i klassementet og falder til " + (spiGC + 1) + ". plads.";
+            } else if (gcGabAendring >= 180) {
+                spiTekst = "Det var en hård dag for " + spiEfternavn + " der tabte " + fmtTidstab(gcGabAendring) + " i klassementet.";
+                if (placeringAendring < -3) {
+                    spiTekst += " Han faldt fra en " + spiGCFoer + ". til " + (spiGC + 1) + ". plads.";
+                } else {
+                    spiTekst += " Han ligger nu nr. " + (spiGC + 1) + ".";
+                }
+            } else if (gcGabAendring >= 60) {
+                spiTekst = spiEfternavn + " tabte " + fmtTidstab(gcGabAendring) + " i klassementet og ligger nu nr. " + (spiGC + 1) + ".";
+            } else if (gcGabAendring <= -60) {
+                spiTekst = "Det var en fremragende dag for " + spiEfternavn + " der hentede " + fmtTidstab(gcGabAendring) + " i klassementet!";
+                if (placeringAendring >= 3) {
+                    spiTekst += " Han rykker op fra " + spiGCFoer + ". til " + (spiGC + 1) + ". plads.";
+                } else {
+                    spiTekst += " Han ligger nu nr. " + (spiGC + 1) + ".";
+                }
+            } else if (gcGabAendring <= -10) {
+                spiTekst = spiEfternavn + " hentede " + fmtTidstab(gcGabAendring) + " i klassementet og ligger nr. " + (spiGC + 1) + ".";
+            } else if (gcGabAendring > 10) {
+                spiTekst = spiEfternavn + " tabte " + fmtTidstab(gcGabAendring) + " i klassementet og ligger nr. " + (spiGC + 1) + ".";
+            } else {
+                // Ingen væsentlig ændring i klassementet
+                if (spiPlads <= 5) {
+                    spiTekst = spiEfternavn + " var med helt fremme og sluttede på en flot " + spiPlads + ". plads.";
+                } else if (spiPlads <= 10) {
+                    spiTekst = erTT 
+                        ? "Solid enkeltstart for " + spiEfternavn + " med en " + spiPlads + ". plads."
+                        : "Det var en solid dag for " + spiEfternavn + " med en " + spiPlads + ". plads.";
+                } else if (spiPlads <= 30) {
+                    spiTekst = erTT
+                        ? spiEfternavn + " kørte en jævn enkeltstart som nr. " + spiPlads + "."
+                        : spiEfternavn + " fulgte favoritterne sikkert i mål som nr. " + spiPlads + ".";
+                } else {
+                    spiTekst = erTT
+                        ? spiEfternavn + " sluttede som nr. " + spiPlads + " på enkeltstart."
+                        : spiEfternavn + " kom i mål med hovedfeltet.";
+                }
+                if (spiGC < 10 && !erFoersteEtape) {
+                    spiTekst += " Han ligger nr. " + (spiGC + 1) + " i klassementet.";
+                }
             }
         }
     }
-
     afsnit.push(spiTekst);
 
     // UDGÅEDE RYTTERE
@@ -1800,20 +1938,23 @@ function genererTourResume() {
         afsnit.push(G.navn + " har gennemført årets Tour de France og slutter på en " + (spiGC + 1) + ". plads samlet.");
     }
     
-    // STATISTIK
+// STATISTIK
     var statTekst = "Gennem de 21 etaper opnåede " + spiEfternavn + " ";
     var stats = [];
     if (sejre > 0) stats.push(sejre + " etapesejr" + (sejre > 1 ? "e" : ""));
     if (podier > sejre) stats.push((podier - sejre) + " yderligere podieplacering" + (podier - sejre > 1 ? "er" : ""));
     if (top10 > podier) stats.push((top10 - podier) + " yderligere top-10 placering" + (top10 - podier > 1 ? "er" : ""));
     
-    if (stats.length > 0) {
-        statTekst += stats.join(" og ") + ".";
+    if (stats.length === 1) {
+        statTekst += stats[0] + ".";
+    } else if (stats.length === 2) {
+        statTekst += stats[0] + " og " + stats[1] + ".";
+    } else if (stats.length === 3) {
+        statTekst += stats[0] + ", " + stats[1] + " samt " + stats[2] + ".";
     } else {
         statTekst = "Bedste etaperesultat var en " + bedstePlads + ". plads.";
     }
-    afsnit.push(statTekst);
-    
+    afsnit.push(statTekst);    
     // TRØJER
     if (guleDage > 0 || groenneDage > 0 || prikkede > 0) {
         var troejeTekst = "";
@@ -1969,13 +2110,31 @@ function visEtapeOversigt() {
             marker = ' <span style="color:#0f0">✓</span>';
         }
         
+// Find etapevinder fra historik
+        var etapeVinder = "";
+        if (erKoert) {
+            for (var hi = 0; hi < ETAPE_HISTORIK.length; hi++) {
+                if (ETAPE_HISTORIK[hi].etape === e.nr && ETAPE_HISTORIK[hi].vinder) {
+                    var vinderNavn = ETAPE_HISTORIK[hi].vinder.split(" ").pop();
+                    var vinderErSpiller = (ETAPE_HISTORIK[hi].vinder === G.spiller.navn);
+                    var vinderFarve = vinderErSpiller ? "#fff" : "#888";
+                    var vinderPrefix = vinderErSpiller ? "🏆 " : "🏁 ";
+                    etapeVinder = '<span style="color:' + vinderFarve + ';font-size:11px">' + vinderPrefix + vinderNavn + '</span>';
+                    break;
+                }
+            }
+        }
+
         html += '<div' + scrollId + ' style="padding:8px;margin:4px 0;border-radius:4px;border:1px solid #333;' + rowStyle + '">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:5px">' +
                 '<span style="font-weight:bold;color:#fff">Etape ' + e.nr + marker + '</span>' +
                 '<span style="color:' + typeClr + ';font-size:12px;padding:2px 8px;border:1px solid ' + typeClr + ';border-radius:10px;white-space:nowrap">' + typeTxt + '</span>' +
             '</div>' +
             '<div style="font-size:12px;color:#aaa;margin-top:4px">' + e.start + ' → ' + e.slut + '</div>' +
-            '<div style="font-size:11px;color:#666">' + e.dist + ' km</div>' +
+            '<div style="display:flex;justify-content:space-between;align-items:center">' +
+                '<span style="font-size:11px;color:#666">' + e.dist + ' km</span>' +
+                etapeVinder +
+            '</div>' +
         '</div>';
     }
     
@@ -2597,8 +2756,13 @@ function tegnPlot(type) {
         ctx.fillText("Etape", l + w / 2, c.height - 5);
         
         // Legende
-        var slutPlads = ETAPE_HISTORIK[etaper - 1][trojeConfig.pladsKey] || "?";
-        var legendHtml = 'Slutplacering: <span style="color:' + trojeConfig.farve + ';font-weight:bold">' + slutPlads + '. plads</span>';
+		var slutPlads = ETAPE_HISTORIK[etaper - 1][trojeConfig.pladsKey];
+        var legendHtml;
+        if (!slutPlads || slutPlads <= 0) {
+            legendHtml = 'Slutplacering: <span style="color:#888">Ingen placering</span>';
+        } else {
+            legendHtml = 'Slutplacering: <span style="color:' + trojeConfig.farve + ';font-weight:bold">' + slutPlads + '. plads</span>';
+        }
         if (dageITroeje > 0) {
             legendHtml += ' · <span style="color:' + trojeConfig.farve + '">' + trojeConfig.emoji + ' ' + dageITroeje + ' dag' + (dageITroeje > 1 ? 'e' : '') + ' i ' + trojeConfig.troejeNavn + '</span>';
         }
@@ -2841,8 +3005,8 @@ function genENyt() {
     var typer = [];
     
     // Definer antal af hver type
-    var antalBjerg = ri(5, 7);
-    var antalKuperet = ri(4, 6);
+    var antalBjerg = ri(7, 9);
+    var antalKuperet = ri(5, 6);
     var antalTT = 2;
     var antalFlad = 21 - antalBjerg - antalKuperet - antalTT;
     
@@ -3134,14 +3298,15 @@ if (e.type === "bjerg") {
     }
 }
  else if (e.type === "kuperet") {
-        // Kuperede etaper: En pointspurt og en bjergspurt (højeste punkt)
+} else if (e.type === "kuperet") {
+        // Kuperede etaper: En pointspurt (max 10 pts) og en bjergspurt (højeste punkt)
         mps.push({
             km: Math.floor(e.dist * 0.4),
             type: "sprint",
             done: false,
-            pts: [20, 17, 15, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1]
+            pts: [10, 8, 6, 4, 2, 1]
         });
-        // Find højeste punkt på etapen for bjergspurt
+	 // Find højeste punkt på etapen for bjergspurt
         var højestePunkt = 0;
         var højesteKm = Math.floor(e.dist * 0.6);
         // Dette sættes korrekt efter profilen er genereret
@@ -3549,7 +3714,7 @@ function startEtape() {
     
     for (var i = 0; i < G.ryttere.length; i++) { G.ryttere[i].gi = 0; }
     
-	// === DÅRLIGE DAGE ===
+// === DÅRLIGE DAGE ===
 	// 12% chance for dårlig dag (kun spilleren)
 	if (Math.random() < 0.12) {
 	    var maxE = getMaxEnergi(G.spiller);
@@ -3560,16 +3725,14 @@ function startEtape() {
 	    G.spiller.energi = Math.max(maxE * 0.5, G.spiller.energi - raTab);
 	    var faktiskTab = energiFoer - G.spiller.energi;
 	    
-	    // Vis kun besked hvis du faktisk tabte energi
-		if (faktiskTab > 0) {
-	        var faktiskPct = Math.round((faktiskTab / maxE) * 100);
+	    var faktiskPct = Math.round((Math.abs(faktiskTab) / maxE) * 100);
+	    // Vis kun besked hvis der er en mærkbar ændring (mindst 1%)
+	    if (faktiskTab > 0 && faktiskPct >= 1) {
 	        G.msg = "😓 Du føler dig ikke helt frisk i dag... (-" + faktiskPct + "% energi)";
-	    } else if (faktiskTab < 0) {
-	        var boostPct = Math.round((Math.abs(faktiskTab) / maxE) * 100);
-	        G.msg = "🙂 Kroppen reagerer bedre end frygtet i dag... (+" + boostPct + "% energi)";
+	    } else if (faktiskTab < 0 && faktiskPct >= 1) {
+	        G.msg = "🙂 Kroppen reagerer bedre end frygtet i dag... (+" + faktiskPct + "% energi)";
 	    }
 	}
-
            
         if (e.type === "tt") startTT();
         else startNorm();
@@ -5815,14 +5978,8 @@ function tegnP() {
         ctx.fillStyle = "#fff";
         ctx.font = her ? "bold 13px monospace" : "11px monospace";
         ctx.textAlign = "center";
-        ctx.fillText(g.ryt.length, gx, gy - 12);
-                
-        // Gruppenavn for spillerens gruppe
-        if (her) {
-            ctx.font = "11px monospace";
-            ctx.fillStyle = "#fff";
-            ctx.fillText("DIG", gx, gy - 32);
-        }
+        ctx.fillText(g.ryt.length, gx, gy - 12);           
+
     }
     
     // Mål
@@ -6133,15 +6290,23 @@ function afslut() {
         }
     }
     
-    // Sprint points ved flad OG kuperet etape
-    if (e.type === "flad" || e.type === "kuperet") {
+// Sprint points ved flad OG kuperet etape
+    if (e.type === "flad") {
         for (var i = 0; i < Math.min(SPR_PTS_FINISH.length, res.length); i++) {
             if (!res[i].r.ude) {
                 G.sprPts[res[i].r.navn] = (G.sprPts[res[i].r.navn]||0) + SPR_PTS_FINISH[i];
             }
         }
+    } else if (e.type === "kuperet") {
+        // Kuperet: 25 point til vinderen ved mål, faldende
+        var KUP_SPR_PTS_FINISH = [25, 20, 16, 13, 11, 9, 7, 6, 5, 4, 3, 2, 1];
+		for (var i = 0; i < Math.min(KUP_SPR_PTS_FINISH.length, res.length); i++) {
+            if (!res[i].r.ude) {
+                G.sprPts[res[i].r.navn] = (G.sprPts[res[i].r.navn]||0) + KUP_SPR_PTS_FINISH[i];
+            }
+        }
     }
-    
+	
     // Bjerg points ved bjergetape
     if (e.type === "bjerg") {
         for (var i = 0; i < Math.min(BJG_PTS_FINISH.length, res.length); i++) {
@@ -6331,13 +6496,13 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGraense) {
 	        '<button class="btn btn-big" style="border-color:#3399ff;color:#3399ff" onclick="visResume()">📰 REFERAT</button>' +
 	        '<button class="btn btn-big" onclick="samlet()">STILLING →</button>' +
 	        '</div>';
-    } else {
-        html += '<div class="ctrls ctrls-3">' +
-            '<button class="btn btn-big btn-y" onclick="visAlleResultater()">📋 ALLE</button>' +
-            '<button class="btn btn-big" style="border-color:#3399ff;color:#3399ff" onclick="visResume()">📰 REFERAT</button>' +
-            '<button class="btn btn-big" onclick="samlet()">STILLING →</button>' +
-            '</div>';
-    }
+	} else {
+	    html += '<div class="ctrls ctrls-3">' +
+	        '<button class="btn btn-big btn-y" onclick="visAlleResultater()">📋 ALLE</button>' +
+	        '<button class="btn btn-big" style="border-color:#3399ff;color:#3399ff" onclick="visResume()">📰 REFERAT</button>' +
+	        '<button class="btn btn-big" onclick="slut()">SLUT 🏆</button>' +
+	        '</div>';
+	}
 
     
     R(html);
