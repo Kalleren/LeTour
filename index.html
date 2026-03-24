@@ -2172,130 +2172,6 @@ function visEtapeOversigt() {
     }, 50);
 }
 
-function genENyt() {
-    var typer = [];
-    
-    // Definer antal af hver type
-    var antalBjerg = ri(5, 7);
-    var antalKuperet = ri(4, 6);
-    var antalTT = 2;
-    var antalFlad = 21 - antalBjerg - antalKuperet - antalTT;
-    
-    // Sørg for mindst 4 flade
-    if (antalFlad < 4) {
-        var diff = 4 - antalFlad;
-        if (antalBjerg > 5) { antalBjerg -= Math.min(diff, antalBjerg - 5); diff = 4 - (21 - antalBjerg - antalKuperet - antalTT); }
-        if (diff > 0 && antalKuperet > 4) { antalKuperet -= Math.min(diff, antalKuperet - 4); }
-        antalFlad = 21 - antalBjerg - antalKuperet - antalTT;
-    }
-    
-    // Byg typeliste
-    for (var i = 0; i < antalFlad; i++) typer.push("flad");
-    for (var i = 0; i < antalKuperet; i++) typer.push("kuperet");
-    for (var i = 0; i < antalBjerg; i++) typer.push("bjerg");
-    
-    // Bland dem (uden TT endnu)
-    typer = sh(typer);
-    
-    // Første og sidste etape er altid flade
-    // Fjern to flade fra listen
-    var flatCount = 0;
-    for (var i = typer.length - 1; i >= 0; i--) {
-        if (typer[i] === "flad" && flatCount < 2) {
-            typer.splice(i, 1);
-            flatCount++;
-        }
-    }
-    
-    // Sæt flad på position 0 og 20 (første og sidste)
-    var endelig = new Array(21);
-    endelig[0] = "flad";
-    endelig[20] = "flad";
-    
-    // Placer TT1 i etape 3-7 (tidlig TT)
-    var tt1Pos = ri(3, 7);
-    endelig[tt1Pos] = "tt";
-    
-    // Placer TT2 i etape 15-19 (sen TT), mindst 5 etaper fra TT1
-    var tt2Min = Math.max(15, tt1Pos + 5);
-    var tt2Max = 19;
-    if (tt2Min > tt2Max) tt2Min = tt2Max;
-    var tt2Pos = ri(tt2Min, tt2Max);
-    endelig[tt2Pos] = "tt";
-    
-    // Fyld resten ind
-    var typerIdx = 0;
-    for (var i = 0; i < 21; i++) {
-        if (endelig[i]) continue; // Allerede sat
-        endelig[i] = typer[typerIdx];
-        typerIdx++;
-    }
-    
-    // Valider: ingen to TT ved siden af hinanden (skulle ikke ske med min 5 afstand, men sikkerhed)
-    for (var i = 0; i < 20; i++) {
-        if (endelig[i] === "tt" && endelig[i+1] === "tt") {
-            // Swap den anden TT med en tilfældig ikke-TT position
-            for (var j = 0; j < 21; j++) {
-                if (endelig[j] !== "tt" && j !== i && j !== i+1 && Math.abs(j - i) >= 5) {
-                    var tmp = endelig[i+1];
-                    endelig[i+1] = endelig[j];
-                    endelig[j] = tmp;
-                    break;
-                }
-            }
-        }
-    }
-    
-    // Normale byer
-    var normaleByer = [
-        "Lille", "Bruxelles", "Dunkerque", "Calais", "Rouen", "Chartres", "Orléans", 
-        "Limoges", "Clermont-Ferrand", "Saint-Étienne", "Gap", "Briançon", 
-        "Barcelonnette", "Nice", "Monaco", "Menton", "Digne", "Valence", 
-        "Villard-de-Lans", "Grenoble", "Lyon", "Marseille", "Toulouse", 
-        "Bordeaux", "Nantes", "Rennes", "Strasbourg", "Dijon", "Montpellier",
-        "Perpignan", "Pau", "Biarritz", "La Rochelle", "Angers", "Tours",
-        "Megève", "Chamonix", "Annecy", "Chambéry", "Albertville", "Bourg-en-Bresse"
-    ];
-    
-    var bjergToppe = [
-        "Alpe d'Huez", "Col du Tourmalet", "Mont Ventoux", "Col du Galibier",
-        "Pla d'Adet", "Luz Ardiden", "Col du Portet", "Hautacam", "Superbagnères"
-    ];
-    
-    var blandedeByer = sh(normaleByer);
-    var blandedeBjergToppe = sh(bjergToppe);
-    var bjergTopIdx = 0;
-    
-    var brugteByer = [blandedeByer.shift()];
-    
-    for (var i = 0; i < endelig.length; i++) {
-        var etapeType = endelig[i];
-        
-        if (etapeType === "bjerg" && Math.random() < 0.4 && bjergTopIdx < blandedeBjergToppe.length) {
-            brugteByer.push(blandedeBjergToppe[bjergTopIdx]);
-            bjergTopIdx++;
-        } else {
-            brugteByer.push(blandedeByer.shift());
-        }
-    }
-    
-    brugteByer[21] = "Paris";
-    
-    var result = [];
-    for (var i = 0; i < endelig.length; i++) {
-        var x = endelig[i];
-        result.push({ 
-            nr: i+1, 
-            type: x, 
-            start: i === 0 ? brugteByer[0] : brugteByer[i], 
-            slut: brugteByer[i + 1] || "Paris", 
-            dist: x === "tt" ? ri(28,42) : x === "bjerg" ? ri(155,180) : ri(170,210) 
-        });
-    }
-    return result;
-}
-
-
 function visAlleSlut() {
     var aktive = G.ryttere.filter(function(r) { return !r.ude; });
     var gcS = aktive.slice().sort(function(a,b) { return a.stid - b.stid; });
@@ -3005,7 +2881,7 @@ function genENyt() {
     var typer = [];
     
     // Definer antal af hver type
-    var antalBjerg = ri(7, 9);
+    var antalBjerg = ri(6, 8);
     var antalKuperet = ri(5, 6);
     var antalTT = 2;
     var antalFlad = 21 - antalBjerg - antalKuperet - antalTT;
