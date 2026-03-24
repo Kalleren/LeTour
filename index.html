@@ -5815,7 +5815,7 @@ function tegnP() {
     var aktiveRyttere = G.ryttere.filter(function(r) { return !r.ude; });
     var gcLeder = aktiveRyttere.slice().sort(function(a,b) { return a.stid - b.stid; })[0];
     var spLeder = aktiveRyttere.slice().sort(function(a,b) { return (G.sprPts[b.navn]||0) - (G.sprPts[a.navn]||0); })[0];
-    var bjLeder = aktiveRyttere.slice().sort(function(a,b) { return (G.bjgPts[b.navn]||0) - (G.bjgPts[a.namn]||0); })[0];
+    var bjLeder = aktiveRyttere.slice().sort(function(a,b) { return (G.bjgPts[b.navn]||0) - (G.bjgPts[a.navn]||0); })[0];
     
     for (var i = 0; i < G.grp.length; i++) {
         var g = G.grp[i];
@@ -5861,18 +5861,19 @@ function tegnP() {
     // X-labels
     ctx.fillStyle = "#666";
     ctx.font = "11px monospace";
-    ctx.textAlign = "center";
-    ctx.fillText("0", l, t + h + 14);
-    ctx.fillText(e.dist + " km", l + w, t + h + 14);
+    ctx.textAlign = "left";
+    ctx.fillText("0 km", l, t + h + 18);
+    ctx.textAlign = "right";
+    ctx.fillText(e.dist + " km", l + w, t + h + 18);
     
     // Y-labels - tegnes SIDST så de er oven på alt
-    ctx.font = "bold 10px monospace";
+    ctx.font = "10px monospace";
     ctx.fillStyle = "#fff";
     ctx.textAlign = "left";
     ctx.fillText(Math.round(maxH) + "m", 2, t - 5);
-    ctx.fillText(Math.round(minH) + "m", 2, t + h + 14);
+    ctx.fillText(Math.round(minH) + "m", 2, t + h - 2);
 }
-
+	
 // === ENKELTSTART ===
 function startTT() {
     var e = G.etaper[G.enr];
@@ -6057,14 +6058,22 @@ function tegnTTP() {
     ctx.font = "16px sans-serif";
     ctx.fillText("🏁", l + w, t + 12);
     
+    // X-labels
+    ctx.fillStyle = "#666";
+    ctx.font = "10px monospace";
+    ctx.textAlign = "left";
+    ctx.fillText("0 km", l, t + h + 14);
+    ctx.textAlign = "right";
+    ctx.fillText(e.dist + " km", l + w, t + h + 14);
+    
     // Y-labels - tegnes SIDST så de er oven på alt
-    ctx.font = "bold 10px monospace";
+    ctx.font = "10px monospace";
     ctx.fillStyle = "#fff";
     ctx.textAlign = "left";
     ctx.fillText(Math.round(maxH) + "m", 2, t - 4);
-    ctx.fillText(Math.round(minH) + "m", 2, t + h + 14);
+    ctx.fillText(Math.round(minH) + "m", 2, t + h - 2);
 }
-	
+
 function afslutTT() {
     releaseWakeLock();  // <-- Tilføj denne linje
     clearInterval(G.iv);
