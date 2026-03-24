@@ -5859,7 +5859,7 @@ var l = 8, b = 20, r = 12, t = 16;
     ctx.fillText("🏁", l + w, t + 16);
     
     // X-labels
-    ctx.fillStyle = "#666";
+    ctx.fillStyle = "#888";
     ctx.font = "11px monospace";
     ctx.textAlign = "left";
     ctx.fillText("0km", l, t + h + 12);
@@ -5868,10 +5868,10 @@ var l = 8, b = 20, r = 12, t = 16;
     
     // Y-labels - tegnes SIDST så de er oven på alt
     ctx.font = "10px monospace";
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = "#888";
     ctx.textAlign = "left";
-	ctx.fillText(Math.round(maxH) + "m", 2, t);
-    ctx.fillText(Math.round(minH) + "m", 2, t + h - 2);}
+	ctx.fillText(Math.round(maxH) + "m", 4, t);
+    ctx.fillText(Math.round(minH) + "m", 4, t + h - 2);}
 	
 // === ENKELTSTART ===
 function startTT() {
@@ -6057,7 +6057,7 @@ function tegnTTP() {
     ctx.fillText("🏁", l + w, t + 12);
     
     // X-labels
-    ctx.fillStyle = "#666";
+    ctx.fillStyle = "#888";
     ctx.font = "10px monospace";
     ctx.textAlign = "left";
     ctx.fillText("0km", l, t + h + 12);
@@ -6066,10 +6066,10 @@ function tegnTTP() {
     
     // Y-labels - tegnes SIDST så de er oven på alt
     ctx.font = "10px monospace";
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = "#888";
     ctx.textAlign = "left";
-	ctx.fillText(Math.round(maxH) + "m", 2, t);
-    ctx.fillText(Math.round(minH) + "m", 2, t + h - 2);
+	ctx.fillText(Math.round(maxH) + "m", 4, t);
+    ctx.fillText(Math.round(minH) + "m", 4, t + h - 2);
 }
 
 function afslutTT() {
