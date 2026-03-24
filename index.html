@@ -5773,7 +5773,7 @@ function tegnP() {
     var rng = maxH - minH;
     if (rng < 1000) { maxH = 1000; rng = 1000; }
 
-var l = 8, b = 20, r = 12, t = 16;
+	var l = 8, b = 20, r = 12, t = 16;
     var w = c.width - l - r, h = c.height - b - t;
 	
     // Profil
@@ -5870,8 +5870,8 @@ var l = 8, b = 20, r = 12, t = 16;
     ctx.font = "10px monospace";
     ctx.fillStyle = "#888";
     ctx.textAlign = "left";
-	ctx.fillText(Math.round(maxH) + "m", 4, t);
-    ctx.fillText(Math.round(minH) + "m", 4, t + h - 2);}
+	ctx.fillText(Math.round(maxH) + "m", 8, t);
+    ctx.fillText(Math.round(minH) + "m", 8, t + h - 2);}
 	
 // === ENKELTSTART ===
 function startTT() {
@@ -6068,8 +6068,8 @@ function tegnTTP() {
     ctx.font = "10px monospace";
     ctx.fillStyle = "#888";
     ctx.textAlign = "left";
-	ctx.fillText(Math.round(maxH) + "m", 4, t);
-    ctx.fillText(Math.round(minH) + "m", 4, t + h - 2);
+	ctx.fillText(Math.round(maxH) + "m", 8, t);
+    ctx.fillText(Math.round(minH) + "m", 8, t + h - 2);
 }
 
 function afslutTT() {
@@ -6125,8 +6125,25 @@ function afslut() {
     
     // Fjern evt. udgåede der er sluppet igennem
     res = res.filter(function(x) { return !x.r.ude; });
+
+// Sikr at ALLE aktive ryttere er i res
+    var resNavne = {};
+    for (var i = 0; i < res.length; i++) {
+        resNavne[res[i].r.navn] = true;
+    }
+    for (var i = 0; i < G.ryttere.length; i++) {
+        var r = G.ryttere[i];
+        if (!r.ude && !resNavne[r.navn]) {
+            // Rytter mangler! Giv dem den dårligste tid + straf
+            var sidsteTid = res.length > 0 ? res[res.length - 1].tid : førerTid;
+            res.push({ r: r, tid: sidsteTid + 60, sprintPos: 999 });
+            console.warn("MANGLENDE RYTTER tilføjet: " + r.navn + " med tid " + (sidsteTid + 60));
+        }
+    }
     
+    // Sortér igen efter tilføjelse
     res.sort(function(a, b) { return a.tid - b.tid || a.sprintPos - b.sprintPos; });
+
     
     // Vinderens tid på DENNE etape
     var vinderTid = res[0] ? res[0].tid : førerTid;
