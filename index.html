@@ -5857,26 +5857,25 @@ function tegnP() {
     ctx.font = "20px sans-serif";
     ctx.fillText("🏁", l + w, 28);
     
-    // Y-labels OVEN PÅ grafen (med baggrund)
+// Y-labels OVEN PÅ grafen (med baggrund fra venstre kant)
     ctx.font = "10px monospace";
     ctx.textAlign = "left";
     
     // Top label
     var topTxt = Math.round(maxH) + "m";
-    var topW = ctx.measureText(topTxt).width + 6;
+    var topW = ctx.measureText(topTxt).width + 8;
     ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(l + 2, 12, topW, 14);
+    ctx.fillRect(0, 12, topW, 14);
     ctx.fillStyle = "#888";
-    ctx.fillText(topTxt, l + 5, 23);
+    ctx.fillText(topTxt, 3, 23);
     
     // Bund label
     var bundTxt = Math.round(minH) + "m";
-    var bundW = ctx.measureText(bundTxt).width + 6;
+    var bundW = ctx.measureText(bundTxt).width + 8;
     ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(l + 2, h - 2, bundW, 14);
+    ctx.fillRect(0, h - 2, bundW, 14);
     ctx.fillStyle = "#888";
-    ctx.fillText(bundTxt, l + 5, h + 9);
-    
+    ctx.fillText(bundTxt, 3, h + 9);    
     // X-labels
     ctx.textAlign = "center";
     ctx.fillStyle = "#666";
@@ -6065,24 +6064,23 @@ function tegnTTP() {
     ctx.font = "16px sans-serif";
     ctx.fillText("🏁", l + w, 18);
     
-    // Y-labels oven på grafen
+// Y-labels oven på grafen (fra venstre kant)
     ctx.font = "10px monospace";
     ctx.textAlign = "left";
     
     var topTxt = Math.round(maxH) + "m";
-    var topW = ctx.measureText(topTxt).width + 6;
+    var topW = ctx.measureText(topTxt).width + 8;
     ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(l + 2, 8, topW, 14);
+    ctx.fillRect(0, 8, topW, 14);
     ctx.fillStyle = "#888";
-    ctx.fillText(topTxt, l + 5, 19);
+    ctx.fillText(topTxt, 3, 19);
     
     var bundTxt = Math.round(minH) + "m";
-    var bundW = ctx.measureText(bundTxt).width + 6;
+    var bundW = ctx.measureText(bundTxt).width + 8;
     ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(l + 2, h - 6, bundW, 14);
+    ctx.fillRect(0, h - 6, bundW, 14);
     ctx.fillStyle = "#888";
-    ctx.fillText(bundTxt, l + 5, h + 5);
-}
+    ctx.fillText(bundTxt, 3, h + 5);}
 
 function afslutTT() {
     releaseWakeLock();  // <-- Tilføj denne linje
