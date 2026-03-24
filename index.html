@@ -5768,21 +5768,12 @@ function tegnP() {
     ctx.fillRect(0, 0, c.width, c.height);
     
     var maxH = Math.max.apply(null, p), minH = Math.min.apply(null, p);
-    
-    // Y-aksen starter altid ved 0m
     minH = 0;
-    
-    // Max er højeste punkt + 200m luft
     maxH = maxH + 200;
-    
-    // Minimum 1000m spænd for flade/kuperede etaper
     var rng = maxH - minH;
-    if (rng < 1000) {
-        maxH = 1000;
-        rng = 1000;
-    }
+    if (rng < 1000) { maxH = 1000; rng = 1000; }
 
-    var l = 45, b = 28, w = c.width - l - 12, h = c.height - b - 15;
+    var l = 8, b = 28, r = 12, w = c.width - l - r, h = c.height - b - 15;
     
     // Profil
     ctx.beginPath();
@@ -5832,14 +5823,12 @@ function tegnP() {
         var idx = Math.min(Math.floor(km), p.length - 1);
         var gy = 12 + h - ((p[idx] - minH) / rng) * h;
         
-        // Brug getGruppeFarve()
         var farve = getGruppeFarve(g, G.spiller, gcLeder, spLeder, bjLeder);
         var col = farve.border;
         var her = g.ryt.indexOf(G.spiller) >= 0;
         
         var rad = her ? 16 : (g.type === "felt" ? 12 : 10);
         
-        // Cirkel
         ctx.beginPath();
         ctx.arc(gx, gy - 16, rad, 0, Math.PI * 2);
         ctx.fillStyle = col;
@@ -5850,12 +5839,10 @@ function tegnP() {
         ctx.lineWidth = her ? 4 : 2;
         ctx.stroke();
         
-        // Antal
         ctx.fillStyle = "#fff";
         ctx.font = her ? "bold 13px monospace" : "11px monospace";
         ctx.textAlign = "center";
-        ctx.fillText(g.ryt.length, gx, gy - 12);           
-
+        ctx.fillText(g.ryt.length, gx, gy - 12);
     }
     
     // Mål
@@ -5870,12 +5857,29 @@ function tegnP() {
     ctx.font = "20px sans-serif";
     ctx.fillText("🏁", l + w, 28);
     
-    ctx.fillStyle = "#666";
-    ctx.font = "11px monospace";
-    ctx.textAlign = "right";
-    ctx.fillText(Math.round(maxH) + "m", l - 5, 20);
-    ctx.fillText(Math.round(minH) + "m", l - 5, 12 + h);
+    // Y-labels OVEN PÅ grafen (med baggrund)
+    ctx.font = "10px monospace";
+    ctx.textAlign = "left";
+    
+    // Top label
+    var topTxt = Math.round(maxH) + "m";
+    var topW = ctx.measureText(topTxt).width + 6;
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect(l + 2, 12, topW, 14);
+    ctx.fillStyle = "#888";
+    ctx.fillText(topTxt, l + 5, 23);
+    
+    // Bund label
+    var bundTxt = Math.round(minH) + "m";
+    var bundW = ctx.measureText(bundTxt).width + 6;
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect(l + 2, h - 2, bundW, 14);
+    ctx.fillStyle = "#888";
+    ctx.fillText(bundTxt, l + 5, h + 9);
+    
+    // X-labels
     ctx.textAlign = "center";
+    ctx.fillStyle = "#666";
     ctx.fillText("0", l, 12 + h + 18);
     ctx.fillText(e.dist + " km", l + w, 12 + h + 18);
 }
@@ -6013,21 +6017,12 @@ function tegnTTP() {
     ctx.fillRect(0, 0, c.width, c.height);
     
     var maxH = Math.max.apply(null, p), minH = Math.min.apply(null, p);
+    minH = 0;
+    maxH = maxH + 100;
+    var rng = maxH - minH;
+    if (rng < 750) { maxH = 750; rng = 750; }
 
-// Y-aksen starter altid ved 0m
-minH = 0;
-
-// Max er højeste punkt + 100m luft
-maxH = maxH + 100;
-
-// Minimum 500m spænd for enkeltstart
-var rng = maxH - minH;
-if (rng < 750) {
-    maxH = 750;
-    rng = 750;
-}
-
-    var l = 35, bm = 18, w = c.width - l - 8, h = c.height - bm - 8;
+    var l = 8, bm = 18, r = 8, w = c.width - l - r, h = c.height - bm - 8;
     
     ctx.beginPath();
     for (var i = 0; i < p.length; i++) {
@@ -6044,7 +6039,6 @@ if (rng < 750) {
     var idx = Math.min(Math.floor(km), p.length - 1);
     var py = 8 + h - ((p[idx] - minH) / rng) * h;
     
-    // Pænere rytter-markør
     ctx.beginPath();
     ctx.arc(px, py - 12, 10, 0, Math.PI * 2);
     ctx.fillStyle = "rgba(0, 255, 255, 0.3)";
@@ -6053,7 +6047,6 @@ if (rng < 750) {
     ctx.lineWidth = 2;
     ctx.stroke();
     
-    // Cyklist vendt mod højre (målet)
     ctx.save();
     ctx.translate(px, py - 12);
     ctx.scale(-1, 1);
@@ -6061,7 +6054,6 @@ if (rng < 750) {
     ctx.textAlign = "center";
     ctx.fillText("🚴", 0, 5);
     ctx.restore();
-    ;
     
     ctx.strokeStyle = "#fff";
     ctx.setLineDash([4, 4]);
@@ -6072,6 +6064,24 @@ if (rng < 750) {
     ctx.setLineDash([]);
     ctx.font = "16px sans-serif";
     ctx.fillText("🏁", l + w, 18);
+    
+    // Y-labels oven på grafen
+    ctx.font = "10px monospace";
+    ctx.textAlign = "left";
+    
+    var topTxt = Math.round(maxH) + "m";
+    var topW = ctx.measureText(topTxt).width + 6;
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect(l + 2, 8, topW, 14);
+    ctx.fillStyle = "#888";
+    ctx.fillText(topTxt, l + 5, 19);
+    
+    var bundTxt = Math.round(minH) + "m";
+    var bundW = ctx.measureText(bundTxt).width + 6;
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect(l + 2, h - 6, bundW, 14);
+    ctx.fillStyle = "#888";
+    ctx.fillText(bundTxt, l + 5, h + 5);
 }
 
 function afslutTT() {
