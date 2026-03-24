@@ -1089,8 +1089,8 @@ var overskrift = "";
                     var forrigeTop = ETAPE_HISTORIK[ETAPE_HISTORIK.length - 2].gcTop3;
                     // Check om de var i top 10 (vi har kun top3 gemt, men check GC)
                     var rObj = null;
-                    for (var ri = 0; ri < G.ryttere.length; ri++) {
-                        if (G.ryttere[ri].navn === kollapsRytterNavn) { rObj = G.ryttere[ri]; break; }
+                    for (var ri3 = 0; ri < G.ryttere.length; ri3++) {
+                        if (G.ryttere[ri3].navn === kollapsRytterNavn) { rObj = G.ryttere[ri3]; break; }
                     }
                     if (rObj && rObj.gc > 82) {
                         vigtigsteKollapsErDramatisk = true;
@@ -4605,15 +4605,15 @@ function favoritAngrebMidtvejs() {
         }
         
         // Fjern reagerende fra gruppen
-        for (var ri = 0; ri < reagerende.length; ri++) {
-            g.ryt = g.ryt.filter(function(r) { return r !== reagerende[ri]; });
-            reagerende[ri].energi -= 5;
+        for (var ri3 = 0; ri3 < reagerende.length; ri3++) {
+            g.ryt = g.ryt.filter(function(r) { return r !== reagerende[ri3]; });
+            reagerende[ri3].energi -= 5;
         }
         
         // Opret nyt udbrud
         var nyGrpRyttere = [angriber];
-        for (var ri = 0; ri < reagerende.length; ri++) {
-            nyGrpRyttere.push(reagerende[ri]);
+        for (var ri3 = 0; ri < reagerende.length; ri3++) {
+            nyGrpRyttere.push(reagerende[ri3]);
         }
         
         var nyNavn = nyGrpRyttere.length === 1 ? angriber.navn.split(" ").pop() : "Favoritgruppe";
