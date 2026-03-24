@@ -5773,9 +5773,9 @@ function tegnP() {
     var rng = maxH - minH;
     if (rng < 1000) { maxH = 1000; rng = 1000; }
 
-    var l = 8, b = 28, r = 12, t = 12;
+var l = 8, b = 20, r = 12, t = 16;
     var w = c.width - l - r, h = c.height - b - t;
-    
+	
     // Profil
     ctx.beginPath();
     for (var i = 0; i < p.length; i++) {
@@ -5862,17 +5862,16 @@ function tegnP() {
     ctx.fillStyle = "#666";
     ctx.font = "11px monospace";
     ctx.textAlign = "left";
-    ctx.fillText("0km", l, t + h + 18);
+    ctx.fillText("0km", l, t + h + 12);
     ctx.textAlign = "right";
-    ctx.fillText(e.dist + "km", l + w, t + h + 18);
+    ctx.fillText(e.dist + "km", l + w, t + h + 12);
     
     // Y-labels - tegnes SIDST så de er oven på alt
     ctx.font = "10px monospace";
     ctx.fillStyle = "#fff";
     ctx.textAlign = "left";
-    ctx.fillText(Math.round(maxH) + "m", 2, t - 5);
-    ctx.fillText(Math.round(minH) + "m", 2, t + h - 2);
-}
+	ctx.fillText(Math.round(maxH) + "m", 2, t);
+    ctx.fillText(Math.round(minH) + "m", 2, t + h - 2);}
 	
 // === ENKELTSTART ===
 function startTT() {
@@ -6011,9 +6010,8 @@ function tegnTTP() {
     var rng = maxH - minH;
     if (rng < 750) { maxH = 750; rng = 750; }
 
-    var l = 8, bm = 18, r = 8, t = 12;
-    var w = c.width - l - r, h = c.height - bm - t;
-    
+	var l = 8, bm = 16, r = 8, t = 16;
+    var w = c.width - l - r, h = c.height - bm - t;    
     // Profil
     ctx.beginPath();
     for (var i = 0; i < p.length; i++) {
@@ -6062,15 +6060,15 @@ function tegnTTP() {
     ctx.fillStyle = "#666";
     ctx.font = "10px monospace";
     ctx.textAlign = "left";
-    ctx.fillText("0km", l, t + h + 14);
+    ctx.fillText("0km", l, t + h + 12);
     ctx.textAlign = "right";
-    ctx.fillText(e.dist + "km", l + w, t + h + 14);
+    ctx.fillText(e.dist + "km", l + w, t + h + 12);
     
     // Y-labels - tegnes SIDST så de er oven på alt
     ctx.font = "10px monospace";
     ctx.fillStyle = "#fff";
     ctx.textAlign = "left";
-    ctx.fillText(Math.round(maxH) + "m", 2, t - 4);
+	ctx.fillText(Math.round(maxH) + "m", 2, t);
     ctx.fillText(Math.round(minH) + "m", 2, t + h - 2);
 }
 
