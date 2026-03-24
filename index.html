@@ -1649,9 +1649,9 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
             // Langt bagud allerede - ikke dramatisk
             spiTekst = spiEfternavn + " gik kold ved km " + kollapsKm + " og ligger nr. " + (spiGC + 1) + " i klassementet.";
         } else if (gcGabPaalidelig && placeringAendring > 0) {
-            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ", men havde opbygget et stort nok forspring til at rykke op til " + (spiGC + 1) + ". plads i klassementet.";
+            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ", men havde opbygget et stort nok forspring til at rykke op til " + (spiGC + 1) + ". pladsen i klassementet.";
         } else if (gcGabPaalidelig && gcGabAendring > 120) {
-            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + " og tabte " + fmtTidstab(gcGabAendring) + " i klassementet. Han falder til " + (spiGC + 1) + ". plads.";
+            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + " og tabte " + fmtTidstab(gcGabAendring) + " i klassementet. Han falder til " + (spiGC + 1) + ". pladsen.";
         } else {
             spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ". Energien var fuldstændig opbrugt. Han ligger nu nr. " + (spiGC + 1) + " i klassementet.";
         }
@@ -1743,9 +1743,9 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
                     ? "Solid enkeltstart for " + spiEfternavn + " med en " + spiPlads + ". plads. Han ligger nr. " + (spiGC + 1) + " i klassementet."
                     : "Det var en solid dag for " + spiEfternavn + " med en " + spiPlads + ". plads. Han ligger nr. " + (spiGC + 1) + " i klassementet.";
             } else if (placeringAendring > 3) {
-                spiTekst = spiEfternavn + " rykker op fra " + spiGCFoer + ". til " + (spiGC + 1) + ". plads i klassementet.";
+                spiTekst = spiEfternavn + " rykker op fra " + spiGCFoer + ". til " + (spiGC + 1) + ". pladsen i klassementet.";
             } else if (placeringAendring < -3) {
-                spiTekst = spiEfternavn + " faldt fra " + spiGCFoer + ". til " + (spiGC + 1) + ". plads i klassementet.";
+                spiTekst = spiEfternavn + " faldt fra " + spiGCFoer + ". til " + (spiGC + 1) + ". pladsen i klassementet.";
             } else {
                 spiTekst = spiEfternavn + " sluttede som nr. " + spiPlads + " og ligger nr. " + (spiGC + 1) + " i klassementet.";
             }
@@ -1753,11 +1753,11 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
             var absGabAendring = Math.round(Math.abs(gcGabAendring));
 
             if (gcGabAendring >= 480) {
-                spiTekst = "Det var en katastrofedag for " + spiEfternavn + "! Han tabte " + fmtTidstab(gcGabAendring) + " i klassementet og falder til " + (spiGC + 1) + ". plads.";
+                spiTekst = "Det var en katastrofedag for " + spiEfternavn + "! Han tabte " + fmtTidstab(gcGabAendring) + " i klassementet og falder til " + (spiGC + 1) + ". pladsen.";
             } else if (gcGabAendring >= 180) {
                 spiTekst = "Det var en hård dag for " + spiEfternavn + " der tabte " + fmtTidstab(gcGabAendring) + " i klassementet.";
                 if (placeringAendring < -3) {
-                    spiTekst += " Han faldt fra en " + spiGCFoer + ". til " + (spiGC + 1) + ". plads.";
+                    spiTekst += " Han faldt fra en " + spiGCFoer + ". til en " + (spiGC + 1) + ". plads.";
                 } else {
                     spiTekst += " Han ligger nu nr. " + (spiGC + 1) + ".";
                 }
@@ -1766,7 +1766,7 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
             } else if (gcGabAendring <= -60) {
                 spiTekst = "Det var en fremragende dag for " + spiEfternavn + " der hentede " + fmtTidstab(gcGabAendring) + " i klassementet!";
                 if (placeringAendring >= 3) {
-                    spiTekst += " Han rykker op fra " + spiGCFoer + ". til " + (spiGC + 1) + ". plads.";
+                    spiTekst += " Han rykker op fra " + spiGCFoer + ". til " + (spiGC + 1) + ". pladsen.";
                 } else {
                     spiTekst += " Han ligger nu nr. " + (spiGC + 1) + ".";
                 }
@@ -1780,7 +1780,7 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
                     spiTekst = spiEfternavn + " var med helt fremme og sluttede på en flot " + spiPlads + ". plads.";
                 } else if (spiPlads <= 10) {
                     spiTekst = erTT 
-                        ? "Solid enkeltstart for " + spiEfternavn + " med en " + spiPlads + ". plads."
+                        ? spiEfternavn + "Det var en solid enkeltstart for " + " med en " + spiPlads + ". plads."
                         : "Det var en solid dag for " + spiEfternavn + " med en " + spiPlads + ". plads.";
                 } else if (spiPlads <= 30) {
                     spiTekst = erTT
