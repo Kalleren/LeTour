@@ -1738,7 +1738,7 @@ var overskrift = "";
 	            } else {
 	                bagvedTekst = "foran resten";
 	            }
-	            afsnit.push(vinderNavn + " vandt spurten i en lille gruppe på " + vinderGruppeStr + " ryttere, " + fmtTidstab(gapTilFelt) + " " + bagvedTekst + ".");
+	            afsnit.push(vinderNavn + " vandt spurten om etapen i en lille gruppe på " + vinderGruppeStr + " ryttere, " + fmtTidstab(gapTilFelt) + " " + bagvedTekst + ".");
 	        } else if (vinderDiff === 0) {
 	            afsnit.push(vinderNavn + " tog sejren i en tæt spurt foran " + 
 	                       (res[1] ? res[1].r.navn.split(" ").pop() : "feltet") + ".");
@@ -1887,7 +1887,7 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
         } else if (gcGabPaalidelig && placeringAendring > 0) {
             spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ", men havde opbygget et stort nok forspring til at rykke op til " + (spiGC + 1) + ". pladsen i klassementet.";
 		} else if (gcGabNu > 120) {
-            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + " og ligger nu " + fmtTidstab(gcGabNu) + " efter den gule trøje på " + (spiGC + 1) + ". plads.";
+            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + " og ligger nu " + fmtTidstab(gcGabNu) + " efter den gule trøje på en " + (spiGC + 1) + ". plads.";
         } else {
             spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ". Energien var fuldstændig opbrugt. Han ligger nu nr. " + (spiGC + 1) + " i klassementet.";
         }
@@ -1962,9 +1962,9 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
 	else if (varGcLeder && !erGcLeder) {
         var nyLederNavn = gcS[0] ? gcS[0].navn.split(" ").pop() : "rivalen";
         if (gcGabNu > 60) {
-            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu " + fmtTidstab(gcGabNu) + " efter på " + (spiGC + 1) + ". plads.";
+            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu " + fmtTidstab(gcGabNu) + " efter på en " + (spiGC + 1) + ". plads.";
         } else {
-            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu " + gcGabNu + " sekunder efter på " + (spiGC + 1) + ". plads.";
+            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu " + gcGabNu + " sekunder efter på " + (spiGC + 1) + ". pladsen.";
         }
     }
 
@@ -2024,8 +2024,8 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
                         : spiEfternavn + " fulgte favoritterne sikkert i mål som nr. " + spiPlads + ".";
                 } else {
                     spiTekst = erTT
-                        ? spiEfternavn + " sluttede som nr. " + spiPlads + " på enkeltstart."
-                        : spiEfternavn + " kom i mål med hovedfeltet.";
+                        ? spiEfternavn + " sluttede som nr. " + spiPlads + " på enkeltstarten."
+                        : spiEfternavn + " kom i mål med feltet.";
                 }
                 if (spiGC < 10 && !erFoersteEtape) {
                     spiTekst += " Han ligger nr. " + (spiGC + 1) + " i klassementet.";
@@ -2064,7 +2064,7 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
         } else {
             var fladFrem = [
                 "Sprinterne vil lugte blod på morgendagens flade etape til " + nesteE.slut + ".",
-                "Morgendagens flade etape til " + nesteE.slut + " burde ende i massespurt.",
+                "Morgendagens flade etape til " + nesteE.slut + " burde ende i en massespurt.",
                 "Sprinterholdene vil kontrollere morgendagens flade etape."
             ];
             fremTekst = fladFrem[ri(0, fladFrem.length - 1)];
