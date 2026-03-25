@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LeTour - Tour de France 2025</title>
+    
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffff00">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LeTour">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    
+    <meta name="format-detection" content="telephone=no">
+
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
@@ -12,6 +27,11 @@
         font-family: 'Courier New', monospace; 
         padding: 16px; 
         font-size: 16px; 
+        /* Safe area for notch-telefoner */
+        padding-top: max(16px, env(safe-area-inset-top));
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
     }
     
     #game { 
@@ -57,40 +77,33 @@
     .bad { color: #f44; }
     .cyan { color: #0ff; }
     
-.btn { 
-    background: #111; 
-    color: #0f0; 
-    border: 2px solid #0f0; 
-    padding: 10px 22px; 
-    margin: 4px; 
-    cursor: pointer; 
-    font-family: inherit; 
-    font-size: 17px; 
-    border-radius: 5px; 
-}
-.btn:hover { background: #0f0; color: #000; }
-/* Grøn knap hover */
-.btn[style*="border-color:#0f0"]:hover {
-    background: #0f0;
-    color: #000;
-}
-
-/* Blå knap hover */
-.btn[style*="border-color:#3399ff"]:hover {
-    background: #3399ff;
-    color: #000;
-}
-
-
-/* SPECIFIKT for Fuld gas / blå knappen (enkeltstart) */
-.btn[style*="border-color:#3399ff"] {
-    color: #3399ff;   /* blå tekst i normal tilstand */
-}
-
-.btn[style*="border-color:#3399ff"]:hover { 
-    background: #003366; 
-    color: #3399ff; 
-}
+    .btn { 
+        background: #111; 
+        color: #0f0; 
+        border: 2px solid #0f0; 
+        padding: 10px 22px; 
+        margin: 4px; 
+        cursor: pointer; 
+        font-family: inherit; 
+        font-size: 17px; 
+        border-radius: 5px; 
+    }
+    .btn:hover { background: #0f0; color: #000; }
+    .btn[style*="border-color:#0f0"]:hover {
+        background: #0f0;
+        color: #000;
+    }
+    .btn[style*="border-color:#3399ff"]:hover {
+        background: #3399ff;
+        color: #000;
+    }
+    .btn[style*="border-color:#3399ff"] {
+        color: #3399ff;
+    }
+    .btn[style*="border-color:#3399ff"]:hover { 
+        background: #003366; 
+        color: #3399ff; 
+    }
     .btn:disabled { opacity: 0.3; cursor: not-allowed; }
     .btn-big { 
         padding: 14px 32px; 
@@ -124,7 +137,6 @@
         border-radius: 5px; 
     }
 
-    
     .ebar { 
         background: #222; 
         border: 2px solid #aa0; 
@@ -173,7 +185,6 @@
         justify-content: space-between; 
         align-items: center;  
     }
-
     .row.pl { background: #333; color: #fff; }
     
     .ctrls { 
@@ -242,33 +253,31 @@
         margin-bottom: 12px; 
     }
     .tab { 
-    padding: 8px 15px; 
-    border: 2px solid #aa0; 
-    cursor: pointer; 
-    border-radius: 4px; 
-    font-size: 14px; 
-    color: #ff0;
-}
-.tab.active { background: #aa0; color: #000; }
-.tab:hover { background: #330; color: #ff0; }
-.tab.active:hover { background: #aa0; color: #000; }
+        padding: 8px 15px; 
+        border: 2px solid #aa0; 
+        cursor: pointer; 
+        border-radius: 4px; 
+        font-size: 14px; 
+        color: #ff0;
+    }
+    .tab.active { background: #aa0; color: #000; }
+    .tab:hover { background: #330; color: #ff0; }
+    .tab.active:hover { background: #aa0; color: #000; }
 
-.tab-gc { border-color: #ff0; }
-.tab-gc.active { background: #ff0; color: #000; }
-.tab-gc:hover { background: #330; color: #ff0; }
-.tab-gc.active:hover { background: #ff0; color: #000; }
+    .tab-gc { border-color: #ff0; }
+    .tab-gc.active { background: #ff0; color: #000; }
+    .tab-gc:hover { background: #330; color: #ff0; }
+    .tab-gc.active:hover { background: #ff0; color: #000; }
 
-.tab-sp { border-color: #0f0; }
-.tab-sp.active { background: #0f0; color: #000; }
-.tab-sp:hover { background: #030; color: #0f0; }
-.tab-sp.active:hover { background: #0f0; color: #000; }
+    .tab-sp { border-color: #0f0; }
+    .tab-sp.active { background: #0f0; color: #000; }
+    .tab-sp:hover { background: #030; color: #0f0; }
+    .tab-sp.active:hover { background: #0f0; color: #000; }
 
-.tab-bj { border-color: #f44; }
-.tab-bj.active { background: #f44; color: #000; }
-.tab-bj:hover { background: #300; color: #f44; }
-.tab-bj.active:hover { background: #f44; color: #000; }
-
-
+    .tab-bj { border-color: #f44; }
+    .tab-bj.active { background: #f44; color: #000; }
+    .tab-bj:hover { background: #300; color: #f44; }
+    .tab-bj.active:hover { background: #f44; color: #000; }
     
     .mp-result { 
         background: linear-gradient(135deg, #220 0%, #110 100%); 
@@ -294,14 +303,97 @@
         color: #ff0;
     }
 
-            /* Mobiltilpasning */
-     /* -- STYR VISNING AF TOP-BAR -- */
+    /* PWA Installationsbanner */
+    .install-banner {
+        background: linear-gradient(135deg, #220 0%, #110 100%);
+        border: 2px solid #0f0;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin: 10px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .install-banner-text {
+        color: #0f0;
+        font-size: 13px;
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .install-banner-text small {
+        color: #888;
+        display: block;
+        margin-top: 3px;
+        font-size: 11px;
+    }
+    
+    .install-btn {
+        background: #0f0;
+        color: #000;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    
+    .install-btn:hover {
+        background: #0c0;
+    }
+    
+    .install-dismiss {
+        background: none;
+        border: 1px solid #666;
+        color: #666;
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 11px;
+    }
+    
+    .ios-install-guide {
+        background: linear-gradient(135deg, #112 0%, #001 100%);
+        border: 2px solid #3399ff;
+        border-radius: 8px;
+        padding: 14px;
+        margin: 10px 0;
+        text-align: center;
+    }
+    
+    .ios-install-guide p {
+        color: #ccc;
+        font-size: 13px;
+        margin: 6px 0;
+        line-height: 1.4;
+    }
+    
+    .ios-install-guide .step {
+        color: #3399ff;
+        font-weight: bold;
+    }
+    
+    /* Skjul install-banner når appen kører standalone */
+    @media (display-mode: standalone) {
+        .install-banner,
+        .ios-install-guide {
+            display: none !important;
+        }
+    }
+
+    /* Mobil top-bar */
     .top-bar-mobile {
-        display: none !important; /* Skjul mobil-versionen som standard */
+        display: none !important;
     }
 
     @media (max-width: 768px) {
-        /* Regler til at skifte top-bar */
         .top-bar-desktop {
             display: none !important;
         }
@@ -309,24 +401,24 @@
             display: block !important;
         }
         
-        /* Skjul trøjer */
         .jerseys {
-            display: none; /* Skjul trøjerne OG titlen helt på mobil */
+            display: none;
         }
 
         .jerseys-box {
-        display: none !important;
+            display: none !important;
         }
 
         div[style*="text-align:center"] .btn-big {
             min-width: 100px !important;
             padding: 8px 12px !important;
             font-size: 14px !important;
-            }
+        }
         
-        /* Generelle mobil-styles */
         body {
             padding: 8px;
+            padding-top: max(8px, env(safe-area-inset-top));
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
             font-size: 14px;
         }
         #game {
@@ -375,38 +467,35 @@
         .naeste-pil {
             font-size: 20px;
         }
+    }
 
-	}
-
-    /* Forhindre zoom ved dobbeltklik/hurtige tryk */
     button, .btn {
         touch-action: manipulation;
     }
 
     html, body {
         touch-action: pan-y;
+    }
+    
+    .ctrls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+    }
 
-        /* Knap-layout på mobil */
-        .ctrls {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 6px;
-        }
-        
+    @media (max-width: 768px) {
         .ctrls .btn-big {
             flex: 1 1 auto;
             max-width: 48%;
         }
         
-        /* Hvis 3 knapper på mobil */
         .ctrls-3 .btn-big {
             flex: 1 1 30%;
             min-width: 90px;
         }
-
     }
-    /* Sværhedsgrad styling */
+
     .svaerhed-valg {
         display: flex;
         gap: 10px;
@@ -433,9 +522,8 @@
     .svaerhed-boks.normal.valgt { background: #ff0; box-shadow: 0 0 2px #ff0; color: #000; }
     .svaerhed-boks.svaer { border-color: #f44; color: #f44; }
     .svaerhed-boks.svaer.valgt { background: #f44; box-shadow: 0 0 2px #f44; color: #000; }
-.svaerhed-boks .navn { font-size: 16px; font-weight: bold; }
+    .svaerhed-boks .navn { font-size: 16px; font-weight: bold; }
 
-    /* Skjul/vis tekst baseret på skærm */
     .mobil-txt {
         display: none;
     }
@@ -475,7 +563,6 @@
             max-width: 160px;
         }
 
-        /* Kontroltaster 2x2 grid på mobil */
         .box div[style*="display:flex"][style*="gap:15px"] {
             display: grid !important;
             grid-template-columns: repeat(2, 1fr) !important;
@@ -496,7 +583,6 @@
             font-size: 10px !important;
         }
 
-        /* Statistik-canvas responsiv */
         #plotCanvas {
             height: 250px !important;
         }
@@ -520,26 +606,176 @@
             padding: 8px;
         }
 
-		.plot-tabs {
-		    flex-wrap: wrap;
-		}
-		
-		.plot-tabs .tab:first-child {
-		    flex: 0 0 100%;
-		    margin-bottom: 4px;
-		}
-		
-		.plot-tabs .tab:not(:first-child) {
-		    flex: 1 1 30%;
-		}
+        .plot-tabs {
+            flex-wrap: wrap;
+        }
+        
+        .plot-tabs .tab:first-child {
+            flex: 0 0 100%;
+            margin-bottom: 4px;
+        }
+        
+        .plot-tabs .tab:not(:first-child) {
+            flex: 1 1 30%;
+        }
     }
 
-</style>
-
+    </style>
 </head>
+
 <body>
 <div id="game"></div>
 <script>
+// ========== PWA: Service Worker Registration ==========
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./sw.js')
+            .then(function(registration) {
+                console.log('ServiceWorker registreret:', registration.scope);
+            })
+            .catch(function(error) {
+                console.log('ServiceWorker fejl:', error);
+            });
+    });
+}
+
+// ========== PWA: Install Prompt ==========
+
+var deferredPrompt = null;
+var installDismissed = false;
+
+window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log('Install prompt fanget');
+});
+
+function erStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || 
+           window.navigator.standalone === true;
+}
+
+function erIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function erSafari() {
+    var ua = navigator.userAgent;
+    return erIOS() && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+}
+
+function getInstallBannerHtml() {
+    if (erStandalone()) return '';
+    if (installDismissed || localStorage.getItem('installDismissed')) return '';
+    
+    // Android/Chrome desktop: direkte install-knap
+    if (deferredPrompt) {
+        return '<div class="install-banner" id="installBanner">' +
+            '<div class="install-banner-text">' +
+                '📱 <strong>Installér som app!</strong>' +
+                '<small>Fuld skærm, ingen søgefelt, virker offline</small>' +
+            '</div>' +
+            '<button class="install-btn" onclick="installApp()">INSTALLÉR</button>' +
+            '<button class="install-dismiss" onclick="dismissInstall()">✕</button>' +
+        '</div>';
+    }
+    
+    // iOS i Safari: vis vejledning
+    if (erIOS() && erSafari()) {
+        return '<div class="ios-install-guide" id="installBanner">' +
+            '<p style="font-size:15px;color:#3399ff;font-weight:bold">📱 Tilføj til hjemmeskærm</p>' +
+            '<p><span class="step">1.</span> Tryk på <span style="font-size:18px">⬆️</span> (Del-knappen) nederst</p>' +
+            '<p><span class="step">2.</span> Scroll ned og tryk <strong>"Føj til hjemmeskærm"</strong></p>' +
+            '<p><span class="step">3.</span> Tryk <strong>"Tilføj"</strong> – færdig! 🎉</p>' +
+            '<p style="color:#888;font-size:10px">Spillet kører derefter i fuld skærm som en app</p>' +
+            '<button class="install-dismiss" onclick="dismissInstall()" style="margin-top:8px">Skjul denne besked</button>' +
+        '</div>';
+    }
+    
+    // iOS i Chrome/Firefox/anden browser: bed dem åbne i Safari
+    if (erIOS() && !erSafari()) {
+        return '<div class="ios-install-guide" id="installBanner" style="border-color:#f80">' +
+            '<p style="font-size:15px;color:#f80;font-weight:bold">📱 Spil som app?</p>' +
+            '<p>Åbn dette link i <strong style="color:#3399ff">Safari</strong> for at tilføje spillet til din hjemmeskærm.</p>' +
+            '<p style="color:#888;font-size:11px">På iPhone kan apps kun installeres via Safari.</p>' +
+            '<div style="margin-top:8px">' +
+                '<button class="install-btn" style="background:#3399ff" onclick="kopierLink()">KOPIÉR LINK</button>' +
+                '<button class="install-dismiss" onclick="dismissInstall()" style="margin-left:8px">✕</button>' +
+            '</div>' +
+        '</div>';
+    }
+    
+    return '';
+}
+
+function installApp() {
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(choiceResult) {
+        if (choiceResult.outcome === 'accepted') {
+            console.log('Bruger accepterede installation');
+        }
+        deferredPrompt = null;
+        var banner = document.getElementById('installBanner');
+        if (banner) banner.remove();
+    });
+}
+
+function dismissInstall() {
+    installDismissed = true;
+    localStorage.setItem('installDismissed', 'true');
+    var banner = document.getElementById('installBanner');
+    if (banner) banner.style.display = 'none';
+}
+
+function kopierLink() {
+    var url = window.location.href;
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function() {
+            visKopieretBesked();
+        }).catch(function() {
+            fallbackKopier(url);
+        });
+    } else {
+        fallbackKopier(url);
+    }
+}
+
+function fallbackKopier(url) {
+    var textarea = document.createElement('textarea');
+    textarea.value = url;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        visKopieretBesked();
+    } catch (err) {
+        prompt('Kopiér dette link og åbn det i Safari:', url);
+    }
+    
+    document.body.removeChild(textarea);
+}
+
+function visKopieretBesked() {
+    var banner = document.getElementById('installBanner');
+    if (banner) {
+        var original = banner.innerHTML;
+        banner.innerHTML = '<p style="color:#0f0;font-size:15px;font-weight:bold">✅ Link kopieret!</p>' +
+            '<p style="color:#ccc">Åbn Safari og indsæt linket i adressefeltet.</p>';
+        
+        setTimeout(function() {
+            banner.innerHTML = original;
+        }, 3000);
+    }
+}
+
 var TEAMS = {
     "UAE Team Emirates": { abbr: "UAE", clr: "#fe3c3c", r: [
         { n: "Tadej Pogačar", gc: 98, bj: 98, sp: 72, tt: 95, ud: 96, re: 86, fl: 86 },
@@ -3234,7 +3470,8 @@ function intro() {
     }
     
     R('<div style="text-align:center;padding:20px 0">' +
-        '<div style="font-size:60px;margin-bottom:5px">🚴‍♂️🏔️🚴‍♂️</div>' +
+		getInstallBannerHtml() +
+		'<div style="font-size:60px;margin-bottom:5px">🚴‍♂️🏔️🚴‍♂️</div>' +
         '<h1 style="font-size:42px;margin:0;background:linear-gradient(180deg,#ff0 0%,#fa0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;letter-spacing:3px">LE TOUR</h1>' +
         '<div style="font-size:28px;color:#0ff;font-weight:bold;margin-top:5px">2025</div>' +
         '<div style="margin-top:10px">' +
