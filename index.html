@@ -1647,11 +1647,11 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
             spiTekst = spiEfternavn + " gik kold ved km " + kollapsKm + ", men holder sig på " + (spiGC + 1) + ". pladsen i klassementet.";
         } else if (!spillerKollapsErDramatisk) {
             // Langt bagud allerede - ikke dramatisk
-            spiTekst = spiEfternavn + " gik kold ved km " + kollapsKm + " og ligger nr. " + (spiGC + 1) + " i klassementet.";
+            spiTekst = spiEfternavn + " gik kold ved km " + kollapsKm + " og ligger nu nr. " + (spiGC + 1) + " i klassementet.";
         } else if (gcGabPaalidelig && placeringAendring > 0) {
             spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ", men havde opbygget et stort nok forspring til at rykke op til " + (spiGC + 1) + ". pladsen i klassementet.";
-        } else if (gcGabPaalidelig && gcGabAendring > 120) {
-            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + " og tabte " + fmtTidstab(gcGabAendring) + " i klassementet. Han falder til " + (spiGC + 1) + ". pladsen.";
+		} else if (gcGabNu > 120) {
+            spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + " og ligger nu " + fmtTidstab(gcGabNu) + " efter den gule trøje på " + (spiGC + 1) + ". plads.";
         } else {
             spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ". Energien var fuldstændig opbrugt. Han ligger nu nr. " + (spiGC + 1) + " i klassementet.";
         }
@@ -1723,12 +1723,12 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
     }
 	
     // 6) Mistede den gule trøje
-    else if (varGcLeder && !erGcLeder) {
+	else if (varGcLeder && !erGcLeder) {
         var nyLederNavn = gcS[0] ? gcS[0].navn.split(" ").pop() : "rivalen";
-        if (gcGabPaalidelig && gcGabAendring > 60) {
-            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " efter at have tabt " + fmtTidstab(gcGabAendring) + ". Han ligger nu nr. " + (spiGC + 1) + " i klassementet.";
+        if (gcGabNu > 60) {
+            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu " + fmtTidstab(gcGabNu) + " efter på " + (spiGC + 1) + ". plads.";
         } else {
-            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu nr. " + (spiGC + 1) + " i klassementet.";
+            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu " + gcGabNu + " sekunder efter på " + (spiGC + 1) + ". plads.";
         }
     }
 
@@ -1940,10 +1940,10 @@ function genererTourResume() {
     
 // STATISTIK
     var statTekst = "Gennem de 21 etaper opnåede " + spiEfternavn + " ";
-    var stats = [];
+	var stats = [];
     if (sejre > 0) stats.push(sejre + " etapesejr" + (sejre > 1 ? "e" : ""));
-    if (podier > sejre) stats.push((podier - sejre) + " yderligere podieplacering" + (podier - sejre > 1 ? "er" : ""));
-    if (top10 > podier) stats.push((top10 - podier) + " yderligere top-10 placering" + (top10 - podier > 1 ? "er" : ""));
+    if (podier > sejre) stats.push((podier - sejre) + (sejre > 0 ? " yderligere " : " ") + "podieplacering" + (podier - sejre > 1 ? "er" : ""));
+    if (top10 > podier) stats.push((top10 - podier) + (podier > 0 ? " yderligere " : " ") + "top-10 placering" + (top10 - podier > 1 ? "er" : ""));
     
     if (stats.length === 1) {
         statTekst += stats[0] + ".";
