@@ -6283,7 +6283,7 @@ function tegnTTP() {
     var c = $("cv");
     if (!c) return;
     c.width = c.parentElement.clientWidth - 4;
-    c.height = 130;
+    c.height = 180;
     var ctx = c.getContext("2d");
     var e = G.etaper[G.enr];
     var p = G.profil;
@@ -6295,42 +6295,46 @@ function tegnTTP() {
     minH = 0;
     maxH = maxH + 100;
     var rng = maxH - minH;
-    if (rng < 750) { maxH = 750; rng = 750; }
+    if (rng < 400) { maxH = minH + 400; rng = 400; }
 
-	var l = 8, bm = 16, r = 8, t = 16;
-    var w = c.width - l - r, h = c.height - bm - t;    
-    // Profil
+    var l = 8, bm = 20, r = 12, t = 16;
+    var w = c.width - l - r, h = c.height - bm - t;
+    
+    // Profil - fyldt område
     ctx.beginPath();
     for (var i = 0; i < p.length; i++) {
-        var x = l + (i / (p.length-1)) * w;
+        var x = l + (i / (p.length - 1)) * w;
         var y = t + h - ((p[i] - minH) / rng) * h;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.strokeStyle = "#088";
     ctx.lineWidth = 3;
     ctx.stroke();
+    ctx.lineTo(l + w, t + h);
+    ctx.lineTo(l, t + h);
+    ctx.fillStyle = "rgba(0,100,100,0.25)";
+    ctx.fill();
     
-    // Rytter
+    // Rytter-position
     var km = Math.min(G.km, e.dist);
     var px = l + (km / e.dist) * w;
     var idx = Math.min(Math.floor(km), p.length - 1);
     var py = t + h - ((p[idx] - minH) / rng) * h;
     
+    // Cirkel bag rytter
     ctx.beginPath();
-    ctx.arc(px, py - 12, 10, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(0, 255, 255, 0.3)";
+    ctx.arc(px, py - 14, 12, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0, 255, 255, 0.2)";
     ctx.fill();
     ctx.strokeStyle = "#0ff";
     ctx.lineWidth = 2;
     ctx.stroke();
     
-    ctx.save();
-    ctx.translate(px, py - 12);
-    ctx.scale(-1, 1);
-    ctx.font = "12px sans-serif";
+    // Rytter-antal (bare "1" for TT)
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 11px monospace";
     ctx.textAlign = "center";
-    ctx.fillText("🚴", 0, 5);
-    ctx.restore();
+    ctx.fillText("1", px, py - 10);
     
     // Mål
     ctx.strokeStyle = "#fff";
@@ -6340,22 +6344,24 @@ function tegnTTP() {
     ctx.lineTo(l + w, t + h);
     ctx.stroke();
     ctx.setLineDash([]);
+    ctx.fillStyle = "#fff";
     ctx.font = "16px sans-serif";
-    ctx.fillText("🏁", l + w, t + 12);
+    ctx.textAlign = "center";
+    ctx.fillText("🏁", l + w, t + 14);
     
     // X-labels
     ctx.fillStyle = "#888";
-    ctx.font = "10px monospace";
+    ctx.font = "11px monospace";
     ctx.textAlign = "left";
-    ctx.fillText("0km", l, t + h + 12);
+    ctx.fillText("0km", l, t + h + 14);
     ctx.textAlign = "right";
-    ctx.fillText(e.dist + "km", l + w, t + h + 12);
+    ctx.fillText(e.dist + "km", l + w, t + h + 14);
     
-    // Y-labels - tegnes SIDST så de er oven på alt
+    // Y-labels
     ctx.font = "10px monospace";
     ctx.fillStyle = "#888";
     ctx.textAlign = "left";
-	ctx.fillText(Math.round(maxH) + "m", 8, t);
+    ctx.fillText(Math.round(maxH) + "m", 8, t);
     ctx.fillText(Math.round(minH) + "m", 8, t + h - 2);
 }
 
