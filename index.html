@@ -1162,8 +1162,8 @@ function genererResume(res, erTT, udeRyttere) {
 
     // Beregn GC-gab ændring robust via historik
     // gcGabNu = spillerens tid til GC-leder NU (positiv = bagud)
-    var gcGabNu = (spiGC > 0) ? (G.spiller.stid - gcS[0].stid) : 0;
-    
+	var gcGabNu = (spiGC > 0) ? Math.round(G.spiller.stid - gcS[0].stid) : 0;    
+	
     // gcGabFoer = spillerens tid til GC-leder FØR denne etape
     var gcGabFoer = 0;
     if (!erFoersteEtape && ETAPE_HISTORIK.length >= 2) {
@@ -1393,10 +1393,37 @@ var overskrift = "";
             ];
             overskrift = normalOvk[ri(0, normalOvk.length - 1)];
         }
-    } else if (spillerKollapsErDramatisk) {
+	} else if (spillerKollapsErDramatisk) {
         overskrift = "KATASTROFE! " + spiEfternavn.toUpperCase() + " GÅR HELT KOLD!";
     } else if (vigtigsteKollapsErDramatisk) {
-        overskrift = "DRAMA! " + vigtigsteKollapsNavn.toUpperCase() + " KRAKELERER!";
+        // Check om den nævnte rytter faktisk vandt etapen - hvis ja, find en anden vinkel
+        var kollapsRytterVandt = (vigtigsteKollaps && vinder && vigtigsteKollaps.data.rytter === vinder.navn);
+        if (kollapsRytterVandt) {
+            // Tæl totale kollaps
+            var antalKollaps = gcKollaps.length;
+            if (antalKollaps >= 5) {
+                overskrift = "MASSAKRE I BJERGENE! " + antalKollaps + " FAVORITTER GÅR KOLD!";
+            } else if (antalKollaps >= 3) {
+                overskrift = "BRUTAL ETAPE! FAVORITTERNE KNÆKKER!";
+            } else {
+                // Find en anden kollaps-rytter til overskriften
+                var andenKollaps = null;
+                for (var ki2 = 0; ki2 < gcKollaps.length; ki2++) {
+                    var kNavn2 = gcKollaps[ki2].data.rytter;
+                    if (kNavn2 !== vinder.navn && kNavn2 !== G.spiller.navn) {
+                        andenKollaps = kNavn2;
+                        break;
+                    }
+                }
+                if (andenKollaps) {
+                    overskrift = "DRAMA! " + andenKollaps.split(" ").pop().toUpperCase() + " KRAKELERER!";
+                } else {
+                    overskrift = vinder.navn.split(" ").pop() + " vinder trods kollaps i " + e.slut;
+                }
+            }
+        } else {
+            overskrift = "DRAMA! " + vigtigsteKollapsNavn.toUpperCase() + " KRAKELERER!";
+        }
     } else if (spiPlads === 2) {
         overskrift = spiEfternavn + " tæt på sejren i " + e.slut;
     } else if (spiPlads === 3) {
@@ -1442,7 +1469,7 @@ var overskrift = "";
     
 // ===== GENERER BRØDTEKST =====
     var afsnit = [];
-    
+    var kollapsNaevntIIntro = false;
     // ===== INTRO =====
     var intro = "";
     if (erTT) {
@@ -1456,17 +1483,21 @@ var overskrift = "";
             } else if (angreb.length >= 4) {
                 introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " bød på mange angreb mellem favoritterne.");
                 introVarianter.push("Der blev angrebet fra flere sider på den " + e.dist + " km lange bjergetape til " + e.slut + ".");
-			} else if (gcKollaps.length > 0) {
+				} else if (gcKollaps.length > 0) {
 			                var kollapsNavne = [];
 			                for (var i = 0; i < gcKollaps.length; i++) {
 			                    var kRytter = gcKollaps[i].data.rytter;
+			                    if (kRytter === G.spiller.navn) continue;
 			                    var kRytterObj = null;
 			                    for (var j = 0; j < G.ryttere.length; j++) {
 			                        if (G.ryttere[j].navn === kRytter) { kRytterObj = G.ryttere[j]; break; }
 			                    }
 			                    if (kRytterObj && kRytterObj.gc > 84) {
 			                        var kNavn = kRytter.split(" ").pop();
-			                        if (kollapsNavne.indexOf(kNavn) < 0) kollapsNavne.push(kNavn);
+			                        if (kollapsNavne.indexOf(kNavn) < 0) {
+			                            kollapsNavne.push(kNavn);
+			                            alleredeNaevnteKollaps[kRytter] = true;
+			                        }
 			                    }
 			                }
 			                if (kollapsNavne.length >= 3) {
@@ -1479,10 +1510,6 @@ var overskrift = "";
 			                    introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " bød på kontrolleret kørsel blandt favoritterne.");
 			                    introVarianter.push("Feltet tog fat på dagens " + e.dist + " km lange bjergetape med respekt for de ventende stigninger, men uden de helt vilde angreb.");
 			                }
-			            } else {
-			                introVarianter.push("Dagens " + e.dist + " km lange bjergetape fra " + e.start + " til " + e.slut + " bød på kontrolleret kørsel blandt favoritterne.");
-			                introVarianter.push("Feltet tog fat på dagens " + e.dist + " km lange bjergetape med respekt for de ventende stigninger, men uden de helt vilde angreb.");
-			            }
         } else if (e.type === "kuperet") {
             if (angreb.length > 3) {
                 introVarianter.push("Dagens " + e.dist + " km lange kuperede etape fra " + e.start + " til " + e.slut + " var præget af konstante angreb.");
@@ -1502,7 +1529,7 @@ var overskrift = "";
             } else if (varLilleGruppe) {
                 introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " endte med en reduceret spurt efter at en lille gruppe slap væk.");
                 introVarianter.push("Sprinterholdene mistede kontrollen på den " + e.dist + " km lange flade etape til " + e.slut + ", og kun en lille gruppe kæmpede om sejren.");
-                introVarianter.push("En lille gruppe slog hul på de " + e.dist + " kilometer fra " + e.start + " til " + e.slut + ", og feltet nåede aldrig op.");
+                introVarianter.push("En lille gruppe slog hul til feltet på de " + e.dist + " kilometer fra " + e.start + " til " + e.slut + ", og feltet nåede aldrig op.");
             } else if (indhentninger.length > 0 && udbrud.length > 0) {
                 introVarianter.push("Dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fulgte det velkendte mønster: udbrud, jagt og massespurt.");
                 introVarianter.push("På dagens " + e.dist + " km lange flade etape fra " + e.start + " til " + e.slut + " fik udbruddene ingen snor, og blev hentet på vej mod mål.");
@@ -1606,6 +1633,9 @@ var overskrift = "";
             // Spring spilleren over her - nævnes separat i spillerafsnittet
             if (kollapsNavn === G.spiller.navn) continue;
             
+            // Spring over hvis allerede nævnt i introen
+            if (alleredeNaevnteKollaps[kollapsNavn]) continue;
+            
             var erVigtig = false;
             // Kun vigtig hvis rytteren er i top 10 i GC
             for (var j = 0; j < gcS.length; j++) {
@@ -1620,7 +1650,10 @@ var overskrift = "";
                 for (var k = 0; k < vigtigeKollaps.length; k++) {
                     if (vigtigeKollaps[k].rytter === kollapsNavn) { alleredeTilføjet = true; break; }
                 }
-                if (!alleredeTilføjet) vigtigeKollaps.push(kollaps);
+                if (!alleredeTilføjet) {
+                    vigtigeKollaps.push(kollaps);
+                    alleredeNaevnteKollaps[kollapsNavn] = true;
+                }
             }
         }
         
@@ -1644,6 +1677,8 @@ var overskrift = "";
             var dd = daarligeDage[i].data;
             // Spring altid spilleren over - nævnes separat
             if (dd.rytter === G.spiller.navn) continue;
+            // Spring over hvis allerede nævnt i intro eller kollaps
+            if (alleredeNaevnteKollaps[dd.rytter]) continue;
             var alleredeKollaps = false;
             for (var ki = 0; ki < gcKollaps.length; ki++) {
                 if (gcKollaps[ki].data.rytter === dd.rytter) { alleredeKollaps = true; break; }
@@ -1659,7 +1694,10 @@ var overskrift = "";
                 for (var k = 0; k < vigtigeDaarlige.length; k++) {
                     if (vigtigeDaarlige[k].rytter === dd.rytter) { alleredeTilføjet = true; break; }
                 }
-                if (!alleredeTilføjet) vigtigeDaarlige.push(dd);
+                if (!alleredeTilføjet) {
+                    vigtigeDaarlige.push(dd);
+                    alleredeNaevnteKollaps[dd.rytter] = true;
+                }
             }
         }
         
@@ -1806,8 +1844,10 @@ var overskrift = "";
             gcVerb = "erobrer";
         }
         
-        var troejeTekst = gcLederNavn + " " + gcVerb + " den gule trøje";
-        if (gcGap < 60 && gcNr2) {
+		var troejeTekst = gcLederNavn + " " + gcVerb + " den gule trøje";
+        if (gcGap === 0 && gcNr2) {
+            troejeTekst += " med samme tid som " + gcNr2.navn.split(" ").pop() + "!";
+        } else if (gcGap < 60 && gcNr2) {
             troejeTekst += " med kun " + gcGap + " sekunder ned til " + gcNr2.navn.split(" ").pop() + ".";
         } else if (gcNr2) {
             troejeTekst += " med " + ft(gcGap) + " til " + gcNr2.navn.split(" ").pop() + ".";
@@ -1815,7 +1855,7 @@ var overskrift = "";
             troejeTekst += ".";
         }
         
-if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
+		if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
             var spNr2 = spS[1];
             var spGap = spNr2 ? (G.sprPts[spLeder.navn] || 0) - (G.sprPts[spNr2.navn] || 0) : 0;
             var spLederNavn = spLeder.navn.split(" ").pop();
@@ -1823,20 +1863,28 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
             if (!erFoersteEtape && tidligereSpLeder && tidligereSpLeder !== spLeder.navn) {
                 spVerb = "overtager føringen i";
             }
-            if (spGap < 20 && spNr2) {
+            if (spGap === 0 && spNr2) {
+                troejeTekst += " " + spLederNavn + " deler føringen i pointkonkurrencen med " + spNr2.navn.split(" ").pop() + ".";
+            } else if (spGap < 20 && spNr2) {
                 troejeTekst += " " + spLederNavn + " " + spVerb + " pointkonkurrencen med kun " + spGap + " point til " + spNr2.navn.split(" ").pop() + ".";
             } else {
                 troejeTekst += " " + spLederNavn + " " + spVerb + " pointkonkurrencen.";
             }
         }
         
-        if (bjLeder && (G.bjgPts[bjLeder.navn] || 0) > 0) {
+  		 if (bjLeder && (G.bjgPts[bjLeder.navn] || 0) > 0) {
             var bjLederNavn = bjLeder.navn.split(" ").pop();
+            var bjNr2 = bjS[1];
+            var bjGap = bjNr2 ? (G.bjgPts[bjLeder.navn] || 0) - (G.bjgPts[bjNr2.navn] || 0) : 0;
             var bjVerb = "er i front i";
             if (!erFoersteEtape && tidligereBjLeder && tidligereBjLeder !== bjLeder.navn) {
                 bjVerb = "overtager føringen i";
             }
-            troejeTekst += " " + bjLederNavn + " " + bjVerb + " bjergkonkurrencen.";
+            if (bjGap === 0 && bjNr2) {
+                troejeTekst += " " + bjLederNavn + " deler føringen i bjergkonkurrencen med " + bjNr2.navn.split(" ").pop() + ".";
+            } else {
+                troejeTekst += " " + bjLederNavn + " " + bjVerb + " bjergkonkurrencen.";
+            }
         }
         
         afsnit.push(troejeTekst);
@@ -1875,9 +1923,12 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
             spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + ", men havde heldigvis så stort et forspring at etapesejren aldrig kom i fare.";
         } else if (G.spiller.ude) {
             spiTekst = spiEfternavn + " gik helt kold ved km " + kollapsKm + " og nåede ikke inden for tidsgrænsen. Touren er slut.";
-        } else if (erGcLeder) {
+		} else if (erGcLeder && varGcLeder) {
             // Beholdt gult trods kollaps
             spiTekst = spiEfternavn + " gik kold ved km " + kollapsKm + ", men beholder den gule trøje.";
+        } else if (erGcLeder && !varGcLeder) {
+            // Overtog gult trods kollaps
+            spiTekst = spiEfternavn + " gik kold ved km " + kollapsKm + ", men overtager alligevel den gule trøje!";
         } else if ((spiGC + 1) <= 3) {
             // Stadig på podiet trods kollaps
             spiTekst = spiEfternavn + " gik kold ved km " + kollapsKm + ", men holder sig på " + (spiGC + 1) + ". pladsen i klassementet.";
@@ -1910,16 +1961,16 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
         } else {
             spiTekst = "En drømmedag for " + spiEfternavn + "!";
         }
-    }
-
-	// 3) 2. og 3. plads
-    else if (spiPlads === 2) {
+    } else if (spiPlads === 2) {
+        var tidTilVinder = spiRes ? Math.round(spiRes.tid - res[0].tid) : 0;
         if (gcGabPaalidelig && gcGabAendring <= -60) {
             spiTekst = "Andenpladsen er et flot resultat for " + spiEfternavn + ", der hentede " + fmtTidstab(gcGabAendring) + " i klassementet.";
         } else if (gcGabPaalidelig && gcGabAendring >= 60) {
             spiTekst = spiEfternavn + " måtte nøjes med andenpladsen og tabte " + fmtTidstab(gcGabAendring) + " i klassementet.";
-        } else {
+        } else if (tidTilVinder <= 3) {
             spiTekst = spiEfternavn + " måtte se sig slået på stregen, men andenpladsen er et flot resultat.";
+        } else {
+            spiTekst = spiEfternavn + " kom i mål " + fmtTidstab(tidTilVinder) + " efter vinderen på en flot andenplads.";
         }
     } else if (spiPlads === 3) {
         if (gcGabPaalidelig && gcGabAendring <= -60) {
@@ -1961,10 +2012,11 @@ if (spLeder && (G.sprPts[spLeder.navn] || 0) > 0) {
     // 6) Mistede den gule trøje
 	else if (varGcLeder && !erGcLeder) {
         var nyLederNavn = gcS[0] ? gcS[0].navn.split(" ").pop() : "rivalen";
-        if (gcGabNu > 60) {
-            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu " + fmtTidstab(gcGabNu) + " efter på en " + (spiGC + 1) + ". plads.";
+        var gcGabNuRundet = Math.round(gcGabNu);
+        if (gcGabNuRundet > 60) {
+            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu " + fmtTidstab(gcGabNuRundet) + " efter på en " + (spiGC + 1) + ". plads.";
         } else {
-            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu " + gcGabNu + " sekunder efter på " + (spiGC + 1) + ". pladsen.";
+            spiTekst = spiEfternavn + " mistede den gule trøje til " + nyLederNavn + " og ligger nu " + gcGabNuRundet + " sekunder efter på " + (spiGC + 1) + ". pladsen.";
         }
     }
 
@@ -3826,10 +3878,10 @@ function startEtape() {
     for (var i = 0; i < G.ryttere.length; i++) { G.ryttere[i].gi = 0; }
     
 // === DÅRLIGE DAGE ===
-	// 12% chance for dårlig dag (kun spilleren)
-	if (Math.random() < 0.12) {
+	// 10% chance for dårlig dag (kun spilleren)
+	if (Math.random() < 0.10) {
 	    var maxE = getMaxEnergi(G.spiller);
-	    var pctTab = ri(10, 15);
+	    var pctTab = ri(5, 10);
 	    var raTab = maxE * (pctTab / 100);
 	    
 	    var energiFoer = G.spiller.energi;
@@ -3903,7 +3955,7 @@ function loop() {
             } else if (stig < -5) {
                 // Ned ad: Alle restituerer - gode klatrere lidt mere
                 var restitution = 0.03 + klatreEffektivitet * 0.02;
-                r.energi = Math.min(getMaxEnergi(), r.energi + restitution);
+                r.energi = Math.min(getMaxEnergi(r), r.energi + restitution);
                 baseTab *= 0.3; // Meget lavt energitab ned ad
             } else {
                 // Fladt/let terræn på bjergetape: dårligt tempo straffes lidt, godt tempo hjælper en smule
@@ -3934,7 +3986,7 @@ function loop() {
             } else if (stig < -5) {
                 // Lidt restitution ned ad bakke
                 var restitution = 0.02 + klatreEffektivitet * 0.01;
-                r.energi = Math.min(getMaxEnergi(), r.energi + restitution);
+                r.energi = Math.min(getMaxEnergi(r), r.energi + restitution);
                 baseTab *= 0.5;
             }
         } else if (e.type === "flad") {
