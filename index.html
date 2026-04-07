@@ -1141,6 +1141,7 @@ function genererResume(res, erTT, udeRyttere) {
         tidligereBjLeder = forrige.bjLeder;
     }
     var erFoersteEtape = (ETAPE_HISTORIK.length <= 1);
+	var alleredeNaevnteKollaps = {};
 
 // ===== BEREGN GC-FØR / EFTER =====
     var spiGC = -1;
@@ -1469,7 +1470,7 @@ var overskrift = "";
     
 // ===== GENERER BRØDTEKST =====
     var afsnit = [];
-    var kollapsNaevntIIntro = false;
+	
     // ===== INTRO =====
     var intro = "";
     if (erTT) {
