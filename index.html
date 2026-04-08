@@ -4284,7 +4284,7 @@ if (e.type === "kuperet" && G.km > e.dist * 0.75) {
 }
 
 // Styrt-check
-    if (Math.random() < 0.0006 && !G.etapeSlut && G.km > 50 && G.km < e.dist - 2) {
+    if (Math.random() < 0.001 && !G.etapeSlut && G.km > 50 && G.km < e.dist - 2) {
         var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
         if (felt && felt.ryt.length > 20) {
             // Tæl eksisterende styrt denne etape
