@@ -2089,6 +2089,17 @@ var overskrift = "";
     }
     afsnit.push(spiTekst);
 
+// STYRT
+    var styrtEvents = HOEJDEPUNKTER.filter(function(h) { return h.type === "styrt"; });
+    if (styrtEvents.length === 1) {
+        var styrtNavn = styrtEvents[0].data.rytter.split(" ").pop();
+        afsnit.push("Etapen blev også overskygget af et styrt, der kostede " + styrtNavn + " udgangen af Touren.");
+    } else if (styrtEvents.length === 2) {
+        var styrt1 = styrtEvents[0].data.rytter.split(" ").pop();
+        var styrt2 = styrtEvents[1].data.rytter.split(" ").pop();
+        afsnit.push("To ryttere måtte forlade Touren efter styrt: " + styrt1 + " og " + styrt2 + ".");
+    }
+	
     // UDGÅEDE RYTTERE
     if (udeRyttere && udeRyttere.length >= 5) {
         if (udeRyttere.length >= 20) {
@@ -4272,6 +4283,36 @@ if (e.type === "kuperet" && G.km > e.dist * 0.75) {
     favoritAngrebKuperet();
 }
 
+// Styrt-check
+    if (Math.random() < 0.0006 && !G.etapeSlut && G.km > 50 && G.km < e.dist - 2) {
+        var felt = findInArr(G.grp, function(g) { return g.type === "felt"; });
+        if (felt && felt.ryt.length > 20) {
+            // Tæl eksisterende styrt denne etape
+            var styrtDenneEtape = 0;
+            for (var hi = 0; hi < HOEJDEPUNKTER.length; hi++) {
+                if (HOEJDEPUNKTER[hi].type === "styrt") styrtDenneEtape++;
+            }
+            if (styrtDenneEtape < 2) {
+                // Find kandidater: ikke spilleren, ikke gc>75, ikke sprintere>80
+                var styrtKand = [];
+                for (var si = 0; si < felt.ryt.length; si++) {
+                    var sr = felt.ryt[si];
+                    if (sr.sp || sr.ude) continue;
+                    if (sr.gc > 75) continue;
+                    if (sr.spr > 80) continue;
+                    styrtKand.push(sr);
+                }
+                if (styrtKand.length > 0) {
+                    var styrtet = styrtKand[ri(0, styrtKand.length - 1)];
+                    styrtet.ude = true;
+                    styrtet.styrt = true;
+                    felt.ryt = felt.ryt.filter(function(x) { return x !== styrtet; });
+                    G.msg = "⚠️ STYRT! " + styrtet.navn.split(" ").pop() + " udgår!";
+                    logHoejdepunkt("styrt", { rytter: styrtet.navn, km: G.km });
+                }
+            }
+        }
+    }
     
     // Mellempunkter
     if (G.mps && G.mps.length > 0) chkMP();
@@ -5362,12 +5403,10 @@ for (var i = 0; i < G.grp.length; i++) {
         }
     }
 
-
-
-
          
             // Indhent kun hvis MEGET tæt
-            if (afstand < 0.08) {
+            var indhentAfstand = e.type === "flad" ? 0.06 : 0.08;
+            if (afstand < indhentAfstand) {
                 for (var j = 0; j < g.ryt.length; j++) {
                     if (felt.ryt.indexOf(g.ryt[j]) < 0) {
                         felt.ryt.push(g.ryt[j]);
@@ -5670,7 +5709,7 @@ if (Math.random() < ch) {
         reagerende[i].gi = ni;
     }
     
-    var nyNavn = reagerende.length > 0 ? "Udbrud" : "Solo: " + G.spiller.navn.split(" ").pop();
+    var nyNavn = reagerende.length > 0 ? "Udbrud" : "Solo";
     G.grp.push({ 
         type: "udbrud", 
         navn: nyNavn, 
@@ -6297,7 +6336,7 @@ function tegnTTP() {
     minH = 0;
     maxH = maxH + 100;
     var rng = maxH - minH;
-    if (rng < 400) { maxH = minH + 400; rng = 400; }
+    if (rng < 800) { maxH = minH + 800; rng = 800; }
 
     var l = 8, bm = 20, r = 12, t = 16;
     var w = c.width - l - r, h = c.height - bm - t;
@@ -6644,7 +6683,28 @@ function visRes(res, erTT, udeRyttere, vinderTid, tidsGraense) {
         html += '<br><div class="row pl"><span>' + (spi+1) + '. ' + x.r.navn + '</span><span>' + tidTxt + ' </span></div>';
     }
     html += '</div>';
-    
+
+// Vis styrtede ryttere
+    var styrtedeRyttere = G.ryttere.filter(function(r) { return r.styrt && r.ude; });
+    var nyeStyrt = [];
+    for (var si = 0; si < HOEJDEPUNKTER.length; si++) {
+        if (HOEJDEPUNKTER[si].type === "styrt") {
+            for (var sj = 0; sj < styrtedeRyttere.length; sj++) {
+                if (styrtedeRyttere[sj].navn === HOEJDEPUNKTER[si].data.rytter) {
+                    nyeStyrt.push(styrtedeRyttere[sj]);
+                }
+            }
+        }
+    }
+    if (nyeStyrt.length > 0) {
+        html += '<div class="box" style="border-color:#f80"><h3 style="color:#f80">⚠️ STYRTET - DNF:</h3>';
+        for (var si = 0; si < nyeStyrt.length; si++) {
+            var sr = nyeStyrt[si];
+            html += '<div class="row" style="color:#f80"><span>' + sr.navn + ' (' + sr.holdAbbr + ')</span><span>DNF</span></div>';
+        }
+        html += '</div>';
+    }
+	
     // Vis ryttere der er ude pga. tidsgrænse
     if (udeRyttere && udeRyttere.length > 0) {
         html += '<div class="box" style="border-color:#f44"><h3 style="color:#f44">❌ UDEN FOR TIDSGRÆNSEN:</h3>';
@@ -7028,6 +7088,7 @@ function nytTour() {
         r.stid = 0;
         r.energi = getMaxEnergi(r);
         r.ude = false;
+		r.styrt = false;
         r.gi = 0;
     }
     G.sprPts = {};
