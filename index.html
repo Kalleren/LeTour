@@ -6564,7 +6564,7 @@ function afslut() {
 		    
 		    // Kun tjek GC-favoritter
 		    if (r.gc <= 82) continue;
-		    
+		    if (i === 0) continue;
 		    // Tidstab i forhold til den hurtigste favorit
 		    var tidstabTilFavoritter = res[i].tid - favoritReferenceTid;
 		    
